@@ -216,14 +216,14 @@
 };
 
 &spi2_cs0 {
-	spi-max-buswidth = <1>;
-	spi-max-frequency = <40000000>;
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
 	status = "okay";
 };
 
 &spi2_cs1 {
-	spi-max-buswidth = <1>;
-	spi-max-frequency = <40000000>;
+	spi-max-buswidth = <4>;
+	spi-max-frequency = <50000000>;
 	status = "okay";
 };
 
@@ -280,7 +280,7 @@
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
 	pinctrl-0 = <&pinctrl_spim3_cs &pinctrl_spim3_in_default &pinctrl_spim3_out_default
-		&pinctrl_spim3_qspi_in_default>;
+		&pinctrl_spim3_qspi_in_default &pinctrl_spim3_qspi_out_default>;
 
 	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
@@ -297,7 +297,7 @@
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
 	pinctrl-0 = <&pinctrl_spim4_cs &pinctrl_spim4_in_default &pinctrl_spim4_out_default
-		&pinctrl_spim4_qspi_in_default>;
+		&pinctrl_spim4_qspi_in_default &pinctrl_spim4_qspi_out_default>;
 
 	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
