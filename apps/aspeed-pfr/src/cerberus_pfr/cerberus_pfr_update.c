@@ -434,11 +434,7 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 			if (status != Success)
 				return Failure;
 
-			address += CONFIG_BMC_STAGING_SIZE;
-
-			// Checking for key cancellation
 			pfr_manifest->address = address;
-
 			status = pfr_staging_pch_staging(pfr_manifest);
 			if (status != Success)
 				return Failure;

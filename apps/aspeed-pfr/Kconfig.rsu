@@ -65,7 +65,7 @@ config INTEL_DEBUG_RSU_FLASH_ADDR
 	hex "Debug CPLD CFM1 start address(dword)"
 
 config BMC_INTEL_CPLD_STAGING_OFFSET
-	default 0x0cee0000
+	default 0x0bee0000
 	hex "Intel PFR CPLD staging region offset in BMC flash"
 
 endif # INTEL_PFR_CPLD_UPDATE

@@ -28,11 +28,11 @@ config PFR_SPDM_RESPONDER
 if PFR_SPDM_ATTESTATION
 
 config BMC_AFM_RECOVERY_OFFSET
-	default 0x0d300000
+	default 0x0c300000
 	hex "AFM recovery region offset in BMC flash"
 
 config BMC_AFM_STAGING_OFFSET
-	default 0x0d2e0000
+	default 0x0c2e0000
 	hex "AFM staging region offset in BMC flash"
 
 config BMC_AFM_STAGING_RECOVERY_SIZE

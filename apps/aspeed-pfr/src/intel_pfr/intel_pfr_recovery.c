@@ -322,8 +322,6 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	if (status != Success)
 		return Failure;
 
-	source_address += CONFIG_BMC_STAGING_SIZE;
-
 	manifest->image_type = BMC_TYPE;
 	manifest->address = source_address;
 

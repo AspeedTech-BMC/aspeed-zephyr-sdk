@@ -154,7 +154,7 @@ config PCH_STAGING_SIZE
 	  The max size of PCH staging area for putting signed PCH capsule.
 
 config BMC_PFR_STAGING_OFFSET
-	default 0xcde0000
+	default 0xbde0000
 	hex "PFR staging region offset in BMC flash"
 	help
 	  The starting offset of PFR staging region, and this is also for Cerberus PFR provisioning.

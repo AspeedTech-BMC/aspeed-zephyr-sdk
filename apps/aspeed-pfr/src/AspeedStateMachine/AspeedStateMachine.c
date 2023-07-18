@@ -135,9 +135,6 @@ int get_staging_hash(uint8_t image_type, CPLD_STATUS *cpld_status, uint8_t *hash
 		if (ufm_read(PROVISION_UFM, ufm_staging_offset, (uint8_t *)&address,
 					sizeof(address)))
 			return -1;
-
-		if (image_type == PCH_TYPE && cpld_status->BmcStatus == 1)
-			address += CONFIG_BMC_STAGING_SIZE;
 	}
 
 	pfr_manifest->flash->state->device_id[0] = flash_type;
@@ -1174,14 +1171,11 @@ int handle_recovery_requested(CPLD_STATUS *cpld_status,
 
 	*update_region &= ~update_type;
 
+	if (cpld_status->Region[region].Recoveryregion == BMC_INTENT_RECOVERY_PENDING ||
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	if (cpld_status->Region[region].Recoveryregion == BMC_INTENT_RECOVERY_PENDING ||
-			cpld_status->Region[region].Recoveryregion == PCH_INTENT_RECOVERY_PENDING ||
-			cpld_status->Region[region].Recoveryregion == BMC_INTENT2_AFM_RECOVERY_PENDING) {
-#else
-	if (cpld_status->Region[region].Recoveryregion == BMC_INTENT_RECOVERY_PENDING ||
-			cpld_status->Region[region].Recoveryregion == PCH_INTENT_RECOVERY_PENDING) {
+			cpld_status->Region[region].Recoveryregion == BMC_INTENT2_AFM_RECOVERY_PENDING ||
 #endif
+			cpld_status->Region[region].Recoveryregion == PCH_INTENT_RECOVERY_PENDING) {
 		if (!(evt_ctx->data.bit8[2] & BootDoneRecovery)) {
 			LOG_WRN("System is booting, bypass pending revcovery update");
 			*image_type = 0xFFFFFFFF;

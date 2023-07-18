@@ -633,15 +633,7 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 
 	if (pfr_manifest->image_type == ROT_TYPE) {
 		pfr_manifest->image_type = BMC_TYPE;
-		if (ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
-					sizeof(source_address))) {
-			LOG_ERR("Read BMC staging region offset failed from UFM");
-			return Failure;
-		}
-
-		source_address += CONFIG_BMC_STAGING_SIZE;
-		source_address += CONFIG_BMC_PCH_STAGING_SIZE;
-		pfr_manifest->address = source_address;
+		pfr_manifest->address = CONFIG_BMC_PFR_STAGING_OFFSET;
 		return ast1060_update(pfr_manifest, flash_select);
 	}
 	else if (pfr_manifest->image_type == BMC_TYPE) {
@@ -695,8 +687,6 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 			if (status != Success)
 				return Failure;
 
-			// PFR Staging - PCH Staging offset after BMC staging offset
-			address += CONFIG_BMC_STAGING_SIZE;
 			pfr_manifest->address = address;
 
 			// Checking for key cancellation
@@ -906,8 +896,6 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 #endif
 		spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 
-		// PFR Staging - PCH Staging offset after BMC staging offset
-		address += CONFIG_BMC_STAGING_SIZE;
 		pfr_manifest->address = address;
 
 		// Checking for key cancellation
