@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 ASPEED Technology Inc.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <stdlib.h>
 #include <assert.h>
 #include <kernel.h>
@@ -426,11 +432,13 @@ static void *spdm_server_init()
 	libspdm_register_connection_state_callback_func(
 		spdm_ctx, spdm_server_connection_state_callback);
 
+#if LIBSPDM_CHECK_SPDM_CONTEXT
 	ret = libspdm_check_context(spdm_ctx);
 	if (!ret) {
 		LOG_ERR("SPDM Context check invalid");
 		goto cleanup;
 	}
+#endif
 
 	return spdm_ctx;
 cleanup:

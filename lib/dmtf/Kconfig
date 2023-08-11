@@ -1,0 +1,14 @@
+# Copyright (c) 2023 ASPEED Technology Inc.
+# SPDX-License-Identifier: MIT
+
+config DMTF_LIBSPDM
+	default n
+	bool "DMTF LIBSPDM"
+
+if DMTF_LIBSPDM
+
+config DMTF_LIBSPDM_CONFIG_FILE
+	string "Project based config file to replace spdm_lib_config.h"
+
+endif # DMTF_LIBSPDM
+

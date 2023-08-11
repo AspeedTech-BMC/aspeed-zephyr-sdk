@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 ASPEED Technology Inc.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "kernel.h"
 #include "library/cryptlib/cryptlib_cert.h"
 #include "library/spdm_return_status.h"
@@ -250,11 +256,13 @@ static void *spdm_client_init()
 	libspdm_set_data(spdm_ctx, LIBSPDM_DATA_OTHER_PARAMS_SUPPORT, &parameter,
 		  &data8, sizeof(data8));
 
+#if LIBSPDM_CHECK_SPDM_CONTEXT
 	res = libspdm_check_context(spdm_ctx);
 	if (!res) {
 		LOG_ERR("SPDM Context check invalid");
 		goto cleanup;
 	}
+#endif
 
 	ret = libspdm_init_connection(spdm_ctx, 0);
 	if (ret != LIBSPDM_STATUS_SUCCESS) {

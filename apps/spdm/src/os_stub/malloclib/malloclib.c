@@ -40,7 +40,7 @@ void free_pool(void *buffer)
 	free(buffer);
 }
 
-void mbedtls_platform_zeroize(void *buf, size_t len)
-{
-	libspdm_zero_mem(buf, len);
-}
+// void mbedtls_platform_zeroize(void *buf, size_t len)
+// {
+// 	libspdm_zero_mem(buf, len);
+// }

@@ -1,3 +1,3 @@
 [submodule "apps/spdm/src/libspdm"]
-	path = apps/spdm/src/libspdm
+	path = lib/dmtf/libspdm
 	url = https://github.com/dmtf/libspdm
