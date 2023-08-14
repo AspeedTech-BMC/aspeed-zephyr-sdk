@@ -78,8 +78,8 @@ static libspdm_return_t spdm_device_send_message(void *spdm_context,
 					  const void *message,
 					  uint64_t timeout)
 {
-	//LOG_INF("spdm_device_send_message ctx=%p buffer=%p", spdm_context, message);
-	LOG_HEXDUMP_INF(message, message_size, "spdm_device_send_message");
+	LOG_DBG("spdm_device_send_message ctx=%p buffer=%p", spdm_context, message);
+	LOG_HEXDUMP_DBG(message, message_size, "spdm_device_send_message");
 	
 	struct spdm_fifo_item_t *item = (struct spdm_fifo_item_t *)malloc(sizeof(struct spdm_fifo_item_t));
 	item->fifo_reserved = NULL;
@@ -88,7 +88,6 @@ static libspdm_return_t spdm_device_send_message(void *spdm_context,
 	item->message_size = message_size;
 
 	k_fifo_put(&REQ_TO_RSP, item);
-	//k_msleep(2);
 	return 0;
 }
 
@@ -96,15 +95,14 @@ static libspdm_return_t spdm_device_send_message(void *spdm_context,
 static libspdm_return_t spdm_device_receive_message(void *spdm_context, size_t *message_size, void **message, uint64_t timeout)
 {
 	struct spdm_fifo_item_t *item = k_fifo_get(&RSP_TO_REQ, K_FOREVER);
-	//k_msleep(2);
-	//LOG_INF("spdm_device_receive_message ctx=%p message=%p size=%d", spdm_context, item->message, item->message_size);
+	LOG_DBG("spdm_device_receive_message ctx=%p message=%p size=%d", spdm_context, item->message, item->message_size);
 
 	if (item != NULL && item->message != NULL)
 	{
 		uint8_t *buffer = *message;
 		*message_size = item->message_size;
 		memcpy(buffer, item->message, item->message_size);
-		LOG_HEXDUMP_INF(buffer, item->message_size, "Incoming message");
+		LOG_HEXDUMP_DBG(buffer, item->message_size, "Incoming message");
 		free(item->message);
 		free(item);
 	}
@@ -517,10 +515,6 @@ libspdm_return_t do_session_via_spdm(void *spdm_context, bool use_psk, uint32_t 
 	libspdm_return_t status;
 	uint8_t heartbeat_period;
 	uint8_t measurement_hash[LIBSPDM_MAX_HASH_SIZE];
-	size_t response_size;
-	bool result;
-	uint32_t response;
-
 
 	heartbeat_period = 0;
 	libspdm_zero_mem(measurement_hash, sizeof(measurement_hash));
@@ -531,13 +525,13 @@ libspdm_return_t do_session_via_spdm(void *spdm_context, bool use_psk, uint32_t 
 				0, 0, session_id,
 				&heartbeat_period, measurement_hash);
 	if (LIBSPDM_STATUS_IS_ERROR(status)) {
-		printf("libspdm_start_session - %x\n", (uint32_t)status);
+		LOG_ERR("libspdm_start_session - %x", (uint32_t)status);
 		return status;
 	}
 
 	status = libspdm_heartbeat(spdm_context, *session_id);
 	if (LIBSPDM_STATUS_IS_ERROR(status)) {
-		printf("libspdm_heartbeat - %x\n", (uint32_t)status);
+		LOG_ERR("libspdm_heartbeat - %x", (uint32_t)status);
 	}
 
 	return status;
@@ -567,7 +561,7 @@ void spdm_requester_main(void *a, void *b, void *c)
 				goto cleanup;
 			}
 
-			LOG_INF("SPDM Measuremnt Succesas count=%d", ++count);
+			LOG_INF("SPDM Measuremnt Success count=%d", ++count);
 			k_msleep(1);
 		} while (0);
 
@@ -592,8 +586,8 @@ void spdm_requester_main(void *a, void *b, void *c)
 				goto cleanup;
 			}
 
-			LOG_INF("SPDM Measuremnt Succesas count=%d", ++count);
-			k_msleep(1000);
+			LOG_INF("SPDM Measuremnt success count=%d", ++count);
+			k_msleep(100);
 		} while (1);
 cleanup:
 		libspdm_deinit_context(spdm_context);

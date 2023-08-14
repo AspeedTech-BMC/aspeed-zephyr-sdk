@@ -855,7 +855,7 @@ extern void my_free( void *ptr );
  *        MBEDTLS_ECP_ALT, MBEDTLS_ECDH_XXX_ALT, MBEDTLS_ECDSA_XXX_ALT
  *        and MBEDTLS_ECDH_LEGACY_CONTEXT.
  */
-/*#define MBEDTLS_ECP_RESTARTABLE*/
+#define MBEDTLS_ECP_RESTARTABLE
 
 /**
  * \def MBEDTLS_ECDH_LEGACY_CONTEXT
@@ -1482,7 +1482,7 @@ extern void my_free( void *ptr );
  *
  * Enable the checkup functions (*_self_test).
  */
-#define MBEDTLS_SELF_TEST
+//#define MBEDTLS_SELF_TEST
 
 /**
  * \def MBEDTLS_SHA256_SMALLER
@@ -1498,7 +1498,7 @@ extern void my_free( void *ptr );
  *
  * Uncomment to enable the smaller implementation of SHA256.
  */
-/*#define MBEDTLS_SHA256_SMALLER*/
+#define MBEDTLS_SHA256_SMALLER
 
 /**
  * \def MBEDTLS_SHA512_SMALLER
@@ -1508,7 +1508,7 @@ extern void my_free( void *ptr );
  *
  * Uncomment to enable the smaller implementation of SHA512.
  */
-/*#define MBEDTLS_SHA512_SMALLER*/
+#define MBEDTLS_SHA512_SMALLER
 
 /**
  * \def MBEDTLS_SHA512_NO_SHA384
@@ -2695,7 +2695,7 @@ extern void my_free( void *ptr );
  *
  * This module provides debugging functions.
  */
-/*#define MBEDTLS_DEBUG_C*/
+#define MBEDTLS_DEBUG_C
 
 /**
  * \def MBEDTLS_DES_C
@@ -3999,6 +3999,12 @@ extern int my_snprintf(char *str, size_t size, const char *format, ...);
  * Allow user to override any previous default.
  *
  */
+
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
+#define MBEDTLS_SHA1_C
+#define MBEDTLS_SHA224_C
+#define MBEDTLS_SHA384_C
+
 #if defined(MBEDTLS_USER_CONFIG_FILE)
 #include MBEDTLS_USER_CONFIG_FILE
 #endif

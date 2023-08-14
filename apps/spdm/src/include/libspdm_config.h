@@ -265,7 +265,7 @@
 #endif
 
 #ifndef LIBSPDM_ENABLE_CAPABILITY_CHUNK_CAP
-#define LIBSPDM_ENABLE_CAPABILITY_CHUNK_CAP 0
+#define LIBSPDM_ENABLE_CAPABILITY_CHUNK_CAP 1
 #endif
 
 /* If 1 then endpoint supports sending GET_CERTIFICATE and GET_DIGESTS requests.

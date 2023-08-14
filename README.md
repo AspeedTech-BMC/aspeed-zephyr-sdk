@@ -62,9 +62,9 @@ The requester will initiate the connection and establish a session.
 After the session is esatblished, the requester will ask for measurement and heartbeat every second.
 
 ## Fetch DMTF/LibSPDM codebase
-DMTF/LibSPDM doesn't support Zephyr module, so we use git submodule to recursivily fetch the code base and related libraries.
+DMTF/LibSPDM doesn't support Zephyr module, so we use git submodule to libspdm.
 ```
-git submodule update --init --recursive
+git submodule update --init
 
 ```
 

@@ -8,5 +8,5 @@ find_package(Zephyr HINTS $ENV{ZEPHYR_BASE})
 project(ast1030_spdm)
 
 zephyr_link_libraries(dmtf_libspdm)
-zephyr_include_directories(dmtf_libspdm)
+zephyr_include_directories(.)
 add_subdirectory(src)
