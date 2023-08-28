@@ -129,12 +129,6 @@ config BMC_STAGING_SIZE
 	help
 	  The max size of BMC staging area for putting signed BMC capsule.
 
-config BMC_PCH_STAGING_SIZE
-	default 0x1000000
-	hex "PCH staging region size in BMC flash"
-	help
-	  The max size of PCH staging area for putting signed PCH capsule.
-
 config BMC_PFR_STAGING_SIZE
 	default 0x100000
 	hex "PFR staging region size in BMC flash"
