@@ -595,7 +595,8 @@ int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
 			return Failure;
 		}
 
-		set_ufm_svn(SVN_POLICY_FOR_CPLD_UPDATE, hrot_svn);
+		if (flash_select == SECONDARY_FLASH_REGION)
+			set_ufm_svn(SVN_POLICY_FOR_CPLD_UPDATE, hrot_svn);
 		SetCpldRotSvn(hrot_svn);
 		LOG_INF("ROT %s update end", (flash_select == PRIMARY_FLASH_REGION)? "Active" : "Recovery");
 	}
