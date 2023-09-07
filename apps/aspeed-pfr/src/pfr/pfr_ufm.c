@@ -19,6 +19,7 @@
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(ufm, CONFIG_LOG_DEFAULT_LEVEL);
+extern uint8_t buffer[PAGE_SIZE];
 
 int get_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 {
@@ -34,7 +35,6 @@ int get_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 int set_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 {
 	int status;
-	uint8_t buffer[256] = {0};
 	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
 	if (offset + data_length > sizeof(buffer))
