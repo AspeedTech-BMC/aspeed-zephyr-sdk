@@ -239,7 +239,6 @@ int swmbx_mctp_i3c_doe_msg_write_handler(uint8_t addr, uint8_t data_len, uint8_t
 		GenerateStateMachineEvent(WDT_CHECKPOINT, data.ptr);
 		break;
 	case BmcUpdateIntent:
-	case PchUpdateIntent:
 		if (swmbx_write(gSwMbxDev, false, addr, swmbx_data))
 			goto error;
 		GenerateStateMachineEvent(UPDATE_REQUESTED, data.ptr);
@@ -334,7 +333,13 @@ void swmbx_notifyee_main(void *a, void *b, void *c)
 			data.bit8[0] = PchUpdateIntent;
 			swmbx_get_msg(0, PchUpdateIntent, &data.bit8[1]);
 
-			GenerateStateMachineEvent(UPDATE_REQUESTED, data.ptr);
+			// Only Bit[1:0] and Bit[7:6] have R/W access to PCH/CPU. Other bits are
+			// read only.
+			data.bit8[1] &= PchActiveRecoveryDynamicUpdateAtReset;
+			swmbx_write(gSwMbxDev, false, PchUpdateIntent, &data.bit8[1]);
+
+			if (data.bit8[1] & PchActiveRecoveryDynamicUpdateAtReset)
+				GenerateStateMachineEvent(UPDATE_REQUESTED, data.ptr);
 		} else if (events[5].state == K_POLL_STATE_SEM_AVAILABLE) {
 			/* BMC Checkpoint */
 			k_sem_take(events[5].sem, K_NO_WAIT);
