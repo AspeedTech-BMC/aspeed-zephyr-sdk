@@ -22,9 +22,6 @@ extern void aspeed_print_sysrst_info(void);
 
 void main(void)
 {
-	BMCBootHold();
-	PCHBootHold();
-
 	init_mp_status_gpios();
 
 	LOG_INF("*** ASPEED Preload FW version v%02d.%02d Board:%s ***", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, CONFIG_BOARD);
@@ -45,6 +42,9 @@ void main(void)
 #else
 #if defined(CONFIG_BOARD_AST1060_DCSCM_DICE)
 	PROV_STATUS ret;
+	BMCBootHold();
+	PCHBootHold();
+
 	ret = cert_provision();
 
 	if (ret == PROV_ROT_UPDATE) {
