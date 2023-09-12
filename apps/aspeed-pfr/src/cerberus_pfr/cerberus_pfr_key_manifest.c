@@ -88,6 +88,7 @@ int cerberus_pfr_get_public_key_hash(struct pfr_manifest *manifest, uint32_t add
 		return Failure;
 	}
 
+	manifest->flash->state->device_id[0] = manifest->image_type;
 	manifest->pfr_hash->start_address = address;
 	manifest->pfr_hash->length = sizeof(struct rsa_public_key);
 	manifest->pfr_hash->type = hash_type;

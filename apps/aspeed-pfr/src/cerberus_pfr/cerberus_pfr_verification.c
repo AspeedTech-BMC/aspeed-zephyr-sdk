@@ -322,7 +322,6 @@ int cerberus_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *
 	if (!manifest || !hash || !verification || !hash_out)
 		return Failure;
 
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 	struct pfr_manifest *pfr_manifest = (struct pfr_manifest *) manifest;
 	struct manifest_flash *manifest_flash = getManifestFlashInstance();
 	struct manifest_toc_header *toc_header = &manifest_flash->toc_header;
@@ -334,7 +333,7 @@ int cerberus_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *
 		return Failure;
 
 	read_address = pfr_manifest->address;
-	spi_flash->spi.state->device_id[0] = pfr_manifest->image_type;
+	pfr_manifest->flash->state->device_id[0] = pfr_manifest->image_type;
 	status = manifest_flash_init(manifest_flash, getFlashDeviceInstance(), read_address,
 			PFM_V2_MAGIC_NUM);
 	if (status) {

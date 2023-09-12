@@ -581,7 +581,7 @@ static int cmd_afm(const struct shell *shell, size_t argc, char **argv)
 
 #if defined(CONFIG_ASPEED_DICE_SHELL)
 
-extern uint8_t buffer[PAGE_SIZE] __aligned(16);
+uint8_t buffer[PAGE_SIZE] __aligned(16);
 
 #define CDI_LENGTH                        64
 #define CDI_ADDRESS                       0x79001800

@@ -56,7 +56,6 @@ int intel_pfr_pit_level1_verify(void)
 int intel_pfr_pit_level2_verify(void)
 {
 	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 	const struct device *flash_dev;
 	PFR_AUTHENTICATION_BLOCK1 block1;
 	KEY_ENTRY *root_entry;
@@ -106,8 +105,8 @@ int intel_pfr_pit_level2_verify(void)
 	flash_dev = device_get_binding(flash_devices[BMC_TYPE + 1]);
 	flash_size += flash_get_flash_size(flash_dev);
 #endif
-	spi_flash->spi.state->device_id[0] = BMC_TYPE;
 	pfr_manifest->image_type = BMC_TYPE;
+	pfr_manifest->flash->state->device_id[0] = BMC_TYPE;
 	pfr_manifest->pfr_hash->length = flash_size;
 	pfr_manifest->base->get_hash((struct manifest *)pfr_manifest, pfr_manifest->hash,
 			sha_buffer, hash_length);
@@ -135,8 +134,8 @@ int intel_pfr_pit_level2_verify(void)
 	flash_dev = device_get_binding(flash_devices[PCH_TYPE + 1]);
 	flash_size += flash_get_flash_size(flash_dev);
 #endif
-	spi_flash->spi.state->device_id[0] = PCH_TYPE;
 	pfr_manifest->image_type = PCH_TYPE;
+	pfr_manifest->flash->state->device_id[0] = PCH_TYPE;
 	pfr_manifest->pfr_hash->length = flash_size;
 	pfr_manifest->base->get_hash((struct manifest *)pfr_manifest, pfr_manifest->hash,
 			sha_buffer, hash_length);
@@ -271,6 +270,7 @@ int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 		return Failure;
 	}
 
+	manifest->flash->state->device_id[0] = manifest->image_type;
 	manifest->pfr_hash->start_address = manifest->address;
 	manifest->pfr_hash->length = sizeof(PFR_AUTHENTICATION_BLOCK0);
 
@@ -553,6 +553,7 @@ int intel_block0_verify(struct pfr_manifest *manifest)
 	}
 
 	// Protected content length
+	manifest->flash->state->device_id[0] = manifest->image_type;
 	manifest->pc_length = block0_buffer->PcLength;
 	manifest->pfr_hash->start_address = manifest->address + PFM_SIG_BLOCK_SIZE;
 	manifest->pfr_hash->length = block0_buffer->PcLength;

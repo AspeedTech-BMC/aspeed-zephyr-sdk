@@ -5,6 +5,7 @@
  */
 
 #include <string.h>
+#include <soc.h>
 #include "common/common.h"
 #include "flash/flash_wrapper.h"
 #include "AspeedStateMachine/common_smc.h"
@@ -19,31 +20,26 @@
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(ufm, CONFIG_LOG_DEFAULT_LEVEL);
-extern uint8_t buffer[PAGE_SIZE];
 
 int get_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 {
 	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
-	spi_flash->spi.state->device_id[0] = ROT_INTERNAL_STATE; // Internal UFM SPI
-	status = spi_flash->spi.base.read((struct flash *)&spi_flash->spi, offset, data, data_length);
+	status = pfr_spi_read(ROT_INTERNAL_STATE, offset, data_length, data);
 
-	return Success;
+	return status;
 }
 
 int set_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 {
+	static uint8_t buffer[PAGE_SIZE] NON_CACHED_BSS_ALIGN16;
 	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
 	if (offset + data_length > sizeof(buffer))
 		return Failure;
 
-	spi_flash->spi.state->device_id[0] = ROT_INTERNAL_STATE; // Internal UFM SPI
-	status = spi_flash->spi.base.read((struct flash *)&spi_flash->spi, 0, buffer,
-			sizeof(buffer));
-	if (status != Success)
+	status = pfr_spi_read(ROT_INTERNAL_STATE, 0, sizeof(buffer), buffer);
+	if (status)
 		return Failure;
 
 	memcpy(buffer + offset, data, data_length);
@@ -51,12 +47,9 @@ int set_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)
 	if (status != Success)
 		return Failure;
 
-	status = spi_flash->spi.base.write((struct flash *)&spi_flash->spi, 0, buffer,
-			sizeof(buffer));
-	if (status != sizeof(buffer))
-		return Failure;
+	status = pfr_spi_write(ROT_INTERNAL_STATE, 0, sizeof(buffer), buffer);
 
-	return Success;
+	return status;
 }
 
 int ufm_read(uint32_t ufm_id, uint32_t offset, uint8_t *data, uint32_t data_length)

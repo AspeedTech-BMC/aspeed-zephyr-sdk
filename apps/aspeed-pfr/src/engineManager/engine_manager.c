@@ -29,6 +29,7 @@
 #include "manifestProcessor/manifestProcessor.h"
 #include "flash/flash_wrapper.h"
 #include "gpio/gpio_aspeed.h"
+#include "pfr/pfr_util.h"
 
 LOG_MODULE_REGISTER(engine, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -69,7 +70,7 @@ int initializeEngines(void)
 }
 
 #if defined(CONFIG_SEAMLESS_UPDATE)
-void apply_fvm_spi_protection(struct spi_engine_wrapper *spi_flash, uint32_t fvm_addr)
+void apply_fvm_spi_protection(uint32_t fvm_addr)
 {
 	uint32_t fvm_offset = fvm_addr + PFM_SIG_BLOCK_SIZE;
 	uint32_t fvm_body_offset = fvm_offset + sizeof(FVM_STRUCTURE);
@@ -88,20 +89,18 @@ void apply_fvm_spi_protection(struct spi_engine_wrapper *spi_flash, uint32_t fvm
 		"spi_m4"
 	};
 
-	spi_flash->spi.state->device_id[0] = PCH_SPI;
-	spi_flash->spi.base.read((struct flash *)&spi_flash->spi, fvm_offset, (uint8_t *)&fvm,
-			sizeof(FVM_STRUCTURE));
+	pfr_spi_read(PCH_SPI, fvm_offset, sizeof(FVM_STRUCTURE), (uint8_t *)&fvm);
 	fvm_body_end_addr = fvm_offset + fvm.Length;
 
 	while (fvm_body_offset < fvm_body_end_addr) {
-		spi_flash->spi.base.read((struct flash *)&spi_flash->spi, fvm_body_offset,
-				(uint8_t *)&spi_def, sizeof(PFM_SPI_DEFINITION));
+		pfr_spi_read(PCH_SPI, fvm_body_offset, sizeof(PFM_SPI_DEFINITION),
+				(uint8_t *)&spi_def);
 		if (spi_def.PFMDefinitionType == SPI_REGION) {
 			region_start_address = spi_def.RegionStartAddress;
 			region_end_address = spi_def.RegionEndAddress;
 			region_length = region_end_address - region_start_address;
 #if defined(CONFIG_CPU_DUAL_FLASH)
-			spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &flash_size);
+			flash_size = pfr_spi_get_device_size(PCH_SPI);
 			if (region_start_address >= flash_size && (region_end_address - 1) >= flash_size) {
 				region_start_address -= flash_size;
 				region_end_address -= flash_size;

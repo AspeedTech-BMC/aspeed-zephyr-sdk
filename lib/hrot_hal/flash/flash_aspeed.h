@@ -321,3 +321,15 @@ struct pspi_flash {
 
 int SPI_Command_Xfer(struct pspi_flash *flash, struct pflash_xfer *xfer);
 
+int bmc_pch_flash_read(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data);
+int rot_flash_read(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data);
+int bmc_pch_flash_write(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data);
+int rot_flash_write(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data);
+int bmc_pch_flash_erase(uint8_t device_id, uint32_t address, uint32_t size, bool sector_erase);
+int rot_flash_erase(uint8_t device_id, uint32_t address, uint32_t size, bool sector_erase);
+int bmc_pch_get_flash_size(uint8_t device_id);
+int rot_get_region_size(uint8_t device_id);
+int get_block_erase_size(uint8_t device_id);
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED) || defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
+void init_flash_rw_buf_mutex(void);
+#endif

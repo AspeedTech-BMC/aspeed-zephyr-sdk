@@ -36,7 +36,6 @@ void apply_pfm_protection(int spi_dev)
 	int spi_id = spi_dev;
 
 #if defined(CONFIG_BMC_DUAL_FLASH) || defined(CONFIG_CPU_DUAL_FLASH)
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 	int flash_size;
 #endif
 
@@ -67,7 +66,7 @@ void apply_pfm_protection(int spi_dev)
 
 #if defined(CONFIG_BMC_DUAL_FLASH)
 		if (spi_dev == BMC_SPI) {
-			spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &flash_size);
+			flash_size = pfr_spi_get_device_size(spi_dev);
 			if (region_start_address >= flash_size && region_end_address >= flash_size) {
 				region_start_address -= flash_size;
 				region_end_address -= flash_size;
@@ -83,7 +82,7 @@ void apply_pfm_protection(int spi_dev)
 
 #if defined(CONFIG_CPU_DUAL_FLASH)
 		if (spi_dev == PCH_SPI) {
-			spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &flash_size);
+			flash_size = pfr_spi_get_device_size(spi_dev);
 			if (region_start_address >= flash_size && region_end_address >= flash_size) {
 				region_start_address -= flash_size;
 				region_end_address -= flash_size;

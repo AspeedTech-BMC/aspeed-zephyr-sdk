@@ -181,6 +181,7 @@ int spi_region_hash_verification(struct pfr_manifest *pfr_manifest,
 			return Failure;
 		}
 
+		pfr_manifest->flash->state->device_id[0] = pfr_manifest->image_type;
 		pfr_manifest->base->get_hash((struct manifest *)pfr_manifest, pfr_manifest->hash,
 				sha_buffer, hash_length);
 

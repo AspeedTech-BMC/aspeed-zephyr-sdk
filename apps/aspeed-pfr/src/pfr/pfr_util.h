@@ -25,8 +25,6 @@ int pfr_spi_erase_region(uint8_t device_id,
 
 int pfr_spi_region_read_write_between_spi(uint8_t src_dev, uint32_t src_addr,
 		uint8_t dest_dev, uint32_t dest_addr, size_t length);
-int pfr_spi_page_read_write_between_spi(uint8_t source_flash, uint32_t *source_address,
-		uint8_t target_flash, uint32_t *target_address);
 
 uint32_t pfr_spi_get_device_size(uint8_t device_id);
 

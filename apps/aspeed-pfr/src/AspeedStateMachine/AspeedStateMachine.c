@@ -189,6 +189,10 @@ void do_init(void *o)
 	debug_log_init();
 	spim_irq_init();
 
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED) || defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
+	init_flash_rw_buf_mutex();
+#endif
+
 	BMCBootHold();
 	PCHBootHold();
 
@@ -1951,7 +1955,7 @@ void AspeedStateMachine(void)
 				 * This event will be generate only if the police bits are set to 1
 				 * AFM1/AFM2 failed recovery HOST Firmware
 				 * AFM3 failed recovery BMC Firmware
-				 * 
+				 *
 				 * TODO:
 				 * AFMn failed customization... only generate log for now.
 				 *

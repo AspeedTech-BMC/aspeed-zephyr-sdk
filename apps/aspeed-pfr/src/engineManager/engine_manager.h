@@ -30,4 +30,4 @@ struct engine_instances {
 };
 
 int initializeEngines(void);
-void apply_fvm_spi_protection(struct spi_engine_wrapper *spi_flash, uint32_t fvm_addr);
+void apply_fvm_spi_protection(uint32_t fvm_addr);

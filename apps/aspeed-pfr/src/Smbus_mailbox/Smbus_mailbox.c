@@ -5,8 +5,10 @@
  */
 
 #include <zephyr.h>
+#include <storage/flash_map.h>
 #include <drivers/i2c.h>
 #include <drivers/i2c/pfr/swmbx.h>
+#include <drivers/spi_nor.h>
 #include <logging/log.h>
 #include <drivers/gpio.h>
 #include <build_config.h>
@@ -94,13 +96,13 @@ int erase_provision_flash(void)
  **/
 int erase_provision_ufm_flash(void)
 {
-	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
+	uint32_t region_size = pfr_spi_get_device_size(ROT_INTERNAL_INTEL_STATE);
+	if (pfr_spi_erase_region(ROT_INTERNAL_INTEL_STATE, true, 0, region_size)) {
+		LOG_ERR("Erase the provisioned UFM data failed");
+		return Failure;
+	}
 
-	spi_flash->spi.state->device_id[0] = ROT_INTERNAL_INTEL_STATE;
-	status = spi_flash->spi.base.sector_erase((struct flash *)&spi_flash->spi, 0);
-
-	return status;
+	return Success;
 }
 
 /**
@@ -110,34 +112,22 @@ int erase_provision_ufm_flash(void)
  **/
 int get_provision_data_in_flash(uint32_t addr, uint8_t *DataBuffer, uint32_t length)
 {
-	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
+	int status = pfr_spi_read(ROT_INTERNAL_INTEL_STATE, addr, length, DataBuffer);
 
-	spi_flash->spi.state->device_id[0] = ROT_INTERNAL_INTEL_STATE; // Internal UFM SPI
-	status = spi_flash->spi.base.read((struct flash *)&spi_flash->spi, addr, DataBuffer, length);
-
-	if (status != Success)
-		return Failure;
-
-	return Success;
+	return status;
 }
 
 int set_provision_data_in_flash(uint32_t addr, uint8_t *DataBuffer, uint32_t length)
 {
 	int status;
 	uint8_t buffer[PROVISION_UFM_SIZE];
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
 	if (addr + length > ARRAY_SIZE(buffer)) {
 		LOG_ERR("offset(0x%x) exceeds UFM max size(%ld)",  addr + length, ARRAY_SIZE(buffer));
 		return Failure;
 	}
 
-	spi_flash->spi.state->device_id[0] = ROT_INTERNAL_INTEL_STATE;
-
-	// Read Intel State
-	status = spi_flash->spi.base.read((struct flash *)&spi_flash->spi, 0, buffer,
-			ARRAY_SIZE(buffer));
+	status = get_provision_data_in_flash(0, buffer, ARRAY_SIZE(buffer));
 	if (status != Success)
 		return Failure;
 
@@ -146,12 +136,9 @@ int set_provision_data_in_flash(uint32_t addr, uint8_t *DataBuffer, uint32_t len
 		return Failure;
 
 	memcpy(buffer + addr, DataBuffer, length);
-	status = spi_flash->spi.base.write((struct flash *)&spi_flash->spi,
-					0, buffer, ARRAY_SIZE(buffer));
-	if (status != ARRAY_SIZE(buffer))
-		return Failure;
+	pfr_spi_write(ROT_INTERNAL_INTEL_STATE, 0, ARRAY_SIZE(buffer), buffer);
 
-	return Success;
+	return status;
 }
 
 #define SWMBX_NOTIFYEE_STACK_SIZE 1024
@@ -503,6 +490,7 @@ void InitializeSmbusMailbox(void)
 
 	// Generate hash of rot active image
 	// default hashing algorithm sha384
+	pfr_manifest->flash->state->device_id[0] = ROT_INTERNAL_ACTIVE;
 	pfr_manifest->image_type = ROT_INTERNAL_ACTIVE;
 	pfr_manifest->pfr_hash->type = HASH_TYPE_SHA384;
 	pfr_manifest->pfr_hash->start_address = 0;

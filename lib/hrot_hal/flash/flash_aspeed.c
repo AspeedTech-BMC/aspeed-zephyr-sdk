@@ -32,21 +32,23 @@ static char *Flash_Devices_List[6] = {
 	"fmc_cs1"
 };
 
-#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED)
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED) || defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
+struct k_mutex flash_rw_mutex;
+static bool mutex_init = false;
 static uint8_t flash_rw_buf[16384] NON_CACHED_BSS_ALIGN16;
 #endif
 
-static void Data_dump_buf(uint8_t *buf, uint32_t len)
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED) || defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
+void init_flash_rw_buf_mutex(void)
 {
-	uint32_t i;
-
-	for (i = 0; i < len; i++) {
-		printk("%02x ", buf[i]);
-		if (i % 16 == 15)
-			printk("\n");
+	if (!mutex_init) {
+		k_mutex_init(&flash_rw_mutex);
+		mutex_init = true;
 	}
-	printk("\n");
 }
+#endif
+
+int get_rot_region(uint8_t device_id, const struct flash_area **fa);
 
 int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 {
@@ -54,96 +56,34 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	uint8_t DeviceId = flash->state->device_id[0];
 	int AdrOffset = xfer->address;
 	int Datalen = xfer->length;
-	uint8_t *buf_addr = xfer->data;
 	uint32_t FlashSize = 0;
 	int ret = 0;
-	int page_sz = 0;
-
-	flash_device = device_get_binding(Flash_Devices_List[DeviceId]);
-	if (!flash_device) {
-
-		LOG_DBG("%s doesn't exist.\n", Flash_Devices_List[DeviceId]);
-		return -1;
-	}
-
-#if defined(CONFIG_BMC_DUAL_FLASH)
-	if (DeviceId == BMC_SPI) {
-		FlashSize = flash_get_flash_size(flash_device);
-		if (AdrOffset >= FlashSize) {
-			DeviceId += 1;
-			AdrOffset -= FlashSize;
-			flash_device = device_get_binding(Flash_Devices_List[DeviceId]);
-		}
-	}
-#endif
-
-#if defined(CONFIG_CPU_DUAL_FLASH)
-	if (DeviceId == PCH_SPI) {
-		FlashSize = flash_get_flash_size(flash_device);
-		if (AdrOffset >= FlashSize) {
-			DeviceId += 1;
-			AdrOffset -= FlashSize;
-			flash_device = device_get_binding(Flash_Devices_List[DeviceId]);
-		}
-	}
-#endif
 
 	switch (xfer->cmd) {
 	case SPI_APP_CMD_GET_FLASH_SIZE:
-		if (!FlashSize)
-			FlashSize = flash_get_flash_size(flash_device);
-		return FlashSize;
+		return bmc_pch_get_flash_size(DeviceId);
 	break;
-#if 0
-	case SPI_APP_CMD_GET_FLASH_SECTOR_SIZE:
-		page_sz = flash_get_write_block_size(flash_device);
-		return page_sz;
-	break;
-#else
 	case MIDLEY_FLASH_CMD_WREN:
 		ret = 0;	// bypass as write enabled
 	break;
-#endif
 	case SPI_APP_CMD_GET_FLASH_BLOCK_SIZE:
-		page_sz = spi_nor_get_erase_sz(flash_device, MIDLEY_FLASH_CMD_BLOCK_ERASE);
-		return page_sz;
+		return get_block_erase_size(DeviceId);
 	break;
 	case MIDLEY_FLASH_CMD_READ:
-#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED)
-	        if (buf_addr >= (uint8_t *)NON_CACHED_SRAM_START && buf_addr < (uint8_t *)NON_CACHED_SRAM_END) {
-			ret = flash_read(flash_device, AdrOffset, xfer->data, Datalen);
-		} else {
-			ret = flash_read(flash_device, AdrOffset, flash_rw_buf, Datalen);
-			memcpy(xfer->data, flash_rw_buf, Datalen);
-		}
-#else
-		ret = flash_read(flash_device, AdrOffset, xfer->data, Datalen);
-#endif
-		//Data_dump_buf(buf,Datalen);
+		ret = bmc_pch_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
-#if defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
-	        if (buf_addr >= NON_CACHED_SRAM_START && buf_addr < NON_CACHED_SRAM_END) {
-			ret = flash_write(flash_device, AdrOffset, xfer->data, Datalen);
-		} else {
-			memcpy(flash_rw_buf, xfer->data, Datalen);
-			ret = flash_write(flash_device, AdrOffset, flash_rw_buf, Datalen);
-		}
-#else
-		ret = flash_write(flash_device, AdrOffset, xfer->data, Datalen);
-#endif
+		ret = bmc_pch_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
-		ret = spi_nor_erase_by_cmd(flash_device, AdrOffset, SECTOR_SIZE,
-				MIDLEY_FLASH_CMD_4K_ERASE);
+		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, SECTOR_SIZE, true);
 	break;
 	case MIDLEY_FLASH_CMD_BLOCK_ERASE:
-		ret = spi_nor_erase_by_cmd(flash_device, AdrOffset, BLOCK_SIZE,
-				MIDLEY_FLASH_CMD_BLOCK_ERASE);
+		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, BLOCK_SIZE, false);
 	break;
 	case MIDLEY_FLASH_CMD_CE:
-		FlashSize = flash_get_flash_size(flash_device);
-		ret = flash_erase(flash_device, 0, FlashSize);
+		FlashSize = bmc_pch_get_flash_size(DeviceId);
+		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
 		// bypass as flash status are write enabled and not busy
@@ -160,106 +100,29 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 
 int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 {
-	const struct device *flash_device;
-	const struct flash_area *partition_device;
-	uint8_t *buf_addr = xfer->data;
-	uint32_t FlashSize;
-	int AdrOffset;
-	int Datalen;
-	int ret = 0;
-
 	uint8_t DeviceId = flash->state->device_id[0];
-	if (DeviceId <= ROT_INTERNAL_AFM)
-		flash_device = device_get_binding(Flash_Devices_List[ROT_SPI]);
-	else
-		flash_device = device_get_binding(Flash_Devices_List[ROT_EXT_SPI]);
-
-	AdrOffset = xfer->address;
-	Datalen = xfer->length;
-
-	switch (DeviceId) {
-	case ROT_INTERNAL_ACTIVE:
-		ret = flash_area_open(FLASH_AREA_ID(active), &partition_device);
-		break;
-	case ROT_INTERNAL_RECOVERY:
-		ret = flash_area_open(FLASH_AREA_ID(recovery), &partition_device);
-		break;
-	case ROT_INTERNAL_STATE:
-		ret = flash_area_open(FLASH_AREA_ID(state), &partition_device);
-		break;
-	case ROT_INTERNAL_INTEL_STATE:
-		ret = flash_area_open(FLASH_AREA_ID(intel_state), &partition_device);
-		break;
-	case ROT_INTERNAL_KEY:
-		ret = flash_area_open(FLASH_AREA_ID(key), &partition_device);
-		break;
-#if defined(CONFIG_BOOTLOADER_MCUBOOT)
-	case ROT_INTERNAL_CERTIFICATE:
-		ret = flash_area_open(FLASH_AREA_ID(certificate), &partition_device);
-		break;
-#endif
-#if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	case ROT_INTERNAL_AFM:
-		ret = flash_area_open(FLASH_AREA_ID(afm_act_1), &partition_device);
-		break;
-#endif
-#if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
-	case ROT_EXT_CPLD_ACT:
-		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_act), &partition_device);
-		break;
-	case ROT_EXT_CPLD_RC:
-		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_rc), &partition_device);
-		break;
-#endif
-	default:
-		ret = -1;
-		break;
-	}
-
-	if (ret) {
-		LOG_ERR("Unknown partition");
-		return ret;
-	}
+	uint32_t AdrOffset = xfer->address;
+	uint32_t Datalen = xfer->length;
+	int ret = -1;
 
 	switch (xfer->cmd) {
 	case SPI_APP_CMD_GET_FLASH_SIZE:
-		FlashSize = partition_device->fa_size;
-		return FlashSize;
+		return rot_get_region_size(DeviceId);
 	break;
 	case MIDLEY_FLASH_CMD_WREN:
 		ret = 0;	// bypass as write enabled
 	break;
 	case MIDLEY_FLASH_CMD_READ:
-#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED)
-	        if (buf_addr >= (uint8_t *)NON_CACHED_SRAM_START && buf_addr < (uint8_t *)NON_CACHED_SRAM_END) {
-			ret = flash_area_read(partition_device, AdrOffset, xfer->data, Datalen);
-		} else {
-			ret = flash_area_read(partition_device, AdrOffset, flash_rw_buf, Datalen);
-			memcpy(xfer->data, flash_rw_buf, Datalen);
-		}
-#else
-		ret = flash_area_read(partition_device, AdrOffset, xfer->data, Datalen);
-#endif
+		ret = rot_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
-#if defined(CONFIG_SPI_DMA_WRITE_SUPPORT_ASPEED)
-	        if (buf_addr >= NON_CACHED_SRAM_START && buf_addr < NON_CACHED_SRAM_END) {
-			ret = flash_area_write(partition_device, AdrOffset, xfer->data, Datalen);
-		} else {
-			memcpy(flash_rw_buf, xfer->data, Datalen);
-			ret = flash_area_write(partition_device, AdrOffset, flash_rw_buf, Datalen);
-		}
-#else
-		ret = flash_area_write(partition_device, AdrOffset, xfer->data, Datalen);
-#endif
+		ret = rot_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
-		ret = spi_nor_erase_by_cmd(flash_device, partition_device->fa_off + AdrOffset,
-				SECTOR_SIZE, MIDLEY_FLASH_CMD_4K_ERASE);
+		ret = rot_flash_erase(DeviceId, AdrOffset, SECTOR_SIZE, true);
 	break;
 	case MIDLEY_FLASH_CMD_BLOCK_ERASE:
-		ret = spi_nor_erase_by_cmd(flash_device, partition_device->fa_off + AdrOffset,
-				BLOCK_SIZE, MIDLEY_FLASH_CMD_BLOCK_ERASE);
+		ret = rot_flash_erase(DeviceId, AdrOffset, BLOCK_SIZE, false);
 	break;
 	case MIDLEY_FLASH_CMD_CE:
 		LOG_DBG("%d Command is not supported\n", xfer->cmd);
@@ -290,3 +153,270 @@ int SPI_Command_Xfer(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	return ret;
 }
 
+int get_flash_dev(uint8_t device_id, uint32_t *address, const struct device **dev)
+{
+	uint32_t flash_sz = 0;
+
+	*dev = device_get_binding(Flash_Devices_List[device_id]);
+	if (*dev == NULL)
+		return -1;
+
+#if defined(CONFIG_BMC_DUAL_FLASH)
+	if (device_id == BMC_SPI) {
+		flash_sz = flash_get_flash_size(*dev);
+		if (*address >= flash_sz) {
+			device_id += 1;
+			*address -= flash_sz;
+			*dev = device_get_binding(Flash_Devices_List[device_id]);
+		}
+	}
+#endif
+#if defined(CONFIG_CPU_DUAL_FLASH)
+	if (device_id == PCH_SPI) {
+		flash_sz = flash_get_flash_size(*dev);
+		if (*address >= flash_sz) {
+			device_id += 1;
+			*address -= flash_sz;
+			*dev = device_get_binding(Flash_Devices_List[device_id]);
+		}
+	}
+#endif
+	return 0;
+}
+
+int get_rot_region(uint8_t device_id, const struct flash_area **fa)
+{
+	int ret = 0;
+
+	switch (device_id) {
+	case ROT_INTERNAL_ACTIVE:
+		ret = flash_area_open(FLASH_AREA_ID(active), fa);
+		break;
+	case ROT_INTERNAL_RECOVERY:
+		ret = flash_area_open(FLASH_AREA_ID(recovery), fa);
+		break;
+	case ROT_INTERNAL_STATE:
+		ret = flash_area_open(FLASH_AREA_ID(state), fa);
+		break;
+	case ROT_INTERNAL_INTEL_STATE:
+		ret = flash_area_open(FLASH_AREA_ID(intel_state), fa);
+		break;
+	case ROT_INTERNAL_KEY:
+		ret = flash_area_open(FLASH_AREA_ID(key), fa);
+		break;
+#if defined(CONFIG_BOOTLOADER_MCUBOOT)
+	case ROT_INTERNAL_CERTIFICATE:
+		ret = flash_area_open(FLASH_AREA_ID(certificate), fa);
+		break;
+#endif
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+	case ROT_INTERNAL_AFM:
+		ret = flash_area_open(FLASH_AREA_ID(afm_act_1), fa);
+		break;
+#endif
+#if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
+	case ROT_EXT_CPLD_ACT:
+		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_act), fa);
+		break;
+	case ROT_EXT_CPLD_RC:
+		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_rc), fa);
+		break;
+#endif
+	default:
+		ret = -1;
+		break;
+	}
+
+	return ret;
+}
+
+int bmc_pch_flash_read(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
+{
+	const struct device *flash_dev;
+	int ret;
+
+	ret = get_flash_dev(device_id, &address, &flash_dev);
+	if (ret)
+		return ret;
+
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED)
+	if (data >= (uint8_t *)NON_CACHED_SRAM_START && data < (uint8_t *)NON_CACHED_SRAM_END) {
+		ret = flash_read(flash_dev, address, data, data_length);
+	} else {
+		if (k_mutex_lock(&flash_rw_mutex, K_MSEC(1000)))
+			return -1;
+		ret = flash_read(flash_dev, address, flash_rw_buf, data_length);
+		memcpy(data, flash_rw_buf, data_length);
+		k_mutex_unlock(&flash_rw_mutex);
+	}
+#else
+	ret = flash_read(flash_dev, address, data, data_length);
+#endif
+
+	return ret;
+}
+
+int rot_flash_read(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
+{
+	int ret = 0;
+	const struct flash_area *fa;
+
+	ret = get_rot_region(device_id, &fa);
+	if (ret)
+		return ret;
+
+#if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED)
+	if (data >= (uint8_t *)NON_CACHED_SRAM_START && data < (uint8_t *)NON_CACHED_SRAM_END) {
+		ret = flash_area_read(fa, address, data, data_length);
+	} else {
+		if (k_mutex_lock(&flash_rw_mutex, K_MSEC(1000)))
+			return -1;
+		ret = flash_area_read(fa, address, flash_rw_buf, data_length);
+		memcpy(data, flash_rw_buf, data_length);
+		k_mutex_unlock(&flash_rw_mutex);
+	}
+#else
+	ret = flash_area_read(fa, address, data, data_length);
+#endif
+
+	return ret;
+}
+
+int bmc_pch_flash_write(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
+{
+	const struct device *flash_dev;
+	int ret;
+
+	ret = get_flash_dev(device_id, &address, &flash_dev);
+	if (ret)
+		return ret;
+
+#if defined(CONFIG_SPI_DMA_WRITE_SUPPORT_ASPEED)
+	if (data >= (uint8_t *)NON_CACHED_SRAM_START && data < (uint8_t *)NON_CACHED_SRAM_END) {
+		ret = flash_write(flash_dev, address, data, data_length);
+	} else {
+		if (k_mutex_lock(&flash_rw_mutex, K_MSEC(1000)))
+			return -1;
+		ret = flash_write(flash_dev, address, flash_rw_buf, data_length);
+		memcpy(data, flash_rw_buf, data_length);
+		k_mutex_unlock(&flash_rw_mutex);
+	}
+#else
+	ret = flash_write(flash_dev, address, data, data_length);
+#endif
+
+	return ret;
+}
+
+int rot_flash_write(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
+{
+	int ret = 0;
+	const struct flash_area *fa;
+
+	ret = get_rot_region(device_id, &fa);
+	if (ret)
+		return ret;
+
+#if defined(CONFIG_SPI_DMA_WRITE_SUPPORT_ASPEED)
+	if (data >= (uint8_t *)NON_CACHED_SRAM_START && data < (uint8_t *)NON_CACHED_SRAM_END) {
+		ret = flash_area_write(fa, address, data, data_length);
+	} else {
+		if (k_mutex_lock(&flash_rw_mutex, K_MSEC(1000)))
+			return -1;
+		ret = flash_area_write(fa, address, flash_rw_buf, data_length);
+		memcpy(data, flash_rw_buf, data_length);
+		k_mutex_unlock(&flash_rw_mutex);
+	}
+#else
+	ret = flash_area_write(fa, address, data, data_length);
+#endif
+
+	return ret;
+}
+
+int bmc_pch_flash_erase(uint8_t device_id, uint32_t address, uint32_t size, bool sector_erase)
+{
+	const struct device *flash_dev;
+	int ret = get_flash_dev(device_id, &address, &flash_dev);
+	if (ret)
+		return ret;
+
+	if (sector_erase) {
+		if (size % SECTOR_SIZE)
+			return -1;
+		ret = spi_nor_erase_by_cmd(flash_dev, address, size,
+				MIDLEY_FLASH_CMD_4K_ERASE);
+	} else {
+		if (size % BLOCK_SIZE)
+			return -1;
+		ret = spi_nor_erase_by_cmd(flash_dev, address, size,
+				MIDLEY_FLASH_CMD_BLOCK_ERASE);
+	}
+
+	return ret;
+}
+
+int rot_flash_erase(uint8_t device_id, uint32_t address, uint32_t size, bool sector_erase)
+{
+	const struct flash_area *fa;
+	const struct device *flash_dev;
+	int ret = 0;
+
+	ret = get_rot_region(device_id, &fa);
+	if (ret)
+		return ret;
+
+	flash_dev = device_get_binding(fa->fa_dev_name);
+	if (!flash_dev)
+		return -1;
+
+	if (sector_erase) {
+		if (size % SECTOR_SIZE)
+			return -1;
+		ret = spi_nor_erase_by_cmd(flash_dev, fa->fa_off + address, size,
+				MIDLEY_FLASH_CMD_4K_ERASE);
+	} else {
+		if (size % BLOCK_SIZE)
+			return -1;
+		ret = spi_nor_erase_by_cmd(flash_dev, fa->fa_off + address, size,
+				MIDLEY_FLASH_CMD_BLOCK_ERASE);
+	}
+
+
+	return ret;
+}
+
+int bmc_pch_get_flash_size(uint8_t device_id)
+{
+	const struct device *flash_dev;
+	uint32_t flash_sz;
+	uint32_t address = 0;
+	int ret = get_flash_dev(device_id, &address, &flash_dev);
+	if (ret)
+		return ret;
+
+	flash_sz = flash_get_flash_size(flash_dev);
+	return flash_sz;
+}
+
+int rot_get_region_size(uint8_t device_id)
+{
+	const struct flash_area *fa;
+	int ret = 0;
+
+	ret = get_rot_region(device_id, &fa);
+	if (ret)
+		return ret;
+
+	return fa->fa_size;
+}
+
+int get_block_erase_size(uint8_t device_id)
+{
+	int block_erase_sz = 0;
+	const struct device *flash_device = device_get_binding(Flash_Devices_List[device_id]);
+
+	block_erase_sz = spi_nor_get_erase_sz(flash_device, MIDLEY_FLASH_CMD_BLOCK_ERASE);
+
+	return block_erase_sz;
+}

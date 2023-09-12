@@ -36,48 +36,65 @@
 #include <stdlib.h>
 #include <string.h>
 #include <soc.h>
+#include <drivers/flash.h>
+#include <storage/flash_map.h>
+
+#define NON_CACHED_SRAM_START      DT_REG_ADDR_BY_IDX(DT_NODELABEL(sram0), 1)
+#define NON_CACHED_SRAM_SIZE       DT_REG_SIZE_BY_IDX(DT_NODELABEL(sram0), 1)
+#define NON_CACHED_SRAM_END        (NON_CACHED_SRAM_START + NON_CACHED_SRAM_SIZE)
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
-uint8_t buffer[PAGE_SIZE] __aligned(16);
+uint8_t buffer[PAGE_SIZE] NON_CACHED_BSS_ALIGN16;
 
 int pfr_spi_read(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
 {
 	int status = 0;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	status = spi_flash->spi.base.read((struct flash *)&spi_flash->spi, address, data, data_length);
+	if (device_id <= PCH_SPI) {
+		status = bmc_pch_flash_read(device_id, address, data_length, data);
+	} else {
+		status = rot_flash_read(device_id, address, data_length, data);
+	}
+
 	return status;
 }
 
 int pfr_spi_write(uint8_t device_id, uint32_t address, uint32_t data_length, uint8_t *data)
 {
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
+	int status = 0;
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	if (spi_flash->spi.base.write((struct flash *)&spi_flash->spi, address, data, data_length) != data_length)
-		return Failure;
+	if (device_id <= PCH_SPI) {
+		status = bmc_pch_flash_write(device_id, address, data_length, data);
+	} else {
+		status = rot_flash_write(device_id, address, data_length, data);
+	}
 
-	return Success;
+	return status;
 }
 
 int pfr_spi_erase_4k(uint8_t device_id, uint32_t address)
 {
 	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	status = spi_flash->spi.base.sector_erase((struct flash *)&spi_flash->spi, address);
+	if (device_id <= PCH_SPI) {
+		status = bmc_pch_flash_erase(device_id, address, SECTOR_SIZE, true);
+	} else {
+		status = rot_flash_erase(device_id, address, SECTOR_SIZE, true);
+	}
+
 	return status;
 }
 
 int pfr_spi_erase_block(uint8_t device_id, uint32_t address)
 {
 	int status;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	status = spi_flash->spi.base.block_erase((struct flash *)&spi_flash->spi, address);
+	if (device_id <= PCH_SPI) {
+		status = bmc_pch_flash_erase(device_id, address, BLOCK_SIZE, false);
+	} else {
+		status = rot_flash_erase(device_id, address, BLOCK_SIZE, false);
+	}
+
 	return status;
 }
 
@@ -105,56 +122,33 @@ int pfr_spi_erase_region(uint8_t device_id,
 
 uint32_t pfr_spi_get_device_size(uint8_t device_id)
 {
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 	uint32_t size;
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &size);
+	if (device_id < ROT_INTERNAL_ACTIVE) {
+		size = bmc_pch_get_flash_size(device_id);
+	} else {
+		size = rot_get_region_size(device_id);
+	}
+
 	return size;
 }
 
 int pfr_spi_get_block_size(uint8_t device_id)
 {
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
-	int block_sz;
+	uint32_t block_size;
 
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	spi_flash->spi.base.get_block_size((struct flash *)&spi_flash->spi, &block_sz);
-	return block_sz;
+	block_size = get_block_erase_size(device_id);
+
+	return block_size;
 }
 
 int pfr_spi_page_read_write(uint8_t device_id, uint32_t source_address, uint32_t target_address)
 {
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
-
-	spi_flash->spi.state->device_id[0] = device_id; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	if (spi_flash->spi.base.read((struct flash *)&spi_flash->spi, source_address, buffer, PAGE_SIZE))
+	static uint8_t buffer[PAGE_SIZE] NON_CACHED_BSS_ALIGN16;
+	if (pfr_spi_read(device_id, source_address, PAGE_SIZE, buffer))
 		return Failure;
-	spi_flash->spi.base.write((struct flash *)&spi_flash->spi, target_address, buffer, PAGE_SIZE);
-
-	return Success;
-}
-
-int pfr_spi_page_read_write_between_spi(uint8_t source_flash, uint32_t *source_address, uint8_t target_flash, uint32_t *target_address)
-{
-	uint32_t index1, index2;
-
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
-
-
-	for (index1 = 0; index1 < (PAGE_SIZE / MAX_READ_SIZE); index1++) {
-		spi_flash->spi.state->device_id[0] = source_flash; // assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-		spi_flash->spi.base.read((struct flash *)&spi_flash->spi, *source_address, buffer, MAX_READ_SIZE);
-
-		for (index2 = 0; index2 < (MAX_READ_SIZE / MAX_WRITE_SIZE); index2++) {
-			spi_flash->spi.state->device_id[0] = target_flash;
-			spi_flash->spi.base.write((struct flash *)&spi_flash->spi, *target_address, &buffer[index2 * MAX_WRITE_SIZE], MAX_WRITE_SIZE);
-
-			*target_address += MAX_WRITE_SIZE;
-		}
-
-		*source_address += MAX_READ_SIZE;
-	}
+	if (pfr_spi_write(device_id, target_address, PAGE_SIZE, buffer))
+		return Failure;
 
 	return Success;
 }
@@ -162,14 +156,15 @@ int pfr_spi_page_read_write_between_spi(uint8_t source_flash, uint32_t *source_a
 int pfr_spi_region_read_write_between_spi(uint8_t src_dev, uint32_t src_addr,
 		uint8_t dest_dev, uint32_t dest_addr, size_t length)
 {
+	static uint8_t buffer[PAGE_SIZE] NON_CACHED_BSS_ALIGN16;
 	int i;
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 
 	for (i = 0; i < length / PAGE_SIZE; i++) {
-		spi_flash->spi.state->device_id[0] = src_dev;
-		spi_flash->spi.base.read((struct flash *)&spi_flash->spi, src_addr, buffer, PAGE_SIZE);
-		spi_flash->spi.state->device_id[0] = dest_dev;
-		spi_flash->spi.base.write((struct flash *)&spi_flash->spi, dest_addr, buffer, PAGE_SIZE);
+		if (pfr_spi_read(src_dev, src_addr, PAGE_SIZE, buffer))
+			return Failure;
+		if (pfr_spi_write(dest_dev, dest_addr, PAGE_SIZE, buffer))
+			return Failure;
+
 		src_addr += PAGE_SIZE;
 		dest_addr += PAGE_SIZE;
 	}
@@ -188,7 +183,13 @@ int get_hash(struct manifest *manifest, struct hash_engine *hash_engine, uint8_t
 		return Failure;
 	}
 
-	return flash_hash_contents((struct flash *)pfr_manifest->flash, pfr_manifest->pfr_hash->start_address, pfr_manifest->pfr_hash->length, pfr_manifest->hash, pfr_manifest->pfr_hash->type, hash_out, hash_length);
+	return flash_hash_contents((struct flash *)pfr_manifest->flash,
+			pfr_manifest->pfr_hash->start_address,
+			pfr_manifest->pfr_hash->length,
+			pfr_manifest->hash,
+			pfr_manifest->pfr_hash->type,
+			hash_out,
+			hash_length);
 }
 
 static int mbedtls_ecdsa_verify_middlelayer(struct pfr_pubkey *pubkey,

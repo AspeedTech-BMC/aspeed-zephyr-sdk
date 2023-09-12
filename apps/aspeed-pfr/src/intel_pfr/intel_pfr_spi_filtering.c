@@ -14,6 +14,7 @@
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "intel_pfr/intel_pfr_provision.h"
 #include "intel_pfr/intel_pfr_pfm_manifest.h"
+#include "pfr/pfr_util.h"
 
 #define SPIM_NUM  4
 
@@ -57,7 +58,6 @@ void apply_pfm_protection(int spi_device_id)
 	status = initializeEngines();
 	status = initializeManifestProcessor();
 
-	struct spi_engine_wrapper *spi_flash = getSpiEngineWrapper();
 	uint8_t pfm_length[4];
 	uint32_t pfm_read_address = 0;
 
@@ -90,8 +90,7 @@ void apply_pfm_protection(int spi_device_id)
 #endif
 
 	// assign the flash device id,  0:spi1_cs0, 1:spi2_cs0 , 2:spi2_cs1, 3:spi2_cs2, 4:fmc_cs0, 5:fmc_cs1
-	spi_flash->spi.state->device_id[0] = spi_device_id;
-	spi_flash->spi.base.read((struct flash *)&spi_flash->spi, addr_size_of_pfm, pfm_length, 4);
+	pfr_spi_read(spi_device_id, addr_size_of_pfm, 4, pfm_length);
 
 	int pfm_record_length = (pfm_length[0] & 0xff) | (pfm_length[1] << 8 & 0xff00) | (pfm_length[2] << 16 & 0xff0000) | (pfm_length[3] << 24 & 0xff000000);
 
@@ -100,7 +99,7 @@ void apply_pfm_protection(int spi_device_id)
 
 	while (!done) {
 		/* Read PFM Record */
-		spi_flash->spi.base.read((struct flash *)&spi_flash->spi, pfm_region_Start, region_record, default_region_length);
+		pfr_spi_read(spi_device_id, pfm_region_Start, default_region_length, region_record);
 		switch(region_record[0]) {
 		case SPI_REGION:
 			/* SPI Region: 0x01 */
@@ -120,7 +119,7 @@ void apply_pfm_protection(int spi_device_id)
 
 #if defined(CONFIG_BMC_DUAL_FLASH)
 			if (spi_device_id == BMC_SPI) {
-				spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &flash_size);
+				flash_size = pfr_spi_get_device_size(spi_device_id);
 				if (region_start_address >= flash_size && (region_end_address - 1) >= flash_size) {
 					region_start_address -= flash_size;
 					region_end_address -= flash_size;
@@ -136,7 +135,7 @@ void apply_pfm_protection(int spi_device_id)
 
 #if defined(CONFIG_CPU_DUAL_FLASH)
 			if (spi_device_id == PCH_SPI) {
-				spi_flash->spi.base.get_device_size((struct flash *)&spi_flash->spi, &flash_size);
+				flash_size = pfr_spi_get_device_size(spi_device_id);
 				if (region_start_address >= flash_size && (region_end_address - 1) >= flash_size) {
 					region_start_address -= flash_size;
 					region_end_address -= flash_size;
@@ -248,7 +247,7 @@ void apply_pfm_protection(int spi_device_id)
 #if defined(CONFIG_SEAMLESS_UPDATE)
 		case FVM_ADDR_DEF:
 			fvm_def = (PFM_FVM_ADDRESS_DEFINITION *)region_record;
-			apply_fvm_spi_protection(spi_flash, fvm_def->FVMAddress);
+			apply_fvm_spi_protection(fvm_def->FVMAddress);
 			pfm_region_Start += sizeof(PFM_FVM_ADDRESS_DEFINITION);
 			break;
 #endif
