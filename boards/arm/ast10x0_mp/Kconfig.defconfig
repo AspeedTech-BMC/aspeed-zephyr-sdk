@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Aspeed BIC AST10X0 board configuration
+#
+# Copyright (c) 2023 ASPEED Technology Inc.
+
+if BOARD_AST10X0_MP
+config BOARD
+	default "ast10x0_mp"
+endif # BOARD_AST10X0_MP
+

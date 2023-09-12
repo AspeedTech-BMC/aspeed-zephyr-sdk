@@ -19,7 +19,7 @@ pristine = config['BUILD_OPTION'].get('Pristine', 'always')
 
 def gen_preload_fw():
     cmd = 'cd ' + workspace_path + \
-            '; west build -b ast1060_mp' + \
+            '; west build -b ast10x0_mp' + \
             ' -d ' + build_path + 'preload' + \
             ' aspeed-zephyr-project/apps/preload-fw' + \
             ' -p ' + pristine

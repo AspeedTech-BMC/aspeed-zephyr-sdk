@@ -8,7 +8,7 @@
 #include <aspeed/ast10x0.dtsi>
 
 / {
-	model = "Aspeed AST1060 DCSCM Evaluation board for MP";
+	model = "Aspeed AST10X0 Evaluation board for MP";
 	compatible = "aspeed,bic-ast1030", "aspeed,ast1030";
 
 	chosen {

@@ -9,7 +9,7 @@
 #include <build_config.h>
 #include <shell/shell.h>
 #include <drivers/gpio.h>
-#if defined(CONFIG_AST1060_PROGRAMMER_MP)
+#if defined(CONFIG_AST10X0_PROGRAMMER_MP)
 #include "mp/mp_util.h"
 #else
 #include "certificate/cert_prov.h"
@@ -26,7 +26,7 @@ void main(void)
 
 	LOG_INF("*** ASPEED Preload FW version v%02d.%02d Board:%s ***", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, CONFIG_BOARD);
 	aspeed_print_sysrst_info();
-#if defined(CONFIG_AST1060_PROGRAMMER_MP)
+#if defined(CONFIG_AST10X0_PROGRAMMER_MP)
 	int ret;
 	uint32_t time_start, time_end;
 	time_start = k_uptime_get_32();

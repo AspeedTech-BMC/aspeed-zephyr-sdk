@@ -45,30 +45,30 @@ config ODM_ROT_REPLACEMENT
 	help
 	  Replace ROT firmware by mcuboot recovery mechanism after devid provisioned
 
-config AST1060_PROGRAMMER_MP
-	depends on BOARD_AST1060_MP
+config AST10X0_PROGRAMMER_MP
+	depends on BOARD_AST10X0_MP
 	default n
 	bool "MP via programmer"
 	help
 	  Support programming OTP and ROT firmware via programmer
 
 config MP_ROT_IMAGE_OFFSET
-	depends on AST1060_PROGRAMMER_MP
+	depends on AST10X0_PROGRAMMER_MP
 	default 0x60000
 	hex "ROT firmware image start address"
 
 config MP_ROT_IMAGE_SIZE
-	depends on AST1060_PROGRAMMER_MP
+	depends on AST10X0_PROGRAMMER_MP
 	default 0x60000
 	hex "ROT firmware image size"
 
 config MP_OTP_IMAGE_OFFSET
-	depends on AST1060_PROGRAMMER_MP
+	depends on AST10X0_PROGRAMMER_MP
 	default 0x40000
 	hex "OTP image start address"
 
 config MP_OTP_IMAGE_SIZE
-	depends on AST1060_PROGRAMMER_MP
+	depends on AST10X0_PROGRAMMER_MP
 	default 0x10000
 	hex "OTP image size"
 

@@ -1,5 +1,5 @@
-identifier: ast1060_mp
-name: AST1060-MP
+identifier: ast10x0_mp
+name: AST10X0-MP
 type: mcu
 arch: arm
 toolchain:
