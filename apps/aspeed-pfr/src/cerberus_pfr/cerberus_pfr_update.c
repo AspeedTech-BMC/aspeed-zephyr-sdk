@@ -421,7 +421,12 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 		pfr_manifest->flash_id = flash_id;
 		pc_type = PFR_CPLD_UPDATE_CAPSULE;
 		pfr_manifest->pc_type = pc_type;
+		if (cpld_update_status->Region[ROT_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
+			cpld_update_status->Region[ROT_REGION].Recoveryregion = 0;
 		return cerberus_hrot_update(pfr_manifest, flash_select);
+	} else {
+		LOG_ERR("Unknown image type : %x", pfr_manifest->image_type);
+		return Failure;
 	}
 
 	pfr_manifest->staging_address = source_address;
@@ -521,10 +526,12 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 			// BMC Update/Provisioning
 			get_provision_data_in_flash(BMC_STAGING_REGION_OFFSET, (uint8_t *)&source_address, sizeof(source_address));
 			get_provision_data_in_flash(BMC_RECOVERY_REGION_OFFSET, (uint8_t *)&target_address, sizeof(target_address));
+			cpld_update_status->Region[BMC_REGION].Recoveryregion = 0;
 		} else if (image_type == PCH_TYPE) {
 			// PCH Update
 			get_provision_data_in_flash(PCH_STAGING_REGION_OFFSET, (uint8_t *)&source_address, sizeof(source_address));
 			get_provision_data_in_flash(PCH_RECOVERY_REGION_OFFSET, (uint8_t *)&target_address, sizeof(target_address));
+			cpld_update_status->Region[PCH_REGION].Recoveryregion = 0;
 		}
 
 		if (ActiveObjectData->RestrictActiveUpdate == 1) {

@@ -635,6 +635,8 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 	if (pfr_manifest->image_type == ROT_TYPE) {
 		pfr_manifest->image_type = BMC_TYPE;
 		pfr_manifest->address = CONFIG_BMC_PFR_STAGING_OFFSET;
+		if (cpld_update_status->Region[ROT_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
+			cpld_update_status->Region[ROT_REGION].Recoveryregion = 0;
 		return ast1060_update(pfr_manifest, flash_select);
 	}
 	else if (pfr_manifest->image_type == BMC_TYPE) {
@@ -659,6 +661,8 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 		LOG_INF("AFM Update in progress");
 		pfr_manifest->image_type = BMC_TYPE;
 		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		if (cpld_update_status->Region[AFM_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
+			cpld_update_status->Region[AFM_REGION].Recoveryregion = 0;
 		return update_afm_image(pfr_manifest, flash_select, ActiveObjectData);
 	}
 #endif
@@ -779,11 +783,13 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 			LOG_INF("BMC Recovery Region Update");
 			status = ufm_read(PROVISION_UFM, BMC_RECOVERY_REGION_OFFSET,
 					(uint8_t *)&target_address, sizeof(target_address));
+			cpld_update_status->Region[BMC_REGION].Recoveryregion = 0;
 		}
 		else if (pfr_manifest->image_type == PCH_TYPE) {
 			LOG_INF("PCH Recovery Region Update");
 			status = ufm_read(PROVISION_UFM, PCH_RECOVERY_REGION_OFFSET,
 					(uint8_t *)&target_address, sizeof(target_address));
+			cpld_update_status->Region[PCH_REGION].Recoveryregion = 0;
 		}
 		else {
 			LOG_ERR("Unsupported image_type=%d", pfr_manifest->image_type);
