@@ -50,6 +50,8 @@ uint8_t gFifoData = 0;
 uint8_t gProvisionData = 0;
 CPLD_STATUS cpld_update_status;
 
+extern uint8_t gWdtBootStatus;
+
 void ResetMailBox(void)
 {
 	SetUfmStatusValue(COMMAND_DONE);   // reset ufm status
@@ -1266,8 +1268,12 @@ void process_provision_command(void)
  **/
 void UpdateBmcCheckpoint(byte Data)
 {
-	SetBmcCheckpoint(Data);
-	bmc_wdt_handler(Data);
+	if (gWdtBootStatus == WDT_BMC_BOOT_DONE_MASK) {
+		SetBmcCheckpoint(CompletingExecutionBlock);
+	} else {
+		SetBmcCheckpoint(Data);
+		bmc_wdt_handler(Data);
+	}
 }
 
 #if defined(CONFIG_INTEL_PFR)
@@ -1279,8 +1285,12 @@ void UpdateBmcCheckpoint(byte Data)
  **/
 void UpdateAcmCheckpoint(byte Data)
 {
-	SetAcmCheckpoint(Data);
-	acm_wdt_handler(Data);
+	if (gWdtBootStatus == WDT_ACM_BOOT_DONE_MASK) {
+		SetAcmCheckpoint(CompletingExecutionBlock);
+	} else {
+		SetAcmCheckpoint(Data);
+		acm_wdt_handler(Data);
+	}
 }
 #endif
 
@@ -1292,7 +1302,14 @@ void UpdateAcmCheckpoint(byte Data)
  **/
 void UpdateBiosCheckpoint(byte Data)
 {
-	SetBiosCheckpoint(Data);
-	bios_wdt_handler(Data);
+#if defined(CONFIG_INTEL_PFR)
+	if (gWdtBootStatus & WDT_OBB_BOOT_DONE_MASK) {
+#else
+	if (gWdtBootStatus & WDT_PCH_BOOT_DONE_MASK) {
+#endif
+		SetBiosCheckpoint(CompletingExecutionBlock);
+	} else {
+		SetBiosCheckpoint(Data);
+		bios_wdt_handler(Data);
+	}
 }
-

@@ -291,6 +291,7 @@ void enter_tmin1(void *o)
 		BMCBootHold();
 		evt_ctx->data.bit8[2] |= BmcOnlyReset;
 		gWdtBootStatus &= ~WDT_BMC_BOOT_DONE_MASK;
+		SetBmcCheckpoint(0);
 #if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
 		if (mctp_i3c_detach_slave_dev())
 			LOG_WRN("Failed to dettach i3c slave device");
@@ -301,6 +302,10 @@ void enter_tmin1(void *o)
 		PCHBootHold();
 		evt_ctx->data.bit8[2] |= PchOnlyReset;
 		gWdtBootStatus &= ~WDT_PCH_BOOT_DONE_MASK;
+#if defined(CONFIG_INTEL_PFR)
+		SetAcmCheckpoint(0);
+#endif
+		SetBiosCheckpoint(0);
 	} else {
 		evt_ctx->data.bit8[2] &= ~(BmcOnlyReset | PchOnlyReset);
 		BMCBootHold();
@@ -309,6 +314,11 @@ void enter_tmin1(void *o)
 		intel_rsu_unhide_rsu();
 #endif
 		gWdtBootStatus &= ~WDT_ALL_BOOT_DONE_MASK;
+#if defined(CONFIG_INTEL_PFR)
+		SetAcmCheckpoint(0);
+#endif
+		SetBmcCheckpoint(0);
+		SetBiosCheckpoint(0);
 #if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
 		if (mctp_i3c_detach_slave_dev())
 			LOG_WRN("Failed to dettach i3c slave device");

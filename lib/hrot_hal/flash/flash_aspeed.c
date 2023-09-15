@@ -52,7 +52,6 @@ int get_rot_region(uint8_t device_id, const struct flash_area **fa);
 
 int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 {
-	const struct device *flash_device;
 	uint8_t DeviceId = flash->state->device_id[0];
 	int AdrOffset = xfer->address;
 	int Datalen = xfer->length;
