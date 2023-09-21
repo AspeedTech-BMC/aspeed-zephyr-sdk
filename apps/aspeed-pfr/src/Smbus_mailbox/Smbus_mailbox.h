@@ -56,7 +56,7 @@ typedef enum _SMBUS_MAILBOX_RF_ADDRESS_READONLY {
 #endif
 	PchUpdateIntent2        = 0x61,
 	BmcUpdateIntent2        = 0x62,
-	Reserved                = 0x63,
+	UfmSmbusOwnership       = 0x63,
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	AfmActiveSvn            = 0x74,
 	AfmActiveMajorVersion   = 0x75,

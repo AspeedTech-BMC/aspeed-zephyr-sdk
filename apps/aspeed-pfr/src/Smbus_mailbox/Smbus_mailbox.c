@@ -145,7 +145,7 @@ int set_provision_data_in_flash(uint32_t addr, uint8_t *DataBuffer, uint32_t len
 
 #define SWMBX_NOTIFYEE_STACK_SIZE 1024
 
-#define TOTAL_MBOX_EVENT 10
+#define TOTAL_MBOX_EVENT 12
 
 struct k_thread swmbx_notifyee_thread;
 K_THREAD_STACK_DEFINE(swmbx_notifyee_stack, SWMBX_NOTIFYEE_STACK_SIZE);
@@ -160,6 +160,8 @@ K_SEM_DEFINE(acm_checkpoint_sem, 0, 1);
 K_SEM_DEFINE(bios_checkpoint_sem, 0, 1);
 K_SEM_DEFINE(bmc_update_intent2_sem, 0, 1);
 K_SEM_DEFINE(pch_update_intent2_sem, 0, 1);
+K_SEM_DEFINE(bmc_ufm_smbus_ownership_sem, 0, 1);
+K_SEM_DEFINE(pch_ufm_smbus_ownership_sem, 0, 1);
 
 struct k_mutex write_fifo_mutex;
 
@@ -264,6 +266,8 @@ void swmbx_notifyee_main(void *a, void *b, void *c)
 	k_poll_event_init(&events[7], K_POLL_TYPE_SEM_AVAILABLE, K_POLL_MODE_NOTIFY_ONLY, &bios_checkpoint_sem);
 	k_poll_event_init(&events[8], K_POLL_TYPE_SEM_AVAILABLE, K_POLL_MODE_NOTIFY_ONLY, &bmc_update_intent2_sem);
 	k_poll_event_init(&events[9], K_POLL_TYPE_SEM_AVAILABLE, K_POLL_MODE_NOTIFY_ONLY, &pch_update_intent2_sem);
+	k_poll_event_init(&events[10], K_POLL_TYPE_SEM_AVAILABLE, K_POLL_MODE_NOTIFY_ONLY, &bmc_ufm_smbus_ownership_sem);
+	k_poll_event_init(&events[11], K_POLL_TYPE_SEM_AVAILABLE, K_POLL_MODE_NOTIFY_ONLY, &pch_ufm_smbus_ownership_sem);
 
 	int ret, status;
 
@@ -365,6 +369,20 @@ void swmbx_notifyee_main(void *a, void *b, void *c)
 			swmbx_get_msg(0, PchUpdateIntent2, &data.bit8[1]);
 
 			GenerateStateMachineEvent(UPDATE_INTENT_2_REQUESTED, data.ptr);
+		} else if (events[10].state == K_POLL_STATE_SEM_AVAILABLE) {
+			k_sem_take(events[10].sem, K_NO_WAIT);
+			data.bit8[0] = UfmSmbusOwnership;
+			swmbx_get_msg(0, UfmSmbusOwnership, &data.bit8[1]);
+			// BMC has R/W access to Bit[1:0] and Bit[5].
+			data.bit8[1] &= 0x23;
+			swmbx_write(gSwMbxDev, false, UfmSmbusOwnership, &data.bit8[1]);
+		} else if (events[11].state == K_POLL_STATE_SEM_AVAILABLE) {
+			k_sem_take(events[11].sem, K_NO_WAIT);
+			data.bit8[0] = UfmSmbusOwnership;
+			swmbx_get_msg(0, UfmSmbusOwnership, &data.bit8[1]);
+			// PCH/CPU has R/W access to only Bit[1:0]
+			data.bit8[1] &= 0x3;
+			swmbx_write(gSwMbxDev, false, UfmSmbusOwnership, &data.bit8[1]);
 		}
 
 		for (size_t i = 0; i < TOTAL_MBOX_EVENT; ++i)
@@ -407,6 +425,7 @@ void InitializeSoftwareMailbox(void)
 	swmbx_update_notify(swmbx_dev, 0x0, &bmc_checkpoint_sem, BmcCheckpoint, true);
 	swmbx_update_notify(swmbx_dev, 0x0, &bmc_update_intent2_sem,
 			BmcUpdateIntent2, true);
+	swmbx_update_notify(swmbx_dev, 0x0, &bmc_ufm_smbus_ownership_sem, UfmSmbusOwnership, true);
 
 	/* From PCH */
 	swmbx_update_notify(swmbx_dev, 0x1, &ufm_write_fifo_data_sem, UfmWriteFIFO, true);
@@ -415,6 +434,7 @@ void InitializeSoftwareMailbox(void)
 	swmbx_update_notify(swmbx_dev, 0x1, &acm_checkpoint_sem, AcmCheckpoint, true);
 	swmbx_update_notify(swmbx_dev, 0x1, &bios_checkpoint_sem, BiosCheckpoint, true);
 	swmbx_update_notify(swmbx_dev, 0x1, &pch_update_intent2_sem, PchUpdateIntent2, true);
+	swmbx_update_notify(swmbx_dev, 0x1, &pch_ufm_smbus_ownership_sem, UfmSmbusOwnership, true);
 
 	/* Protect bit:
 	 * 0 means readable/writable
@@ -430,7 +450,7 @@ void InitializeSoftwareMailbox(void)
 			0xfff704ff, // 1fh ~ 00h
 			0xffffffff, // 3fh ~ 20h CPLD RoT Hash
 			0xffffffff, // 5fh ~ 40h CPLD RoT Hash
-			0xfffffffa, // 7fh ~ 60h
+			0xfffffff2, // 7fh ~ 60h
 			0xffffffff, // 9fh ~ 80h ACM/BIOS Scrachpad
 			0xffffffff, // bfh ~ a0h ACM/BIOS Scrachpad
 			0x00000000, // dfh ~ c0h BMC scrachpad
