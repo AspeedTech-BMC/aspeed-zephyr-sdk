@@ -203,4 +203,12 @@ config PFR_DEBUG_SHELL
 	select SPI_MONITOR_SHELL_ASPEED
 	select ASPEED_STATE_MACHINE_SHELL
 
+config PROVISION_SHELL
+        depends on PFR_DEBUG_SHELL
+        bool "Enable provision debug shell for development"
+        default n
+        help
+          provision debug shell command
+
+
 source "Kconfig.zephyr"

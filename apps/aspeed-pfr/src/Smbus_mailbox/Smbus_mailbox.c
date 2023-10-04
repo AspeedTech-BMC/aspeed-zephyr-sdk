@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <stdio.h>
 #include <zephyr.h>
 #include <storage/flash_map.h>
 #include <drivers/i2c.h>
@@ -40,8 +41,8 @@ const struct device *gSwMbxDev = NULL;
 uint8_t gUfmFifoData[64];
 uint8_t gReadFifoData[64];
 uint8_t gRootKeyHash[SHA384_DIGEST_LENGTH];
-uint8_t gPchOffsets[12];
-uint8_t gBmcOffsets[12];
+uint8_t gPchOffsets[PCH_OFFSET_SIZE];
+uint8_t gBmcOffsets[BMC_OFFSET_SIZE];
 #if defined(CONFIG_PIT_PROTECTION)
 uint8_t gPitPassword[8];
 #endif
@@ -1332,4 +1333,49 @@ void UpdateBiosCheckpoint(byte Data)
 		SetBiosCheckpoint(Data);
 		bios_wdt_handler(Data);
 	}
+}
+
+/**
+ * Function to show current provision data
+ *
+ * @Param  NULL
+ * @retval NULL
+ **/
+void show_provision_info(void)
+{
+	int i, len;
+	uint8_t tmpbuf[SHA384_DIGEST_LENGTH], ufm_status;
+	char msg[64];
+	uint32_t unprovision = 0xffffffff;
+
+	ufm_status = GetUfmStatusValue();
+
+	memset(tmpbuf, 0xff, sizeof(tmpbuf));
+	get_provision_data_in_flash(BMC_ACTIVE_PFM_OFFSET, tmpbuf, BMC_OFFSET_SIZE);
+	if (memcmp(tmpbuf, &unprovision, 4) == 0) {
+		LOG_INF("Unprovision");
+	} else {
+		LOG_INF("BMC Active PFM Offset : %08x", *(uint32_t *)&tmpbuf[0]);
+		LOG_INF("BMC Recovery Region Offset : %08x", *(uint32_t *)&tmpbuf[4]);
+		LOG_INF("BMC Staging Region Offset : %08x", *(uint32_t *)&tmpbuf[8]);
+		memset(tmpbuf, 0xff, BMC_OFFSET_SIZE);
+		get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, tmpbuf, PCH_OFFSET_SIZE);
+		LOG_INF("PCH Active PFM Offset : %08x", *(uint32_t *)&tmpbuf[0]);
+		LOG_INF("PCH Recovery Region Offset : %08x", *(uint32_t *)&tmpbuf[4]);
+		LOG_INF("PCH Staging Region Offset : %08x", *(uint32_t *)&tmpbuf[8]);
+		memset(tmpbuf, 0xff, BMC_OFFSET_SIZE);
+		get_provision_data_in_flash(ROOT_KEY_HASH, tmpbuf, SHA384_DIGEST_LENGTH);
+		LOG_INF("Root Key Hash:");
+		len = 0;
+		for (i = 0; i < SHA384_DIGEST_LENGTH; i++) {
+			len += sprintf(msg + len, "%02x ", tmpbuf[i]);
+			if (i % 16 == 15) {
+				LOG_INF("%s", log_strdup(msg));
+				len = 0;
+				memset(msg, 0, sizeof(msg));
+			}
+		}
+	}
+
+	LOG_INF("UFM/Provisioning Status Code : %x", ufm_status);
 }

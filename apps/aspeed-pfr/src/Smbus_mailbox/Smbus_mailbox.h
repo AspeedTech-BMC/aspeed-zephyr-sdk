@@ -180,6 +180,7 @@ void SetUfmCmdTriggerValue(byte UfmCommandTriggerValue);
 byte get_provision_command(void);
 void set_provision_command(byte UfmCommandValue);
 void set_provision_commandTrigger(byte UfmCommandTrigger);
+void show_provision_info();
 byte GetAcmCheckpoint(void);
 void SetAcmCheckpoint(byte AcmCheckpoint);
 byte GetBmcCheckpoint(void);
@@ -260,3 +261,7 @@ bool IsSpdmAttestationEnabled();
 
 int swmbx_mctp_i3c_doe_msg_write_handler(uint8_t addr, uint8_t data_len, uint8_t *swmbx_data);
 int swmbx_mctp_i3c_doe_msg_read_handler(uint8_t addr, uint8_t data_len, uint8_t *swmbx_data);
+
+#define BMC_OFFSET_SIZE 12
+#define PCH_OFFSET_SIZE 12
+

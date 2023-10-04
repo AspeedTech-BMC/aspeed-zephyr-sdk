@@ -328,6 +328,7 @@ void enter_tmin1(void *o)
 	}
 
 	SetPlatformState(ENTER_T_MINUS_1);
+	show_provision_info();
 	LOG_DBG("End");
 }
 
