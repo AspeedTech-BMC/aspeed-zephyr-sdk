@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2019 Alexander Wachter
+ * Copyright (c) 2023 ASPEED Technology Inc.
  *
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: MIT
  */
+
 #include <zephyr.h>
 #include <storage/flash_map.h>
 #include <drivers/i2c.h>
