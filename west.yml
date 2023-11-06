@@ -23,9 +23,9 @@ manifest:
           - mbedtls
     - name: cerberus
       remote: gerrit
-      revision: aspeed-dev
+      revision: 0a4ad308aa60606a55cdae86e117afa06ad97c86
       path: middlewares/cerberus
     - name: mcuboot
       remote: gerrit
-      revision: aspeed-dev-v2.6.0
+      revision: 08fb1a46db5e84b91f0eb34d7ae2faac8b53030f
       path: bootloader/mcuboot
