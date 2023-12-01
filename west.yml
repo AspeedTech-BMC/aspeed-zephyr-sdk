@@ -14,7 +14,7 @@ manifest:
   projects:
     - name: zephyr
       remote: gerrit
-      revision: 4e6167c406b473cb2a9ec2b9c78d00fdbf5316df
+      revision: b75daad187c420f8d37989bf5889e23cfca11d97
       import:
         name-whitelist:
           - mcumgr
@@ -23,9 +23,9 @@ manifest:
           - mbedtls
     - name: cerberus
       remote: gerrit
-      revision: 703de8bfd56162dfff546bb586b28c23fd44b9d0
+      revision: 51e55fa2c73f91a81629cefd081e049b5518d2f1
       path: middlewares/cerberus
     - name: mcuboot
       remote: gerrit
-      revision: 08fb1a46db5e84b91f0eb34d7ae2faac8b53030f
+      revision: 74c4d1c52fd51d07904b27a7aa9b2303e896a4e3
       path: bootloader/mcuboot

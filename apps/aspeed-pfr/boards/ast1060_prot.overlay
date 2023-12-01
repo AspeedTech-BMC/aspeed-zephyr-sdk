@@ -2,7 +2,6 @@
 #include "ast1060_prot_gpio_bhs.dts"
 
 &i2cfilter {
-	pinctrl-0 = <&pinctrl_smbflt_default>;
 	status = "okay";
 };
 
@@ -12,12 +11,10 @@
 
 &i2c0 {
 	status = "okay";
-	pinctrl-0 = <&pinctrl_i2c0_default>;
 
 	swmbx0: swmbx0@38 {
 		compatible = "aspeed,swmbx-dev";
 		reg = <0x38>;
-		label = "SWMBX_SLAVE_BMC";
 		size = <256>;
 		port = <0>;
 		status = "okay";
@@ -25,18 +22,15 @@
 };
 
 &i2c1 {
-	pinctrl-0 = <&pinctrl_i2c1_default>;
 	status = "okay";
 };
 
 &i2c2 {
-	pinctrl-0 = <&pinctrl_i2c2_default>;
 	status = "okay";
 
 	swmbx1: swmbx1@70 {
 		compatible = "aspeed,swmbx-dev";
 		reg = <0x70>;
-		label = "SWMBX_SLAVE_CPU";
 		size = <256>;
 		port = <1>;
 		status = "okay";
@@ -44,17 +38,14 @@
 };
 
 &i2c4 {
-	pinctrl-0 = <&pinctrl_i2c4_default>;
 	status = "okay";
 };
 
 &i2c5 {
-	pinctrl-0 = <&pinctrl_i2c5_default>;
 	status = "okay";
 };
 
 &i2c7 {
-	pinctrl-0 = <&pinctrl_i2c7_default>;
 	status = "okay";
 };
 
@@ -62,25 +53,6 @@
 // BMC i3c-5 -> AST1060 i3c-2
 &i3c2 {
 	status = "okay";
-	pinctrl-0 = <&pinctrl_hvi3c2_default>;
-
-#if 0
-	// For CONFIG_I3C_SLAVE=y
-	assigned-address = <0x9>;
-	pid-extra-info = <0x9>;
-	ibi-append-pec;
-	priv-xfer-pec;
-	secondary;
-	i3c2_smq:i3c-slave-mqueue@9 {
-		compatible = "aspeed,i3c-slave-mqueue";
-		reg = <0x9>;
-		msg-size = <256>;
-		num-of-msgs = <4>;
-		mandatory-data-byte = <0xbf>;
-		label = "I3C_SMQ_2";
-		status = "okay";
-	 };
-#endif
 };
 
 &wdt0 {
@@ -108,7 +80,6 @@
 };
 
 &fmc_cs0 {
-	/delete-property/ broken-sfdp;
 	/delete-property/ write-block-size;
 	status = "okay";
 	spi-max-buswidth = <4>;
@@ -122,28 +93,28 @@
 			reg = <0x0 0x60000>;
 		};
 
-		recovery_partition: partition@1 {
+		recovery_partition: partition@60000 {
 			label = "recovery";
 			reg = <0x60000 0x60000>;
 		};
 
-		state_partition: partition@2 {
+		state_partition: partition@c0000 {
 			label = "state";
 			reg = <0xC0000 0x10000>;
 		};
 
-		intel_state_partition: partition@3 {
+		intel_state_partition: partition@d0000 {
 			label = "intel_state";
 			reg = <0xD0000 0x10000>;
 		};
 
-		key_partition: partition@4 {
+		key_partition: partition@e0000 {
 			label = "key";
 			reg = <0xE0000 0x10000>;
 		};
 
 		/* For Intel-PFR 3.0 */
-		afm_act_1_partition: partition@5 {
+		afm_act_1_partition: partition@f0000 {
 			label = "afm_act_1";
 			reg = <0xF0000 0x10000>;
 		};
@@ -166,26 +137,26 @@
 			reg = <0x0 0x80000>;
 		};
 
-		afm_act_2_partition: partition@1 {
+		afm_act_2_partition: partition@80000 {
 			label = "afm_active_2";
 		}
 			reg = <0x80000 0x80000>;
 
-		afm_rcv_1_partition: partition@2 {
+		afm_rcv_1_partition: partition@100000 {
 			label = "afm_recovery_1";
 			reg = <0x100000 0x80000>;
 		};
 
-		afm_rcv_2_partition: partition@3 {
+		afm_rcv_2_partition: partition@180000 {
 			label = "afm_recovery_2";
 			reg = <0x180000 0x80000>;
 		};
 #endif
-		cpld_act_partition: partition@0 {
+		intel_cpld_act_partition: partition@0 {
 			label = "intel_cpld_act";
 			reg = <0x000000 0x200000>;
 		};
-		cpld_rcv_partition: partition@1 {
+		intel_cpld_rc_partition: partition@200000 {
 			label = "intel_cpld_rc";
 			reg = <0x200000 0x200000>;
 		};
@@ -314,7 +285,6 @@
 	status = "okay";
 };
 
-&timer0 {
+&uart5 {
 	status = "okay";
 };
-

@@ -17,10 +17,32 @@
 		zephyr,sram = &sram0;
 		zephyr,entropy = &rng;
 	};
+
+        /* For boot from uart, enable below setting and remove CONFIG_BOOTLOADER_MCUBOOT=y */
+	// sram1: memory@a0000 {
+	// 	compatible = "zephyr,memory-region", "mmio-sram";
+	// 	device_type = "memory";
+	// 	reg = <0xa0000 DT_SIZE_K(128)>;
+	// 	zephyr,memory-region = "RAM_NC";
+	// 	zephyr,memory-region-mpu = "RAM";
+	// };
+
+	sram1: memory@400 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		device_type = "memory";
+		reg = <0x400 DT_SIZE_K(191)>;
+		zephyr,memory-region = "RAM_NC";
+		zephyr,memory-region-mpu = "RAM";
+	};
 };
 
+/* For boot from uart, enable below setting and remove CONFIG_BOOTLOADER_MCUBOOT=y */
+// &sram0 {
+// 	reg = <0 DT_SIZE_K(640)>;
+// };
+
 &sram0 {
-	reg = <0x30000 DT_SIZE_K(575)>, <16 DT_SIZE_K(192)>;
+	reg = <0x30000 DT_SIZE_K(575)>;
 };
 
 &uart5 {

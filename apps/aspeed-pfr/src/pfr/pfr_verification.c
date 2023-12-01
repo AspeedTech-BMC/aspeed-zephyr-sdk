@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #if defined(CONFIG_INTEL_PFR)
 #include "intel_pfr/intel_pfr_authentication.h"
 #include "intel_pfr/intel_pfr_verification.h"

@@ -5,8 +5,8 @@
  */
 
 #if defined(CONFIG_PFR_MCTP)
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "cmd_interface/device_manager.h"
 #include "cmd_interface/cmd_interface.h"
 #include "cmd_interface/cmd_interface_system.h"

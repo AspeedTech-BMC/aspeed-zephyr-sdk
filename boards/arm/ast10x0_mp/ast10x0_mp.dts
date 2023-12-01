@@ -17,15 +17,22 @@
 		zephyr,sram = &sram0;
 		zephyr,entropy = &rng;
 	};
+
+	sram1: memory@a0000 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		device_type = "memory";
+		reg = <0xa0000 DT_SIZE_K(128)>;
+		zephyr,memory-region = "RAM_NC";
+		zephyr,memory-region-mpu = "RAM";
+	};
 };
 
 &sram0 {
-	reg = <0 DT_SIZE_K(640)>, <0xa0000 DT_SIZE_K(128)>;
+	reg = <0 DT_SIZE_K(640)>;
 };
 
 &uart5 {
 	clock-frequency = <1846153>;
 	current-speed = <115200>;
-	status = "okay";
 };
 

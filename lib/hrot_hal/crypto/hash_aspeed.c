@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <string.h>
-#include <sys/printk.h>
-#include <crypto/hash_structs.h>
-#include <crypto/hash.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/crypto/crypto.h>
+#include <zephyr/crypto/hash.h>
 #include "hash_aspeed.h"
 
 static struct hash_params hashParams;	// hash internal parameters
@@ -34,7 +34,6 @@ int hash_engine_sha_calculate(enum hash_algo algo, const uint8_t *data, size_t l
 	hashParams.pkt.in_buf = (uint8_t *)data; //plaint text info
 	hashParams.pkt.in_len = length; // plaint text size
 	hashParams.pkt.out_buf = hash; // hash value and this will updated by hash engine
-	hashParams.pkt.out_buf_max = hash_length; // hash length
 
 	if (hashParams.sessionReady)
 		ret = 0; // hash engine session is ready
@@ -45,7 +44,7 @@ int hash_engine_sha_calculate(enum hash_algo algo, const uint8_t *data, size_t l
 		ret = hash_update(&hashParams.ctx, &hashParams.pkt);  // update plaint text into hash engine
 
 		if (!ret) // success to update hash engine
-			ret = hash_final(&hashParams.ctx, &hashParams.pkt); // final setup hash engine
+			ret = hash_compute(&hashParams.ctx, &hashParams.pkt); // final setup hash engine
 	}
 
 	hash_free_session(dev, &hashParams.ctx); // free hash engine
@@ -71,6 +70,7 @@ int hash_engine_start(enum hash_algo algo)
 
 	memset(&hashParams, 0, sizeof(hashParams)); // clear all the hash internal parameters
 	dev = device_get_binding(HASH_DRV_NAME); // retrieves hash driver device info
+	hashParams.ctx.flags = crypto_query_hwcaps(dev);
 	ret = hash_begin_session(dev, &hashParams.ctx, algo); // initializes hash engine
 
 	if (!ret)
@@ -113,9 +113,8 @@ int hash_engine_finish(uint8_t *hash, size_t hash_length)
 	int ret;
 
 	hashParams.pkt.out_buf = hash; // hash value and this will updated by hash engine
-	hashParams.pkt.out_buf_max = hash_length; //hash size
 	hashParams.sessionReady = 0; // clear as hash engine session as expired, this should initialize again
-	ret = hash_final(&hashParams.ctx, &hashParams.pkt); // final setup hash engine
+	ret = hash_compute(&hashParams.ctx, &hashParams.pkt); // final setup hash engine
 	hash_free_session(dev, &hashParams.ctx); // free hash engine
 	return ret;
 }
@@ -155,7 +154,7 @@ struct hash_test_hmac_info {
 
 const struct hash_test_hmac_info HASH_TEST_CAL_SHA_INFO[] = {
 	{
-		.shaAlgo = HASH_SHA256,
+		.shaAlgo = CRYPTO_HASH_ALGO_SHA256,
 		.hmacLength = (256 / 8),
 		.message = "Test",
 		.messageSize = sizeof("Test") - 1,
@@ -164,7 +163,7 @@ const struct hash_test_hmac_info HASH_TEST_CAL_SHA_INFO[] = {
 	},
 #ifdef HASH_ENABLE_SHA384
 	{
-		.shaAlgo = HASH_SHA384,
+		.shaAlgo = CRYPTO_HASH_ALGO_SHA384,
 		.hmacLength = (384 / 8),
 		.message = "Test",
 		.messageSize = sizeof("Test") - 1,
@@ -175,7 +174,7 @@ const struct hash_test_hmac_info HASH_TEST_CAL_SHA_INFO[] = {
 #endif
 #ifdef HASH_ENABLE_SHA512
 	{
-		.shaAlgo = HASH_SHA512,
+		.shaAlgo = CRYPTO_HASH_ALGO_SHA512,
 		.hmacLength = (512 / 8),
 		.message = "Test",
 		.messageSize = sizeof("Test") - 1,

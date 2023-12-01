@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <flash/flash_aspeed.h>
 
 #include "intel_pfr_pfm_manifest.h"

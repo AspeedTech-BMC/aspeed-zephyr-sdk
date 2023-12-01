@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include "intel_pfr_definitions.h"
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)

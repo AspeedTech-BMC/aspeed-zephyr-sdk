@@ -7,8 +7,8 @@
 #pragma once
 
 #include <stdint.h>
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include "mctp/mctp_interface_wrapper.h"
 #include "cmd_interface/cmd_channel.h"
 

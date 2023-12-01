@@ -5,10 +5,11 @@
  */
 
 #include <stdint.h>
-#include <zephyr.h>
-#include <logging/log.h>
-#include <storage/flash_map.h>
-#include <drivers/misc/aspeed/abr_aspeed.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/misc/aspeed/abr_aspeed.h>
+#include <aspeed_util.h>
 #include "cert_verify.h"
 #include "cert_prov.h"
 #include "gpio/gpio_ctrl.h"
@@ -16,7 +17,7 @@
 #include "sw_mailbox/sw_mailbox.h"
 
 LOG_MODULE_REGISTER(prov, CONFIG_LOG_DEFAULT_LEVEL);
-PFR_DEVID_CERT_INFO devid_cert_info;
+PFR_DEVID_CERT_INFO devid_cert_info NON_CACHED_BSS_ALIGN16;
 uint8_t cert_chain[CERT_CHAIN_SIZE];
 
 PROV_STATUS cert_provision(void)
@@ -48,7 +49,7 @@ PROV_STATUS cert_provision(void)
 		// in the next bootup.
 
 		const struct flash_area *fa;
-		if (flash_area_open(FLASH_AREA_ID(active), &fa)) {
+		if (flash_area_open(FIXED_PARTITION_ID(active_partition), &fa)) {
 			LOG_ERR("Failed to find active fw region");
 			set_mp_status(1, 0);
 			goto out;

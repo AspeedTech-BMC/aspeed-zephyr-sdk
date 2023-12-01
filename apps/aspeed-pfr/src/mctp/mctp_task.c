@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "mctp_utils.h"
@@ -268,8 +268,8 @@ uint8_t mctp_start(mctp *mctp_inst)
 		return MCTP_ERROR;
 
 	if (mctp_inst->is_servcie_start) {
-		LOG_WRN("The mctp_inst is already start!");
-		return MCTP_ERROR;
+		LOG_INF("The mctp_inst is already start!");
+		return MCTP_SUCCESS;
 	}
 
 	set_thread_name(mctp_inst);

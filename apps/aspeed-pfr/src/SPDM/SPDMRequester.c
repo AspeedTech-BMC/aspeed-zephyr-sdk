@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <portability/cmsis_os2.h>
-#include <storage/flash_map.h>
+#include <zephyr/portability/cmsis_os2.h>
+#include <zephyr/storage/flash_map.h>
 #include <aspeed_util.h>
 
 #include "SPDM/SPDMRequester.h"
@@ -76,7 +76,8 @@ int spdm_send_request(void *ctx, void *req, void *rsp)
 	return ret;
 }
 
-static int spdm_attest_device(void *ctx, AFM_DEVICE_STRUCTURE *afm_body) {
+static int spdm_attest_device(void *ctx, AFM_DEVICE_STRUCTURE *afm_body)
+{
 	int ret = 0;
 	struct spdm_context *context = (struct spdm_context *)ctx;
 
@@ -245,7 +246,7 @@ void spdm_attester_main(void *a, void *b, void *c)
 		LOG_INF("Start SPDM attestation events=%08x count=%u", events, ++RUNNING_COUNT);
 
 		const struct flash_area *afm_flash;
-		int ret = flash_area_open(FLASH_AREA_ID(afm_act_1), &afm_flash);
+		int ret = flash_area_open(FIXED_PARTITION_ID(afm_act_1_partition), &afm_flash);
 		if (ret != 0) {
 			LOG_ERR("Unable to open afm partition ret=%d", ret);
 			continue;
@@ -413,7 +414,7 @@ void spdm_run_attester()
 	if (!(event & SPDM_REQ_EVT_ENABLE)) {
 		LOG_WRN("SPDM Requester not enabled");
 	} else if (!(event & SPDM_REQ_EVT_T0)) {
-		ret = flash_area_open(FLASH_AREA_ID(afm_act_1), &afm_flash);
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act_1_partition), &afm_flash);
 		if (ret) {
 			LOG_ERR("Failed to open AFM partition ret=%d", ret);
 			return;

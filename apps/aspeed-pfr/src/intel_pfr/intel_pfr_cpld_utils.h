@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <device.h>
-#include <drivers/i2c.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/i2c.h>
 #include "pfr/pfr_common.h"
 
 #define SCM_BOARD_ID_DEFAULT             0x29

@@ -7,7 +7,7 @@
 #include <base.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <random/rand32.h>
+#include <zephyr/random/rand32.h>
 
 /**
  * Generates a 64-bit random number.

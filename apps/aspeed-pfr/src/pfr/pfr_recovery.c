@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 
 #include "pfr_recovery.h"
 #include "AspeedStateMachine/common_smc.h"
@@ -203,7 +203,7 @@ int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_
 		area_size = CONFIG_PCH_STAGING_SIZE;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	else if (image_type == AFM_TYPE) {
-		area_size = FLASH_AREA_SIZE(afm_act_1);
+		area_size = FIXED_PARTITION_SIZE(afm_act_1_partition);
 		image_type = BMC_TYPE;
 	}
 #endif

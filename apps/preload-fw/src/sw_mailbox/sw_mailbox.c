@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <drivers/i2c.h>
-#include <drivers/i2c/pfr/swmbx.h>
-#include <logging/log.h>
-#include <sys/byteorder.h>
-#include <sys/reboot.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/i2c/pfr/swmbx.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/sys/reboot.h>
 #include "sw_mailbox.h"
 #include "fw_update/fw_update.h"
 
@@ -19,6 +19,9 @@ LOG_MODULE_REGISTER(mailbox, CONFIG_LOG_DEFAULT_LEVEL);
 #define SWMBX_NOTIFYEE_STACK_SIZE     1024
 
 const struct device *swmbx_dev = NULL;
+
+#define SWMBX_SLAVE_BMC DEVICE_DT_NAME(DT_NODELABEL(swmbx1))
+#define SWMBX_SLAVE_CPU DEVICE_DT_NAME(DT_NODELABEL(swmbx0))
 
 #define MBX_REG_SETTER(REG) \
 	void Set##REG(uint8_t Data) \
@@ -199,7 +202,7 @@ void swmbx_notifyee_main(void *a, void *b, void *c)
 
 void init_sw_mailbox(void)
 {
-	swmbx_dev = device_get_binding("SWMBX");
+	swmbx_dev = device_get_binding("swmbx-ctrl");
 	if (swmbx_dev == NULL) {
 		LOG_ERR("%s: fail to bind %s", __func__, "SWMBX");
 		return;
@@ -244,9 +247,9 @@ void init_sw_mailbox(void)
 	/* Register slave device to bus device */
 	const struct device *dev = NULL;
 
-	dev = device_get_binding("SWMBX_SLAVE_BMC");
+	dev = device_get_binding(SWMBX_SLAVE_BMC);
 	if (dev)
-		i2c_slave_driver_register(dev);
+		i2c_target_driver_register(dev);
 
 	k_tid_t swmbx_tid = k_thread_create(
 		&swmbx_notifyee_thread,

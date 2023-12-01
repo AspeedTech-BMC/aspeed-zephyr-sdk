@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "AspeedStateMachine/common_smc.h"
 #include "cerberus_pfr_common.h"
 #include "cerberus_pfr_definitions.h"

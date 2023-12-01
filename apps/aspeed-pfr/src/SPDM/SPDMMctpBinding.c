@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <stdlib.h>
 
 #include "SPDM/SPDMCommon.h"
@@ -65,6 +65,10 @@ int spdm_mctp_recv(void *ctx, void *buffer, size_t *buffer_size)
 	return 0;
 }
 
+#if defined(CONFIG_PFR_MCTP_I3C)
+extern mctp *mctp_i3c_bmc_inst;
+#endif
+
 bool spdm_mctp_init_req(void *ctx, SPDM_MEDIUM medium, uint8_t bus, uint8_t dst_sa, uint8_t dst_eid)
 {
 	struct spdm_context *context = (struct spdm_context *)ctx;
@@ -77,7 +81,7 @@ bool spdm_mctp_init_req(void *ctx, SPDM_MEDIUM medium, uint8_t bus, uint8_t dst_
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 	case SPDM_MEDIUM_I3C:
-		mctp_inst = find_mctp_by_i3c(bus);
+		mctp_inst = mctp_i3c_bmc_inst;
 		break;
 #endif
 	default:

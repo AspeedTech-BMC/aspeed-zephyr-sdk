@@ -3,9 +3,9 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <zephyr.h>
-#include <drivers/gpio.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/logging/log.h>
 #include "AspeedStateMachine/AspeedStateMachine.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "watchdog_timer/wdt_utils.h"

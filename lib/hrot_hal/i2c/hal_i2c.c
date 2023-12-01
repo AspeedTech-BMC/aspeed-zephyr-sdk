@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "hal_i2c.h"
 
 LOG_MODULE_REGISTER(hal_i2c, CONFIG_LOG_DEFAULT_LEVEL);
 
-static const struct device *dev_i2c[I2C_BUS_MAX_NUM];
+const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
 struct k_mutex i2c_mutex[I2C_BUS_MAX_NUM];
 
@@ -36,7 +36,7 @@ int i2c_freq_set(uint8_t i2c_bus, uint8_t i2c_speed_mode)
 
 	uint32_t dev_config_raw;
 
-	dev_config_raw = I2C_MODE_MASTER | I2C_SPEED_SET(i2c_speed_mode);
+	dev_config_raw = I2C_MODE_CONTROLLER | I2C_SPEED_SET(i2c_speed_mode);
 
 	return i2c_configure(dev_i2c[i2c_bus], dev_config_raw);
 }
@@ -232,97 +232,97 @@ void util_init_I2C(void)
 	int status;
 
 #ifdef DEV_I2C_0
-	dev_i2c[0] = device_get_binding("I2C_0");
+	dev_i2c[0] = device_get_binding(I2C_0);
 	status = k_mutex_init(&i2c_mutex[0]);
 	if (status)
 		LOG_ERR("i2c0 mutex init fail");
 #endif
 #ifdef DEV_I2C_1
-	dev_i2c[1] = device_get_binding("I2C_1");
+	dev_i2c[1] = device_get_binding(I2C_1);
 	status = k_mutex_init(&i2c_mutex[1]);
 	if (status)
 		LOG_ERR("i2c1 mutex init fail");
 #endif
 #ifdef DEV_I2C_2
-	dev_i2c[2] = device_get_binding("I2C_2");
+	dev_i2c[2] = device_get_binding(I2C_2);
 	status = k_mutex_init(&i2c_mutex[2]);
 	if (status)
 		LOG_ERR("i2c2 mutex init fail");
 #endif
 #ifdef DEV_I2C_3
-	dev_i2c[3] = device_get_binding("I2C_3");
+	dev_i2c[3] = device_get_binding(I2C_3);
 	status = k_mutex_init(&i2c_mutex[3]);
 	if (status)
 		LOG_ERR("i2c3 mutex init fail");
 #endif
 #ifdef DEV_I2C_4
-	dev_i2c[4] = device_get_binding("I2C_4");
+	dev_i2c[4] = device_get_binding(I2C_4);
 	status = k_mutex_init(&i2c_mutex[4]);
 	if (status)
 		LOG_ERR("i2c4 mutex init fail");
 #endif
 #ifdef DEV_I2C_5
-	dev_i2c[5] = device_get_binding("I2C_5");
+	dev_i2c[5] = device_get_binding(I2C_5);
 	status = k_mutex_init(&i2c_mutex[5]);
 	if (status)
 		LOG_ERR("i2c5 mutex init fail");
 #endif
 #ifdef DEV_I2C_6
-	dev_i2c[6] = device_get_binding("I2C_6");
+	dev_i2c[6] = device_get_binding(I2C_6);
 	status = k_mutex_init(&i2c_mutex[6]);
 	if (status)
 		LOG_ERR("i2c6 mutex init fail");
 #endif
 #ifdef DEV_I2C_7
-	dev_i2c[7] = device_get_binding("I2C_7");
+	dev_i2c[7] = device_get_binding(I2C_7);
 	status = k_mutex_init(&i2c_mutex[7]);
 	if (status)
 		LOG_ERR("i2c7 mutex init fail");
 #endif
 #ifdef DEV_I2C_8
-	dev_i2c[8] = device_get_binding("I2C_8");
+	dev_i2c[8] = device_get_binding(I2C_8);
 	status = k_mutex_init(&i2c_mutex[8]);
 	if (status)
 		LOG_ERR("i2c8 mutex init fail");
 #endif
 #ifdef DEV_I2C_9
-	dev_i2c[9] = device_get_binding("I2C_9");
+	dev_i2c[9] = device_get_binding(I2C_9);
 	status = k_mutex_init(&i2c_mutex[9]);
 	if (status)
 		LOG_ERR("i2c9 mutex init fail");
 #endif
 #ifdef DEV_I2C_10
-	dev_i2c[10] = device_get_binding("I2C_10");
+	dev_i2c[10] = device_get_binding(I2C_10);
 	status = k_mutex_init(&i2c_mutex[10]);
 	if (status)
 		LOG_ERR("i2c10 mutex init fail");
 #endif
 #ifdef DEV_I2C_11
-	dev_i2c[11] = device_get_binding("I2C_11");
+	dev_i2c[11] = device_get_binding(I2C_11);
 	status = k_mutex_init(&i2c_mutex[11]);
 	if (status)
 		LOG_ERR("i2c11 mutex init fail");
 #endif
 #ifdef DEV_I2C_12
-	dev_i2c[12] = device_get_binding("I2C_12");
+	dev_i2c[12] = device_get_binding(I2C_12);
 	status = k_mutex_init(&i2c_mutex[12]);
 	if (status)
 		LOG_ERR("i2c12 mutex init fail");
 #endif
 #ifdef DEV_I2C_13
-	dev_i2c[13] = device_get_binding("I2C_13");
+	dev_i2c[13] = device_get_binding(I2C_13);
 	status = k_mutex_init(&i2c_mutex[13]);
 	if (status)
 		LOG_ERR("i2c13 mutex init fail");
 #endif
 #ifdef DEV_I2C_14
-	dev_i2c[14] = device_get_binding("I2C_14");
+	dev_i2c[14] = device_get_binding(I2C_14);
 	status = k_mutex_init(&i2c_mutex[14]);
 	if (status)
 		LOG_ERR("i2c14 mutex init fail");
 #endif
 #ifdef DEV_I2C_15
-	dev_i2c[15] = device_get_binding("I2C_15");
+	dev_i2c[15] = device_get_binding(I2C_15);
 	status = k_mutex_init(&i2c_mutex[15]);
 	if (status)
 		LOG_ERR("i2c15 mutex init fail");

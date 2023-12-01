@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
-#include <drivers/flash.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/flash.h>
 #include "pfr/pfr_update.h"
 #include "pfr/pfr_ufm.h"
 #include "pfr/pfr_util.h"

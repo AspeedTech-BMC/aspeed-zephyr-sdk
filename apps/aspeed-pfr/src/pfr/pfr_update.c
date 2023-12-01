@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
-#include <drivers/misc/aspeed/pfr_aspeed.h>
+#include <zephyr/drivers/misc/aspeed/pfr_aspeed.h>
 #include <flash/flash_wrapper.h>
 
 #include "pfr_ufm.h"

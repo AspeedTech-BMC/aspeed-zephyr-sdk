@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #if !DT_NODE_HAS_STATUS(DT_INST(0, aspeed_pfr_gpio_common), okay)
 #error "no correct pfr gpio device"

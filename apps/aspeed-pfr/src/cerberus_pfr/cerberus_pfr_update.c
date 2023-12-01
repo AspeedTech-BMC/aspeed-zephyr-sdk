@@ -5,7 +5,7 @@
  */
 
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "pfr/pfr_update.h"
 #include "pfr/pfr_recovery.h"

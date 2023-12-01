@@ -5,13 +5,13 @@
  */
 
 #include <stdio.h>
-#include <zephyr.h>
-#include <storage/flash_map.h>
-#include <drivers/i2c.h>
-#include <drivers/i2c/pfr/swmbx.h>
-#include <drivers/spi_nor.h>
-#include <logging/log.h>
-#include <drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/i2c/pfr/swmbx.h>
+#include <zephyr/drivers/spi_nor.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/gpio.h>
 #include <build_config.h>
 #include "Smbus_mailbox.h"
 #include "common/common.h"
@@ -34,6 +34,9 @@
 #include "watchdog_timer/wdt_handler.h"
 
 LOG_MODULE_REGISTER(mailbox, CONFIG_LOG_DEFAULT_LEVEL);
+
+#define SWMBX_SLAVE_BMC DEVICE_DT_NAME(DT_NODELABEL(swmbx1))
+#define SWMBX_SLAVE_CPU DEVICE_DT_NAME(DT_NODELABEL(swmbx0))
 
 static uint32_t gFailedUpdateAttempts = 0;
 const struct device *gSwMbxDev = NULL;
@@ -126,7 +129,7 @@ int set_provision_data_in_flash(uint32_t addr, uint8_t *DataBuffer, uint32_t len
 	uint8_t buffer[PROVISION_UFM_SIZE];
 
 	if (addr + length > ARRAY_SIZE(buffer)) {
-		LOG_ERR("offset(0x%x) exceeds UFM max size(%ld)",  addr + length, ARRAY_SIZE(buffer));
+		LOG_ERR("offset(0x%x) exceeds UFM max size(%u)",  addr + length, ARRAY_SIZE(buffer));
 		return Failure;
 	}
 
@@ -398,7 +401,7 @@ void InitializeSoftwareMailbox(void)
 
 	int status;
 
-	swmbx_dev = device_get_binding("SWMBX");
+	swmbx_dev = device_get_binding("swmbx-ctrl");
 	if (swmbx_dev == NULL) {
 		LOG_ERR("%s: fail to bind %s", __func__, "SWMBX");
 		return;
@@ -475,14 +478,14 @@ void InitializeSoftwareMailbox(void)
 	/* Register slave device to bus device */
 	const struct device *dev = NULL;
 
-	dev = device_get_binding("SWMBX_SLAVE_BMC");
+	dev = device_get_binding(SWMBX_SLAVE_BMC);
 	if (dev)
-		i2c_slave_driver_register(dev);
+		i2c_target_driver_register(dev);
 
 	/* TODO: CPU0 */
-	dev = device_get_binding("SWMBX_SLAVE_CPU");
+	dev = device_get_binding(SWMBX_SLAVE_CPU);
 	if (dev)
-		i2c_slave_driver_register(dev);
+		i2c_target_driver_register(dev);
 
 	k_tid_t swmbx_tid = k_thread_create(
 		&swmbx_notifyee_thread,
@@ -604,39 +607,23 @@ MBX_REG_SETTER_GETTER(IntelCpldActiveMinorVersion);
 #endif
 
 #if defined(CONFIG_FRONT_PANEL_LED)
-#include <drivers/timer/aspeed_timer.h>
-#include <drivers/led.h>
+#include <zephyr/drivers/led.h>
 
-#define GPIO_SPEC(node_id) GPIO_DT_SPEC_GET_OR(node_id, gpios, {0})
 #define LED_DEVICE "leds"
-#define TIMER_DEVICE "TIMER0"
+#define FP_GREEN_LED DT_NODE_CHILD_IDX(DT_NODELABEL(pfr_fp_green_led_out))
+#define FP_AMBER_LED DT_NODE_CHILD_IDX(DT_NODELABEL(pfr_fp_amber_led_out))
 
-static struct aspeed_timer_user_config timer_conf;
 static const struct device *led_dev = NULL;
-static const struct device *led_timer_dev = NULL;
-static const struct device *bmc_fp_green_in = NULL;
-static const struct device *bmc_fp_amber_in = NULL;
+static const struct gpio_dt_spec bmc_fp_green = GPIO_DT_SPEC_GET(DT_ALIAS(fp_input0), gpios);
+static const struct gpio_dt_spec bmc_fp_amber = GPIO_DT_SPEC_GET(DT_ALIAS(fp_input1), gpios);
 static bool fp_green_on;
 static bool fp_amber_on;
 static bool bypass_bmc_fp_signal;
 
-static const struct gpio_dt_spec bmc_fp_green = GPIO_SPEC(DT_ALIAS(fp_input0));
-static const struct gpio_dt_spec bmc_fp_amber = GPIO_SPEC(DT_ALIAS(fp_input1));
-
 static struct gpio_callback bmc_fp_green_cb_data;
 static struct gpio_callback bmc_fp_amber_cb_data;
 
-enum {
-	FP_GREEN_LED  = 0x00,
-	FP_AMBER_LED,
-};
-
-enum {
-	ONE_SHOT_TIMER = 0x00,
-	PERIOD_TIMER,
-};
-
-void fp_amber_led_ctrl_callback()
+void fp_amber_led_ctrl_callback(struct k_timer *timer_id)
 {
 	fp_amber_on ? led_off(led_dev, FP_AMBER_LED) : led_on(led_dev, FP_AMBER_LED);
 	fp_amber_on = !fp_amber_on;
@@ -678,33 +665,28 @@ void initializeFPLEDs(void)
 	led_off(led_dev, FP_AMBER_LED);
 	fp_amber_on = false;
 
-	// init timer
-	led_timer_dev = device_get_binding(TIMER_DEVICE);
-	timer_conf.millisec = 500;
-	timer_conf.timer_type = PERIOD_TIMER;
-	timer_conf.user_data = NULL;
-	timer_conf.callback = fp_amber_led_ctrl_callback;
-
 	// init bmc_fp_green_led
-	bmc_fp_green_in = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(fp_input0), gpios));
-	gpio_pin_configure(bmc_fp_green_in, DT_GPIO_PIN(DT_ALIAS(fp_input0), gpios),
-			DT_GPIO_FLAGS(DT_ALIAS(fp_input0), gpios) | GPIO_INPUT);
-	gpio_pin_interrupt_configure(bmc_fp_green_in, DT_GPIO_PIN(DT_ALIAS(fp_input0), gpios),
-			GPIO_INT_EDGE_BOTH);
-	gpio_init_callback(&bmc_fp_green_cb_data, bmc_fp_led_handler,
-			BIT(DT_GPIO_PIN(DT_ALIAS(fp_input0), gpios)));
-	gpio_add_callback(bmc_fp_green_in, &bmc_fp_green_cb_data);
+	if (!device_is_ready(bmc_fp_green.port)) {
+		LOG_ERR("BMC FP Green LED is not ready");
+		return;
+	}
+	gpio_pin_configure_dt(&bmc_fp_green, GPIO_INPUT);
+	gpio_pin_interrupt_configure_dt(&bmc_fp_green, GPIO_INT_EDGE_BOTH);
+	gpio_init_callback(&bmc_fp_green_cb_data, bmc_fp_led_handler, BIT(bmc_fp_green.pin));
+	gpio_add_callback(bmc_fp_green.port, &bmc_fp_green_cb_data);
 
 	// init bmc_fp_amber_led
-	bmc_fp_amber_in = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(fp_input1), gpios));
-	gpio_pin_configure(bmc_fp_amber_in, DT_GPIO_PIN(DT_ALIAS(fp_input1), gpios),
-			DT_GPIO_FLAGS(DT_ALIAS(fp_input1), gpios) | GPIO_INPUT);
-	gpio_pin_interrupt_configure(bmc_fp_amber_in, DT_GPIO_PIN(DT_ALIAS(fp_input1), gpios),
-			GPIO_INT_EDGE_BOTH);
-	gpio_init_callback(&bmc_fp_amber_cb_data, bmc_fp_led_handler,
-			BIT(DT_GPIO_PIN(DT_ALIAS(fp_input1), gpios)));
-	gpio_add_callback(bmc_fp_amber_in, &bmc_fp_amber_cb_data);
+	if (!device_is_ready(bmc_fp_amber.port)) {
+		LOG_ERR("BMC FP Amber LED is not ready");
+		return;
+	}
+	gpio_pin_configure_dt(&bmc_fp_amber, GPIO_INPUT);
+	gpio_pin_interrupt_configure_dt(&bmc_fp_amber, GPIO_INT_EDGE_BOTH);
+	gpio_init_callback(&bmc_fp_amber_cb_data, bmc_fp_led_handler, BIT(bmc_fp_amber.pin));
+	gpio_add_callback(bmc_fp_amber.port, &bmc_fp_amber_cb_data);
 }
+
+K_TIMER_DEFINE(fpled_timer, fp_amber_led_ctrl_callback, NULL);
 
 void SetFPLEDState(byte PlatformStateData)
 {
@@ -720,7 +702,7 @@ void SetFPLEDState(byte PlatformStateData)
 	    PlatformStateData == BMC_FW_UPDATE ||
 	    PlatformStateData == CPLD_FW_UPDATE) {
 		bypass_bmc_fp_signal = true;
-		timer_aspeed_stop(led_timer_dev);
+		k_timer_stop(&fpled_timer);
 		led_off(led_dev, FP_GREEN_LED);
 		fp_green_on = false;
 		led_on(led_dev, FP_AMBER_LED);
@@ -729,18 +711,18 @@ void SetFPLEDState(byte PlatformStateData)
 		bypass_bmc_fp_signal = true;
 		led_off(led_dev, FP_GREEN_LED);
 		fp_green_on = false;
-		timer_aspeed_start(led_timer_dev, &timer_conf);
+		k_timer_start(&fpled_timer, K_MSEC(500), K_MSEC(500));
 	} else if (PlatformStateData == ENTER_T_MINUS_1) {
 		bypass_bmc_fp_signal = true;
-		timer_aspeed_stop(led_timer_dev);
+		k_timer_stop(&fpled_timer);
 		led_on(led_dev, FP_GREEN_LED);
 		fp_green_on = true;
 		led_off(led_dev, FP_AMBER_LED);
 		fp_amber_on = false;
 	} else if (PlatformStateData == ENTER_T0) {
-		timer_aspeed_stop(led_timer_dev);
+		k_timer_stop(&fpled_timer);
 		bypass_bmc_fp_signal = false;
-		int pin_state = gpio_pin_get(bmc_fp_green_in, bmc_fp_green.pin);
+		int pin_state = gpio_pin_get(bmc_fp_green.port, bmc_fp_green.pin);
 		if (pin_state < 0) {
 			LOG_ERR("Failed to get BMC_FP_GREEN_LED");
 			return;
@@ -748,7 +730,7 @@ void SetFPLEDState(byte PlatformStateData)
 		pin_state ? led_on(led_dev, FP_GREEN_LED) : led_off(led_dev, FP_GREEN_LED);
 		fp_green_on = pin_state;
 
-		pin_state = gpio_pin_get(bmc_fp_amber_in, bmc_fp_amber.pin);
+		pin_state = gpio_pin_get(bmc_fp_amber.port, bmc_fp_amber.pin);
 		if (pin_state < 0) {
 			LOG_ERR("Failed to get BMC_FP_AMBER_LED");
 			return;
@@ -1343,9 +1325,7 @@ void UpdateBiosCheckpoint(byte Data)
  **/
 void show_provision_info(void)
 {
-	int i;
 	uint8_t tmpbuf[SHA384_DIGEST_LENGTH], ufm_status;
-	char msg[64];
 	uint32_t unprovision = 0xffffffff;
 
 	ufm_status = GetUfmStatusValue();

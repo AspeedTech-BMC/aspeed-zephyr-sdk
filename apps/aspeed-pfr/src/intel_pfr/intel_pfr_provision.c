@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include "AspeedStateMachine/common_smc.h"
 #include "pfr/pfr_common.h"

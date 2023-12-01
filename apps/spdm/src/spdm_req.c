@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include <spdm_fifo.h>
 

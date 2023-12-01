@@ -2,7 +2,11 @@
 #include "ast1060_dcscm_gpio_egs.dts"
 
 &sram0 {
-	reg = <0 DT_SIZE_K(640)>, <0xa0000 DT_SIZE_K(128)>;
+	reg = <0 DT_SIZE_K(640)>;
+};
+
+&sram1 {
+	reg = <0xa0000 DT_SIZE_K(128)>;
 };
 
 &i2cfilter {

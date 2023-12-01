@@ -5,11 +5,11 @@
  */
 
 #include <assert.h>
-#include <logging/log.h>
-#include <zephyr.h>
-#include <device.h>
-#include <logging/log.h>
-#include <drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/i2c/pfr/i2c_filter.h>
 
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "crypto/hash_wrapper.h"

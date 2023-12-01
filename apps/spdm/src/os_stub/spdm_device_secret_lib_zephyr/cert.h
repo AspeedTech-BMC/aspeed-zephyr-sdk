@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #pragma once
 

@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <crypto/rsa_structs.h>
-#include <crypto/rsa.h>
-#include <logging/log.h>
+#include <zephyr/crypto/rsa_structs.h>
+#include <zephyr/crypto/rsa.h>
+#include <zephyr/logging/log.h>
 #include "rsa_aspeed.h"
 
 LOG_MODULE_REGISTER(rsa_middle_aspeed, CONFIG_LOG_DEFAULT_LEVEL);
 
 #ifdef CONFIG_RSA_ASPEED
-#define RSA_DRV_NAME DT_LABEL(DT_INST(0, aspeed_rsa))
+#define RSA_DRV_NAME DEVICE_DT_NAME(DT_INST(0, aspeed_rsa))
 #endif
 
 int decrypt_aspeed(const struct rsa_key *key, const uint8_t *encrypted, size_t in_length, uint8_t *decrypted, size_t out_length)

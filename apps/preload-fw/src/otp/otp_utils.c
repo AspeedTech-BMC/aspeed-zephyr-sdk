@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
-#include <zephyr.h>
-#include <drivers/entropy.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/entropy.h>
 #include "otp_utils.h"
 #include "gpio/gpio_ctrl.h"
 #if defined(CONFIG_OTP_SIM)
@@ -137,7 +137,7 @@ int otp_gen_vault_key(uint32_t *buf, uint32_t buf_len)
 	const struct device *dev_entropy;
 
 	LOG_INF("Generating vault key...");
-	dev_entropy = device_get_binding(DT_LABEL(DT_NODELABEL(rng)));
+	dev_entropy = device_get_binding(DEVICE_DT_NAME(DT_NODELABEL(rng)));
 	if (!dev_entropy) {
 		LOG_ERR("Hardware random number generator not found");
 		return -1;
@@ -225,7 +225,7 @@ out:
 		break;
 	case OTP_SUCCESS:
 		// OTP image update successfully, erase OTP image in AST1060 internal flash
-		if (flash_area_open(FLASH_AREA_ID(otp_img), &fa)) {
+		if (flash_area_open(FIXED_PARTITION_ID(otp_img_partition), &fa)) {
 			LOG_ERR("OTP partition not found");
 			set_mp_status(1, 0);
 			return -1;

@@ -3,15 +3,15 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <zephyr.h>
-#include <smf.h>
-#include <shell/shell.h>
-#include <logging/log.h>
-#include <logging/log_ctrl.h>
-#include <drivers/i2c/pfr/swmbx.h>
-#include <drivers/i2c/pfr/i2c_filter.h>
-#include <drivers/misc/aspeed/abr_aspeed.h>
-#include <drivers/flash.h>
+#include <zephyr/kernel.h>
+#include <zephyr/smf.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/drivers/i2c/pfr/swmbx.h>
+#include <zephyr/drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/drivers/misc/aspeed/abr_aspeed.h>
+#include <zephyr/drivers/flash.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -266,6 +266,7 @@ void do_init(void *o)
 		SetPlatformState(CPLD_NIOS_II_PROCESSOR_STARTED);
 #endif
 	}
+
 	LOG_DBG("End");
 }
 
@@ -303,8 +304,9 @@ void enter_tmin1(void *o)
 		evt_ctx->data.bit8[2] |= BmcOnlyReset;
 		gWdtBootStatus &= ~WDT_BMC_BOOT_DONE_MASK;
 		SetBmcCheckpoint(0);
-#if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
-		if (mctp_i3c_detach_slave_dev())
+#if defined(CONFIG_PFR_MCTP_I3C)
+		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
+					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
 			LOG_WRN("Failed to dettach i3c slave device");
 		else
 			LOG_INF("I3C slave device detached");
@@ -330,8 +332,9 @@ void enter_tmin1(void *o)
 #endif
 		SetBmcCheckpoint(0);
 		SetBiosCheckpoint(0);
-#if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
-		if (mctp_i3c_detach_slave_dev())
+#if defined(CONFIG_PFR_MCTP_I3C)
+		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
+					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
 			LOG_WRN("Failed to dettach i3c slave device");
 		else
 			LOG_INF("I3C slave device detached");
@@ -955,69 +958,69 @@ void enter_tzero(void *o)
 			LOG_ERR("Host firmware is invalid, host won't boot");
 	} else {
 		/* Unprovisioned - Releasing System Reset */
-		if (device_get_binding("spi_m1") != NULL) {
-			Set_SPI_Filter_RW_Region("spi_m1", SPI_FILTER_READ_PRIV,
+		if (device_get_binding("spim@1") != NULL) {
+			Set_SPI_Filter_RW_Region("spim@1", SPI_FILTER_READ_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			Set_SPI_Filter_RW_Region("spi_m1", SPI_FILTER_WRITE_PRIV,
+			Set_SPI_Filter_RW_Region("spim@1", SPI_FILTER_WRITE_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			SPI_Monitor_Enable("spi_m1", false);
-			LOG_INF("Bypass %s", "spi_m1");
+			SPI_Monitor_Enable("spim@1", false);
+			LOG_INF("Bypass %s", "spim@1");
 		}
 
-		if (device_get_binding("spi_m2") != NULL) {
-			Set_SPI_Filter_RW_Region("spi_m2", SPI_FILTER_READ_PRIV,
+		if (device_get_binding("spim@2") != NULL) {
+			Set_SPI_Filter_RW_Region("spim@2", SPI_FILTER_READ_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			Set_SPI_Filter_RW_Region("spi_m2", SPI_FILTER_WRITE_PRIV,
+			Set_SPI_Filter_RW_Region("spim@2", SPI_FILTER_WRITE_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			SPI_Monitor_Enable("spi_m2", false);
-			LOG_INF("Bypass %s", "spi_m2");
+			SPI_Monitor_Enable("spim@2", false);
+			LOG_INF("Bypass %s", "spim@2");
 		}
 
-		if (device_get_binding("spi_m3") != NULL) {
-			Set_SPI_Filter_RW_Region("spi_m3", SPI_FILTER_READ_PRIV,
+		if (device_get_binding("spim@3") != NULL) {
+			Set_SPI_Filter_RW_Region("spim@3", SPI_FILTER_READ_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			Set_SPI_Filter_RW_Region("spi_m3", SPI_FILTER_WRITE_PRIV,
+			Set_SPI_Filter_RW_Region("spim@3", SPI_FILTER_WRITE_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			SPI_Monitor_Enable("spi_m3", false);
-			LOG_INF("Bypass %s", "spi_m3");
+			SPI_Monitor_Enable("spim@3", false);
+			LOG_INF("Bypass %s", "spim@3");
 		}
 
-		if (device_get_binding("spi_m4") != NULL) {
-			Set_SPI_Filter_RW_Region("spi_m4", SPI_FILTER_READ_PRIV,
+		if (device_get_binding("spim@4") != NULL) {
+			Set_SPI_Filter_RW_Region("spim@4", SPI_FILTER_READ_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			Set_SPI_Filter_RW_Region("spi_m4", SPI_FILTER_WRITE_PRIV,
+			Set_SPI_Filter_RW_Region("spim@4", SPI_FILTER_WRITE_PRIV,
 					SPI_FILTER_PRIV_ENABLE, 0, 0x10000000);
-			SPI_Monitor_Enable("spi_m4", false);
-			LOG_INF("Bypass %s", "spi_m4");
+			SPI_Monitor_Enable("spim@4", false);
+			LOG_INF("Bypass %s", "spim@4");
 		}
 
 		/* Releasing I2C Filter */
 		const struct device *dev = NULL;
-		if ((dev = device_get_binding("I2C_FILTER_0")) != NULL) {
+		if ((dev = device_get_binding("i2cfilter0")) != NULL) {
 			ast_i2c_filter_init(dev);
 			ast_i2c_filter_en(dev, true, false, false, false);
 			LOG_INF("Bypass %s", dev->name);
 		}
 
-		if ((dev = device_get_binding("I2C_FILTER_1")) != NULL) {
+		if ((dev = device_get_binding("i2cfilter1")) != NULL) {
 			ast_i2c_filter_init(dev);
 			ast_i2c_filter_en(dev, true, false, false, false);
 			LOG_INF("Bypass %s", dev->name);
 		}
 
-		if ((dev = device_get_binding("I2C_FILTER_2")) != NULL) {
+		if ((dev = device_get_binding("i2cfilter2")) != NULL) {
 			ast_i2c_filter_init(dev);
 			ast_i2c_filter_en(dev, true, false, false, false);
 			LOG_INF("Bypass %s", dev->name);
 		}
 
-		if ((dev = device_get_binding("I2C_FILTER_3")) != NULL) {
+		if ((dev = device_get_binding("i2cfilter3")) != NULL) {
 			ast_i2c_filter_init(dev);
 			ast_i2c_filter_en(dev, true, false, false, false);
 			LOG_INF("Bypass %s", dev->name);
 		}
 
-		if ((dev = device_get_binding("I2C_FILTER_4")) != NULL) {
+		if ((dev = device_get_binding("i2cfilter4")) != NULL) {
 			ast_i2c_filter_init(dev);
 			ast_i2c_filter_en(dev, true, false, false, false);
 			LOG_INF("Bypass %s", dev->name);
@@ -1138,8 +1141,9 @@ void handle_checkpoint(void *o)
 				spdm_run_attester();
 			}
 #endif
-#if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
-			mctp_i3c_attach_slave_dev(BMC_I3C_SLAVE_ADDR);
+#if defined(CONFIG_PFR_MCTP_I3C)
+			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
+					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
 #endif
 		}
 		break;
@@ -1638,9 +1642,10 @@ void do_unprovisioned(void *o)
 #endif
 		break;
 	case WDT_CHECKPOINT:
-#if defined(CONFIG_PFR_MCTP_I3C) && !defined(CONFIG_I3C_SLAVE)
+#if defined(CONFIG_PFR_MCTP_I3C)
 		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
-			mctp_i3c_attach_slave_dev(BMC_I3C_SLAVE_ADDR);
+			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
+					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
 		}
 #endif
 		break;

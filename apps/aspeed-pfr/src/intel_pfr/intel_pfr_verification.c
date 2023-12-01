@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
-#include <drivers/flash.h>
+#include <zephyr/drivers/flash.h>
 #include "common/common.h"
 #include "AspeedStateMachine/common_smc.h"
 #include "AspeedStateMachine/AspeedStateMachine.h"
@@ -66,10 +66,10 @@ int intel_pfr_pit_level2_verify(void)
 	uint8_t sha_buffer[SHA384_DIGEST_LENGTH] = { 0 };
 	uint8_t pit_hash_buffer[SHA384_DIGEST_LENGTH] = { 0 };
 	static char *flash_devices[4] = {
-		"spi1_cs0",
-		"spi1_cs1",
-		"spi2_cs0",
-		"spi2_cs1",
+		"spi1@0",
+		"spi1@1",
+		"spi2@0",
+		"spi2@1",
 	};
 
 	get_provision_data_in_flash(UFM_STATUS, (uint8_t *)&ufm_status, sizeof(ufm_status));

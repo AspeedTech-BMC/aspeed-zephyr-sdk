@@ -16,17 +16,17 @@ config INTEL_SCM_CPLD_UPDATE_ONLY
 	help
 	  Only update SCM CPLD when received CPLD update reqeust
 
-config INTEL_SCM_RSU_DEV
-	default I2C_4
-	string "The bus that used to communicate with Intel SCM CPLD RSU"
+config INTEL_SCM_RSU_BUS
+	default 4
+	hex "The i2c bus that used to communicate with Intel SCM CPLD RSU"
 
-config INTEL_CPU_RSU_DEV
-	default I2C_4
-	string "The bus that used to communicate with Intel CPU CPLD RSU"
+config INTEL_CPU_RSU_BUS
+	default 4
+	hex "The i2c bus that used to communicate with Intel CPU CPLD RSU"
 
-config INTEL_DEBUG_RSU_DEV
-	default I2C_4
-	string "The bus that used to communicate with Intel Debug CPLD RSU"
+config INTEL_DEBUG_RSU_BUS
+	default 4
+	hex "The i2c bus that used to communicate with Intel Debug CPLD RSU"
 
 config INTEL_SCM_RSU_DEV_ADDR
 	default 0x60

@@ -9,7 +9,7 @@
 #if defined(CONFIG_OTP_SIM)
 #include "otp_utils.h"
 
-#define OTP_FLASH_DEV             "fmc_cs0"
+#define OTP_FLASH_DEV             "fmc@0"
 #define OTP_SIM_BASE_ADDR         0xfc000
 
 #define DWORD                       4

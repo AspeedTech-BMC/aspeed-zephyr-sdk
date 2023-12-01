@@ -4,18 +4,19 @@
  * SPDX-License-Identifier: MIT
  */
 #include <stdlib.h>
-#include <zephyr.h>
-#include <sys/sys_heap.h>
-#include <smf.h>
-#include <shell/shell.h>
-#include <logging/log.h>
-#include <drivers/flash.h>
-#include <drivers/misc/aspeed/abr_aspeed.h>
-#include <drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/sys_heap.h>
+#include <zephyr/smf.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/misc/aspeed/abr_aspeed.h>
+#include <zephyr/drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/device.h>
+#include <zephyr/sys/base64.h>
 
 #include "AspeedStateMachine/AspeedStateMachine.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
-#include "device.h"
 #if defined(CONFIG_INTEL_PFR)
 #include "intel_pfr/intel_pfr_definitions.h"
 #include "intel_pfr/intel_pfr_provision.h"
@@ -26,13 +27,12 @@
 #include "cerberus_pfr/cerberus_pfr_provision.h"
 #endif
 #include "flash/flash_aspeed.h"
-#include "flash/flash_wrapper.h"
 #include "gpio/gpio_aspeed.h"
 #include "pfr/pfr_ufm.h"
 #include "pfr/pfr_util.h"
 
-#include "sys/base64.h"
-#include "net/net_ip.h"
+#include <zephyr/net/net_ip.h>
+#if defined(CONFIG_ASPEED_DICE_SHELL)
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/hmac_drbg.h"
 #include "mbedtls/x509_crt.h"
@@ -40,6 +40,7 @@
 #include "mbedtls/oid.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/asn1write.h"
+#endif
 #include <crypto/hash.h>
 #include <crypto/hash_aspeed.h>
 
@@ -366,55 +367,53 @@ static int cmd_asm_spi_error(const struct shell *shell,
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(sub_event, cmd_asm_event,
-	(INIT_DONE, INIT_DONE),
-	(VERIFY_UNPROVISIONED, VERIFY_UNPROVISIONED),
-	(VERIFY_FAILED, VERIFY_FAILED),
-	(VERIFY_DONE, VERIFY_DONE),
-	(RECOVERY_DONE, RECOVERY_DONE),
-	(RECOVERY_FAILED, RECOVERY_FAILED),
-	(RESET_DETECTED, RESET_DETECTED),
-	(UPDATE_DONE, UPDATE_DONE),
-	(UPDATE_FAILED, UPDATE_FAILED),
-	(PROVISION_CMD, PROVISION_CMD),
-	(WDT_TIMEOUT_BMC, (WDT_TIMEOUT | BMC_EVENT << 8)),
-	(WDT_TIMEOUT_PCH, (WDT_TIMEOUT | PCH_EVENT << 8)),
+	(INIT_DONE, INIT_DONE, "INIT_DONE"),
+	(VERIFY_UNPROVISIONED, VERIFY_UNPROVISIONED, "VERIFY_UNPROVISIONED"),
+	(VERIFY_FAILED, VERIFY_FAILED, "VERIFY_FAILED"),
+	(VERIFY_DONE, VERIFY_DONE, "VERIFY_DONE"),
+	(RECOVERY_DONE, RECOVERY_DONE, "RECOVERY_DONE"),
+	(RECOVERY_FAILED, RECOVERY_FAILED, "RECOVERY_FAILED"),
+	(RESET_DETECTED, RESET_DETECTED, "RESET_DETECTED"),
+	(UPDATE_DONE, UPDATE_DONE, "UPDATE_DONE"),
+	(UPDATE_FAILED, UPDATE_FAILED, "UPDATE_FAILED"),
+	(PROVISION_CMD, PROVISION_CMD, "PROVISION_CMD"),
+	(WDT_TIMEOUT_BMC, (WDT_TIMEOUT | BMC_EVENT << 8), "WDT_TIMEOUT_BMC"),
+	(WDT_TIMEOUT_PCH, (WDT_TIMEOUT | PCH_EVENT << 8), "WDT_TIMEOUT_PCH"),
 
 	/* BMC Update Intent */
-	(UPDATE_REQUESTED_BMC_BMC_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | BmcActiveUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_BMC_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | BmcRecoveryUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_PCH_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | PchActiveUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_PCH_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | PchRecoveryUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_PFR_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTActiveUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_PFR_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTRecoveryUpdate << 16)))),
-	(UPDATE_REQUESTED_BMC_PFR_ACTRCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTActiveAndRecoveryUpdate << 16)))),
+	(UPDATE_REQUESTED_BMC_BMC_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | BmcActiveUpdate << 16))), "UPDATE_REQUESTED_BMC_BMC_ACT"),
+	(UPDATE_REQUESTED_BMC_BMC_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | BmcRecoveryUpdate << 16))), "UPDATE_REQUESTED_BMC_BMC_RCV"),
+	(UPDATE_REQUESTED_BMC_PCH_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | PchActiveUpdate << 16))), "UPDATE_REQUESTED_BMC_PCH_ACT"),
+	(UPDATE_REQUESTED_BMC_PCH_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | PchRecoveryUpdate << 16))), "UPDATE_REQUESTED_BMC_PCH_RCV"),
+	(UPDATE_REQUESTED_BMC_PFR_ACT, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTActiveUpdate << 16))), "UPDATE_REQUESTED_BMC_PFR_ACT"),
+	(UPDATE_REQUESTED_BMC_PFR_RCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTRecoveryUpdate << 16))), "UPDATE_REQUESTED_BMC_PFR_RCV"),
+	(UPDATE_REQUESTED_BMC_PFR_ACTRCV, (UPDATE_REQUESTED | ((BmcUpdateIntent << 8 | HROTActiveAndRecoveryUpdate << 16))), "UPDATE_REQUESTED_BMC_PFR_ACTRCV"),
 
 	/* PCH Update Intent */
-	(UPDATE_REQUESTED_PCH_PCH_ACT, (UPDATE_REQUESTED | ((PchUpdateIntent << 8 | PchActiveUpdate << 16)))),
-	(UPDATE_REQUESTED_PCH_PCH_RCV, (UPDATE_REQUESTED | ((PchUpdateIntent << 8 | PchRecoveryUpdate << 16))))
+	(UPDATE_REQUESTED_PCH_PCH_ACT, (UPDATE_REQUESTED | ((PchUpdateIntent << 8 | PchActiveUpdate << 16))), "UPDATE_REQUESTED_PCH_PCH_ACT"),
+	(UPDATE_REQUESTED_PCH_PCH_RCV, (UPDATE_REQUESTED | ((PchUpdateIntent << 8 | PchRecoveryUpdate << 16))), "UPDATE_REQUESTED_PCH_PCH_RCV")
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	,(ATTESTATION_FAILED, ATTESTATION_FAILED)
+	,(ATTESTATION_FAILED, ATTESTATION_FAILED, "ATTESTATION_FAILED")
 #endif
 
 );
 
-
-
 SHELL_SUBCMD_DICT_SET_CREATE(sub_spi_error, cmd_asm_spi_error,
-	(GGGGGGG, 0x00000000),
-	(BGGGGGG, 0x0F000000),
-	(GBGGGGG, 0x00F00000),
-	(BBGGGGG, 0x0FF00000),
-	(GGGGBGG, 0x00000F00),
-	(GGGGGBG, 0x000000F0),
-	(GGGGBBG, 0x00000FF0),
-	(GGGGBBB, 0x00000FFF),
-	(GGGBBBB, 0x0000FFFF),
-	(BGGGBGG, 0x0F000F00),
-	(BGGGBBG, 0x0F000FF0),
-	(BBGGBGG, 0x0FF00F00),
-	(BBGGBBG, 0x0FF00FF0),
-	(BBGGBBB, 0x0FF00FFF),
-	(BBBBBBB, 0x0FFFFFFF)
+	(GGGGGGG, 0x00000000, "GGGGGGG"),
+	(BGGGGGG, 0x0F000000, "BGGGGGG"),
+	(GBGGGGG, 0x00F00000, "GBGGGGG"),
+	(BBGGGGG, 0x0FF00000, "BBGGGGG"),
+	(GGGGBGG, 0x00000F00, "GGGGBGG"),
+	(GGGGGBG, 0x000000F0, "GGGGGBG"),
+	(GGGGBBG, 0x00000FF0, "GGGGBBG"),
+	(GGGGBBB, 0x00000FFF, "GGGGBBB"),
+	(GGGBBBB, 0x0000FFFF, "GGGBBBB"),
+	(BGGGBGG, 0x0F000F00, "BGGGBGG"),
+	(BGGGBBG, 0x0F000FF0, "BGGGBBG"),
+	(BBGGBGG, 0x0FF00F00, "BBGGBGG"),
+	(BBGGBBG, 0x0FF00FF0, "BBGGBBG"),
+	(BBGGBBB, 0x0FF00FFF, "BBGGBBB"),
+	(BBBBBBB, 0x0FFFFFFF, "BBBBBBB")
 );
 
 static int cmd_test_plat_state_led(const struct shell *shell, size_t argc,
@@ -657,7 +656,7 @@ int get_rand_bytes_by_cdi(void *rngState, uint8_t *output, size_t length)
 {
 	uint8_t cdi_digest_digest[SHA384_HASH_LENGTH];
 	ARG_UNUSED(rngState);
-	hash_engine_sha_calculate(HASH_SHA384, (uint8_t *)cdi_digest, SHA384_HASH_LENGTH,
+	hash_engine_sha_calculate(CRYPTO_HASH_ALGO_SHA384, (uint8_t *)cdi_digest, SHA384_HASH_LENGTH,
 			cdi_digest_digest, sizeof(cdi_digest_digest));
 	memset(output, 0, length);
 	memcpy(output, cdi_digest_digest,
@@ -671,7 +670,7 @@ int get_rand_bytes_by_cdi_fwid(void *rngState, uint8_t *output, size_t length)
 	ARG_UNUSED(rngState);
 
 	// Combine CDI and FWID for deriving alias key
-	hash_engine_start(HASH_SHA384);
+	hash_engine_start(CRYPTO_HASH_ALGO_SHA384);
 	hash_engine_update(cdi_digest, SHA384_HASH_LENGTH);
 	hash_engine_update(dev_fwid, SHA384_HASH_LENGTH);
 	hash_engine_finish(alias_digest, sizeof(alias_digest));
@@ -715,7 +714,7 @@ int hash_device_firmware(uint32_t addr, uint32_t fw_size, uint8_t *hash, uint32_
 {
 	const struct device *flash_dev;
 	uint32_t read_len;
-	flash_dev = device_get_binding("fmc_cs0");
+	flash_dev = device_get_binding("fmc@0");
 	hash_engine_start(algo);
 	while (fw_size > 0) {
 		read_len = (fw_size < PAGE_SIZE) ? fw_size : PAGE_SIZE;
@@ -735,9 +734,9 @@ void x509_set_serial_number(mbedtls_mpi *serial_num, uint8_t *digest, uint8_t di
 	uint8_t dice_seed[9] = "DICE_SEED";
 	uint8_t dice_seed_digest[SHA384_HASH_LENGTH];
 	uint8_t final_digest[SHA384_HASH_LENGTH];
-	hash_engine_sha_calculate(HASH_SHA384, dice_seed, sizeof(dice_seed),
+	hash_engine_sha_calculate(CRYPTO_HASH_ALGO_SHA384, dice_seed, sizeof(dice_seed),
 			dice_seed_digest, sizeof(dice_seed_digest));
-	hash_engine_start(HASH_SHA384);
+	hash_engine_start(CRYPTO_HASH_ALGO_SHA384);
 	hash_engine_update(dice_seed_digest, sizeof(dice_seed_digest));
 	hash_engine_update(digest, digest_len);
 	hash_engine_finish(final_digest, sizeof(final_digest));
@@ -869,7 +868,7 @@ int dice_start(size_t cert_type)
 	memset(devid_cert_der, 0, sizeof(devid_cert_der));
 	memset(alias_cert_der, 0, sizeof(alias_cert_der));
 
-	hash_engine_sha_calculate(HASH_SHA384, (uint8_t *)CDI_ADDRESS, CDI_LENGTH,
+	hash_engine_sha_calculate(CRYPTO_HASH_ALGO_SHA384, (uint8_t *)CDI_ADDRESS, CDI_LENGTH,
 			cdi_digest, sizeof(cdi_digest));
 	mbedtls_pk_init(&devid_key);
 	mbedtls_pk_init(&alias_key);
@@ -880,7 +879,7 @@ int dice_start(size_t cert_type)
 	derive_key_pair(mbedtls_pk_ec(devid_key), devid_priv_key_buf, devid_pub_key_buf,
 			get_rand_bytes_by_cdi, NULL);
 	hash_device_firmware(DEVICE_FIRMWARE_START_ADDRESS, DEVICE_FIRMWARE_SIZE, dev_fwid,
-			SHA384_HASH_LENGTH, HASH_SHA384);
+			SHA384_HASH_LENGTH, CRYPTO_HASH_ALGO_SHA384);
 	derive_key_pair(mbedtls_pk_ec(alias_key), alias_priv_key_buf, alias_pub_key_buf,
 			get_rand_bytes_by_cdi_fwid, NULL);
 
@@ -1030,11 +1029,11 @@ static int cmd_i2c_filter_dump(const struct shell *shell, size_t argc, char **ar
 {
 	const struct device *flt_dev = NULL;
 	struct ast_i2c_filter_child_data *data;
-	char bus_dev_name[] = "I2C_FILTER_x";
+	char bus_dev_name[] = "i2cfilterx";
 
 	if (argc > 1) {
 		size_t filter_id = strtol(argv[1], NULL, 16);
-		bus_dev_name[11] = filter_id + '0';
+		bus_dev_name[9] = filter_id + '0';
 		flt_dev = device_get_binding(bus_dev_name);
 		if (!flt_dev || filter_id > 3) {
 			shell_print(shell, "Invalid filter id");
@@ -1065,7 +1064,7 @@ static int cmd_i2c_filter_dump(const struct shell *shell, size_t argc, char **ar
 	}
 
 	for (int i = 0; i < 4; i++) {
-		bus_dev_name[11] = i + '0';
+		bus_dev_name[9] = i + '0';
 		flt_dev = device_get_binding(bus_dev_name);
 		if (!flt_dev) {
 			continue;

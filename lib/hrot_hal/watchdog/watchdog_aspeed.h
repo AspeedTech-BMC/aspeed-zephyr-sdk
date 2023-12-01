@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <zephyr.h>
-#include <drivers/watchdog.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/watchdog.h>
+#include <zephyr/device.h>
 
 struct watchdog_config {
 	struct wdt_timeout_cfg wdt_cfg;

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <init.h>
-#include <zephyr.h>
-#include <logging/log.h>
-#include <drivers/gpio.h>
-#include <sys/sys_io.h>
+#include <zephyr/init.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/sys_io.h>
 
 #define LOG_MODULE_NAME board
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);

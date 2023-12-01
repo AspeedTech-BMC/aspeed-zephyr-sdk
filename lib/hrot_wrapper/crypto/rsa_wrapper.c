@@ -5,9 +5,9 @@
  */
 
 #include <string.h>
-#include <crypto/rsa_structs.h>
+#include <zephyr/crypto/rsa_structs.h>
+#include <zephyr/crypto/rsa.h>
 #include <crypto/rsa_aspeed.h>
-#include <crypto/rsa.h>
 #include "rsa_wrapper.h"
 
 int rsa_wrapper_generate_key(struct rsa_engine *engine, struct rsa_private_key *key, int bits)

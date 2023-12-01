@@ -5,8 +5,8 @@
  */
 
 #include <stdlib.h>
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 #include "common/common.h"
 #include "pfr/pfr_common.h"
 #include "pfr/pfr_ufm.h"

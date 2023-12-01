@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include "flash/flash_wrapper.h"
 
 

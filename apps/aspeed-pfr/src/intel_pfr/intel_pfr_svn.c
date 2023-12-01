@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include "pfr/pfr_common.h"
 #include "pfr/pfr_ufm.h"
