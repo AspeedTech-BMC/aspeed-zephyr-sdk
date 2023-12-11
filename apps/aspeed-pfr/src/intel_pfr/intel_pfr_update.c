@@ -714,7 +714,7 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 	// Staging area verification
 	LOG_INF("Staging Area verification");
 	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
-			NULL, NULL);
+			NULL);
 	if (status != Success) {
 		LOG_ERR("Staging Area verification failed");
 		if (flash_select == PRIMARY_FLASH_REGION) {
@@ -925,7 +925,7 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 	// Staging area verification
 	LOG_INF("Staging Area verification");
 	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
-			NULL, NULL);
+			NULL);
 	if (status != Success) {
 		LOG_ERR("Staging Area verification failed");
 		goto release_pch_mux;

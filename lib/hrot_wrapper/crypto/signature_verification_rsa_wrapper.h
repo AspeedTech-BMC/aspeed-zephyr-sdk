@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "common/signature_verification.h"
+#include "crypto/signature_verification.h"
 #include "crypto/rsa.h"
 
 

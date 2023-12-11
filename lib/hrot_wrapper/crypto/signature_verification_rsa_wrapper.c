@@ -19,7 +19,7 @@ static int signature_verification_rsa_verify_signature(struct signature_verifica
 		return SIG_VERIFICATION_INVALID_ARGUMENT;
 	}
 
-	return rsa->rsa->sig_verify(rsa->rsa, rsa->key, signature, sig_length, digest, length);
+	return rsa->rsa->sig_verify(rsa->rsa, rsa->key, signature, sig_length, HASH_TYPE_SHA256, digest, length);
 }
 
 /**

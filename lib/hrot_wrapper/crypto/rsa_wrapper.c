@@ -52,7 +52,7 @@ int rsa_wrapper_decrypt(struct rsa_engine *engine, const struct rsa_private_key 
 }
 
 int rsa_wrapper_sig_verify(struct rsa_engine *engine, const struct rsa_public_key *key,
-			   const uint8_t *signature, size_t sig_length, const uint8_t *match, size_t match_length)
+			   const uint8_t *signature, size_t sig_length, enum hash_type sig_hash, const uint8_t *match, size_t match_length)
 {
 	struct rsa_key driver_key;
 

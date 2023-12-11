@@ -274,7 +274,7 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	if (manifest->state == FIRMWARE_RECOVERY) {
 		LOG_INF("PCH staging region verification");
 		status = manifest->update_fw->base->verify((struct firmware_image *)manifest,
-				NULL, NULL);
+				NULL);
 		if (status != Success)
 			return Failure;
 	}
