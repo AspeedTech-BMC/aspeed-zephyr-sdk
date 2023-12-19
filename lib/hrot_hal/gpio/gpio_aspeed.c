@@ -106,7 +106,6 @@ int BMCBootHold(void)
 	if (first_time_boot)
 		bmc_srst_enable_ctrl(true);
 	dev_m = device_get_binding(BMC_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 	flash_dev = device_get_binding("spi1_cs0");
@@ -117,7 +116,6 @@ int BMCBootHold(void)
 	}
 #if defined(CONFIG_BMC_DUAL_FLASH)
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 	flash_dev = device_get_binding("spi1_cs1");
@@ -145,7 +143,6 @@ int PCHBootHold(void)
 	// pch_rst_enable_ctrl(true);
 
 	dev_m = device_get_binding(PCH_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 	flash_dev = device_get_binding("spi2_cs0");
@@ -157,7 +154,6 @@ int PCHBootHold(void)
 
 #if defined(CONFIG_CPU_DUAL_FLASH)
 	dev_m = device_get_binding(PCH_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 	flash_dev = device_get_binding("spi2_cs1");
@@ -183,7 +179,6 @@ int BMCBootRelease(void)
 		LOG_ERR("Failed to bind spi1_cs0");
 	}
 	dev_m = device_get_binding(BMC_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
@@ -195,7 +190,6 @@ int BMCBootRelease(void)
 		LOG_ERR("Failed to bind spi1_cs1");
 	}
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
@@ -223,7 +217,6 @@ int PCHBootRelease(void)
 		LOG_ERR("Failed to bind spi2_cs0");
 	}
 	dev_m = device_get_binding(PCH_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
@@ -236,7 +229,6 @@ int PCHBootRelease(void)
 		LOG_ERR("Failed to bind spi2_cs1");
 	}
 	dev_m = device_get_binding(PCH_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
