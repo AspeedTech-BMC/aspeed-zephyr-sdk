@@ -1,10 +1,10 @@
 / {
 	pfr_gpio_common {
 		compatible = "aspeed,pfr-gpio-common";
-		bmc-srst-ctrl-out-gpios = <&gpio0_m_p 5 0>; /* GPIO_M5 */
-		bmc-extrst-ctrl-out-gpios = <&gpio0_e_h 26 0>; /* GPIO_H2 */
-		bmc-rst-ind-in-gpios = <&gpio0_m_p 19 0>; /* GPIO_O3 */
-		pch-rst-ctrl-out-gpios = <&gpio0_m_p 4 0>; /* GPIO_M4 */
+		bmc-srst-ctrl-out-gpios = <&sgpiom_a_d 8 0>; /* SGPIO OUT #9 */
+		bmc-extrst-ctrl-out-gpios = <&sgpiom_a_d 9 0>; /* SGPIO OUT #10 */
+		bmc-rst-ind-in-gpios = <&sgpiom_a_d 4 0>; /* SGPIO IN #5 */
+		pch-rst-ctrl-out-gpios = <&sgpiom_a_d 10 0>; /* SGPIO OUT #11 */
 
 		platform-state-out-gpios =
 			<&sgpiom_m_p 24 0>, <&sgpiom_m_p 25 0>,
@@ -16,16 +16,43 @@
 		 * Normally, these two pin should be GPIO_ACTIVE_LOW, but currently this EVB
 		 * doesn't produce correct power sequence by itself.
 		 */
-		rst-srst-bmc-in-gpios = <&gpio0_q_t 27 GPIO_ACTIVE_HIGH>; /* GPIO_T3 */
-		rst-rsmrst-in-gpios = <&gpio0_q_t 24 GPIO_ACTIVE_HIGH>; /* GPIO_T0 */
+		rst-srst-bmc-in-gpios = <&sgpiom_a_d 1 GPIO_ACTIVE_HIGH>; /* SGPIO IN #2 */
+		rst-rsmrst-in-gpios = <&sgpiom_a_d 0 GPIO_ACTIVE_HIGH>; /* SGPIO IN #1 */
 	};
 
 	aliases {
+		led0 = &pfr_fp_green_led_out;
+		led1 = &pfr_fp_amber_led_out;
+		fp-input0 = &bmc_fp_green_led_in;
+		fp-input1 = &bmc_fp_amber_led_in;
 		hbled0 = &pfr_hb_led_out;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		bmc_fp_green_led_in: fp_green_led_in {
+			gpios = <&sgpiom_a_d 26 1>; /* SGPIO IN #27 */
+			label = "BMC FP GREEN LED";
+		};
+
+		bmc_fp_amber_led_in: fp_amber_led_in {
+			gpios = <&sgpiom_a_d 27 1>; /* SGPIO IN #28 */
+			label = "BMC FP AMBER LED";
+		};
 	};
 
 	leds {
 		compatible = "gpio-leds";
+
+		pfr_fp_green_led_out: green_led {
+			gpios = <&sgpiom_a_d 16 0>; /* GPIO_O2 */
+			label = "PFR_FP_GREEN_LED";
+		};
+
+		pfr_fp_amber_led_out: amber_led {
+			gpios = <&sgpiom_a_d 17 0>; /* GPIO_H1 */
+			label = "PFR_FP_AMBER_LED";
+		};
 
 		pfr_hb_led_out: hb_led {
 			gpios = <&gpio0_m_p 3 1>; /* GPIO_M3 */

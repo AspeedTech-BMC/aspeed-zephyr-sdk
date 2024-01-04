@@ -250,7 +250,7 @@
 
 	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
-	ext-mux-sel-gpios = <&gpio0_a_d 12 0>;
+	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
 	ext-mux-sel-delay-us = <1000>;
 	status = "okay";
 
@@ -266,7 +266,7 @@
 
 	flash-device = <&spi1_cs1>;
 	ext-mux-sel = <1>;
-	ext-mux-sel-gpios = <&gpio0_a_d 12 0>;
+	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
 	ext-mux-sel-delay-us = <1000>;
 	status = "okay";
 
@@ -284,7 +284,7 @@
 
 	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
-	ext-mux-sel-gpios = <&gpio0_e_h 8 0>;
+	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */
 	ext-mux-sel-delay-us = <1000>;
 	status = "okay";
 
@@ -301,7 +301,7 @@
 
 	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
-	ext-mux-sel-gpios = <&gpio0_e_h 8 0>;
+	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */
 	ext-mux-sel-delay-us = <1000>;
 	status = "okay";
 
