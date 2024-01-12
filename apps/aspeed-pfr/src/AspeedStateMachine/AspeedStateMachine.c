@@ -329,6 +329,7 @@ void enter_tmin1(void *o)
 
 	SetPlatformState(ENTER_T_MINUS_1);
 	show_provision_info();
+	power_btn(false);
 	LOG_DBG("End");
 }
 
@@ -1025,8 +1026,8 @@ void enter_tzero(void *o)
 		}
 	}
 
-	power_btn(true);
 enter_tzero_end:
+	power_btn(true);
 	LOG_DBG("End");
 }
 
@@ -1035,7 +1036,6 @@ void exit_tzero(void *o)
 	ARG_UNUSED(o);
 	LOG_DBG("Start");
 	/* Disarm reset monitor */
-	power_btn(false);
 	bmc_reset_monitor_remove();
 	platform_monitor_remove();
 	LOG_DBG("End");

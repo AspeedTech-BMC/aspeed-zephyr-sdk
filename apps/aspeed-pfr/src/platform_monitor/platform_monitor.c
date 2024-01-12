@@ -300,9 +300,8 @@ void power_sequence(void)
 struct k_work pwr_btn_work;
 static struct gpio_callback fp_pwr_btn_cb_data;
 
-static void power_btn_work_handler(struct k_work *item)
+static void power_btn_passthrough_update()
 {
-#ifdef INTEL_BHS
 	struct gpio_dt_spec power_btn_in =
 		GPIO_DT_SPEC_GET_BY_IDX(DT_INST(0, aspeed_pfr_gpio_bhs), fp_pwr_btn_in_gpios, 0);
 	struct gpio_dt_spec power_btn_out =
@@ -313,6 +312,12 @@ static void power_btn_work_handler(struct k_work *item)
 	gpio_pin_set(power_btn_out.port, power_btn_out.pin, ret);
 	gpio_pin_configure_dt(&power_btn_out, GPIO_OUTPUT);
 	LOG_INF("[PFR->BMC] PWR_BTN[%s %d] = %d", power_btn_out.port->name, power_btn_out.pin, ret);
+}
+
+static void power_btn_work_handler(struct k_work *item)
+{
+#ifdef INTEL_BHS
+	power_btn_passthrough_update();
 #endif
 }
 
@@ -327,22 +332,37 @@ void power_btn_handler(const struct device *dev, struct gpio_callback *cb, uint3
 void power_btn(bool enable)
 {
 #ifdef INTEL_BHS
-	k_work_init(&pwr_btn_work, power_btn_work_handler);
+	static bool init_done = false;
 	struct gpio_dt_spec power_btn_in =
 		GPIO_DT_SPEC_GET_BY_IDX(DT_INST(0, aspeed_pfr_gpio_bhs), fp_pwr_btn_in_gpios, 0);
+	struct gpio_dt_spec power_btn_out =
+		GPIO_DT_SPEC_GET_BY_IDX(DT_INST(0, aspeed_pfr_gpio_bhs), bmc_pwr_btn_out_gpios, 0);
+
+	if (!init_done) {
+		k_work_init(&pwr_btn_work, power_btn_work_handler);
+		gpio_init_callback(&fp_pwr_btn_cb_data, power_btn_handler, BIT(power_btn_in.pin));
+		init_done = true;
+	}
 
 	LOG_INF("[FP->PFR] Monitor PWN_BTN[%s %d] %s",
 			power_btn_in.port->name, power_btn_in.pin, enable ? "registered" : "removed");
 	if (enable) {
 		/* Register input */
 		gpio_pin_configure_dt(&power_btn_in, GPIO_INPUT);
-		gpio_init_callback(&fp_pwr_btn_cb_data, power_btn_handler, BIT(power_btn_in.pin));
 		gpio_add_callback(power_btn_in.port, &fp_pwr_btn_cb_data);
 		gpio_pin_interrupt_configure_dt(&power_btn_in, GPIO_INT_EDGE_BOTH);
+
+		/* Update PIN state at T0 */
+		power_btn_passthrough_update();
 	} else {
 		/* Remove the callback */
 		gpio_pin_interrupt_configure_dt(&power_btn_in, GPIO_INT_DISABLE);
 		gpio_remove_callback(power_btn_in.port, &fp_pwr_btn_cb_data);
+
+		/* Force to high at T-1 */
+		LOG_INF("[PFR->BMC] T-1 PWR_BTN[%s %d] force to 1",
+	  		power_btn_out.port->name, power_btn_out.pin);
+		gpio_pin_set(power_btn_out.port, power_btn_out.pin, 1);
 	}
 #endif
 }
