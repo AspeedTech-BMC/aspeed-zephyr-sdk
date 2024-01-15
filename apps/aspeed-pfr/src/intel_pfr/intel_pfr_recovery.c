@@ -117,9 +117,13 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 	}
 
 	act_block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)act_pfm_sig_b0;
+	int offset = PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
 
 	// Staging PFM signature start address after Staging block and capsule signature
-	status = pfr_spi_read(manifest->image_type, staging_address + PFM_SIG_BLOCK_SIZE, sizeof(PFR_AUTHENTICATION_BLOCK0), staging_pfm_sig_b0);
+	status = pfr_spi_read(manifest->image_type, staging_address + offset, sizeof(PFR_AUTHENTICATION_BLOCK0), staging_pfm_sig_b0);
+
 	if (status != Success) {
 		LOG_ERR("Staging pfm block0: Flash read data failed");
 		return Failure;
@@ -127,7 +131,7 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 
 	staging_block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)staging_pfm_sig_b0;
 
-	status = pfr_spi_read(manifest->image_type, staging_address + PFM_SIG_BLOCK_SIZE + sizeof(PFR_AUTHENTICATION_BLOCK0),
+	status = pfr_spi_read(manifest->image_type, staging_address + offset + sizeof(PFR_AUTHENTICATION_BLOCK0),
 				sizeof(staging_block1_buffer->TagBlock1) + sizeof(staging_block1_buffer->ReservedBlock1) +
 				sizeof(staging_block1_buffer->RootEntry), staging_pfm_sig_b1);
 	if (status != Success) {
@@ -137,15 +141,20 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 
 	staging_block1_buffer = (PFR_AUTHENTICATION_BLOCK1 *)staging_pfm_sig_b1;
 
-	if (staging_block1_buffer->RootEntry.PubCurveMagic == PUBLIC_SECP256_TAG) {
-		act_pfm_hash = act_block0_buffer->Sha256Pc;
-		staging_pfm_hash = staging_block0_buffer->Sha256Pc;
-		digest_length = SHA256_DIGEST_LENGTH;
-	} else if (staging_block1_buffer->RootEntry.PubCurveMagic == PUBLIC_SECP384_TAG) {
-		act_pfm_hash = act_block0_buffer->Sha384Pc;
-		staging_pfm_hash = staging_block0_buffer->Sha384Pc;
-		digest_length = SHA384_DIGEST_LENGTH;
-	} else {
+	switch(staging_block1_buffer->RootEntry.PubCurveMagic) {
+		case PUBLIC_SECP256_TAG:
+		case PUBLIC_LMS256_TAG:
+			act_pfm_hash = act_block0_buffer->Sha256Pc;
+			staging_pfm_hash = staging_block0_buffer->Sha256Pc;
+			digest_length = SHA256_DIGEST_LENGTH;
+			break;
+		case PUBLIC_SECP384_TAG:
+		case PUBLIC_LMS384_TAG:
+			act_pfm_hash = act_block0_buffer->Sha384Pc;
+			staging_pfm_hash = staging_block0_buffer->Sha384Pc;
+			digest_length = SHA384_DIGEST_LENGTH;
+			break;
+		default:
 		LOG_ERR("Staging block 1 root entry: Unsupported hash curve, %x", staging_block1_buffer->RootEntry.PubCurveMagic);
 		return Failure;
 	}
@@ -210,7 +219,10 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 
 		block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)buffer;
 		manifest->pc_length = block0_buffer->PcLength;
-		manifest->address += PFM_SIG_BLOCK_SIZE;
+		if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+			manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+		else
+			manifest->address += PFM_SIG_BLOCK_SIZE;
 
 		LOG_INF("AFM update start payload_address=%08x pc_length=%x", manifest->address, manifest->pc_length);
 		if (update_afm(AFM_PART_ACT_1, manifest->address, manifest->pc_length))
@@ -275,7 +287,10 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 	manifest->staging_address = staging_address;
 	manifest->active_pfm_addr = act_pfm_offset;
 	manifest->address = read_address;
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
 
 	if (pfr_spi_read(manifest->image_type, manifest->address,
 			sizeof(PFR_AUTHENTICATION_BLOCK0), buffer)) {
@@ -346,7 +361,11 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	}
 
 	// Recovery region PFM verification
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
+
 	manifest->pc_type = PFR_PCH_PFM;
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification

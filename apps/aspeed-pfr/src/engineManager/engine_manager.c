@@ -70,9 +70,9 @@ int initializeEngines(void)
 }
 
 #if defined(CONFIG_SEAMLESS_UPDATE)
-void apply_fvm_spi_protection(uint32_t fvm_addr)
+void apply_fvm_spi_protection(uint32_t fvm_addr, int offset)
 {
-	uint32_t fvm_offset = fvm_addr + PFM_SIG_BLOCK_SIZE;
+	uint32_t fvm_offset = fvm_addr + offset;
 	uint32_t fvm_body_offset = fvm_offset + sizeof(FVM_STRUCTURE);
 	FVM_STRUCTURE fvm;
 	PFM_SPI_DEFINITION spi_def;

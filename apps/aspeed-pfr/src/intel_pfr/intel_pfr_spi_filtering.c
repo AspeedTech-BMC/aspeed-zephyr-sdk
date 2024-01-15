@@ -14,6 +14,7 @@
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "intel_pfr/intel_pfr_provision.h"
 #include "intel_pfr/intel_pfr_pfm_manifest.h"
+#include "intel_pfr/intel_pfr_definitions.h"
 #include "pfr/pfr_util.h"
 
 #define SPIM_NUM  4
@@ -70,13 +71,18 @@ void apply_pfm_protection(int spi_device_id)
 		return;
 	}
 
-	// Block 0 + Block 1 = 1024 (0x400); PFM data(PFM Body = 0x20)
-	uint32_t pfm_region_Start = pfm_read_address + 0x400 + 0x20;
+	int offset = PFM_SIG_BLOCK_SIZE;
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
+
+	if (pfr_manifest->hash_curve == hash_sign_algo384 || pfr_manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
+
+	uint32_t pfm_region_Start = pfm_read_address + offset + 0x20;
 	int default_region_length = 40;
 	uint32_t region_start_address;
 	uint32_t region_end_address;
 	// Table 2-14  get Length
-	uint32_t addr_size_of_pfm = pfm_read_address + 0x400 + 0x1c;
+	uint32_t addr_size_of_pfm = pfm_read_address + offset + 0x1c;
 	int region_length;
 	// cerberus define region_id start from 1
 	int region_id = 1;
@@ -247,7 +253,7 @@ void apply_pfm_protection(int spi_device_id)
 #if defined(CONFIG_SEAMLESS_UPDATE)
 		case FVM_ADDR_DEF:
 			fvm_def = (PFM_FVM_ADDRESS_DEFINITION *)region_record;
-			apply_fvm_spi_protection(fvm_def->FVMAddress);
+			apply_fvm_spi_protection(fvm_def->FVMAddress, offset);
 			pfm_region_Start += sizeof(PFM_FVM_ADDRESS_DEFINITION);
 			break;
 #endif
@@ -255,7 +261,7 @@ void apply_pfm_protection(int spi_device_id)
 			done = true;
 			break;
 		}
-		if (pfm_region_Start >= pfm_read_address + 0x400 + pfm_record_length)
+		if (pfm_region_Start >= pfm_read_address + offset + pfm_record_length)
 			break;
 	}
 

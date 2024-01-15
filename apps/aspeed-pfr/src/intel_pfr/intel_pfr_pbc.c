@@ -73,7 +73,10 @@ int update_active_pfm(struct pfr_manifest *manifest, uint32_t pfm_size)
 		capsule_offset = manifest->staging_address;
 
 	// Adjusting capsule offset size to PFM Signing chain
-	capsule_offset += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) 
+		capsule_offset += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		capsule_offset += PFM_SIG_BLOCK_SIZE;
 
 	// Updating PFM from capsule to active region
 	length_page_align =
@@ -274,8 +277,10 @@ int get_total_pfm_fvm_size(struct pfr_manifest *manifest, uint32_t signed_pfm_of
 			if (spi_def.HashAlgorithmInfo.SHA256HashPresent ||
 			    spi_def.HashAlgorithmInfo.SHA384HashPresent) {
 				cap_pfm_body_offset += sizeof(PFM_SPI_DEFINITION);
-				cap_pfm_body_offset += (manifest->hash_curve == secp384r1) ?
-					SHA384_SIZE : SHA256_SIZE;
+				if ((manifest->hash_curve == secp384r1) || (manifest->hash_curve == hash_sign_algo384))
+					cap_pfm_body_offset += SHA384_SIZE;
+				else
+					cap_pfm_body_offset += SHA256_SIZE;
 			} else {
 				cap_pfm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}
@@ -367,8 +372,10 @@ int decompress_fvm_spi_region(struct pfr_manifest *manifest, PBC_HEADER *pbc,
 			if (spi_def.HashAlgorithmInfo.SHA256HashPresent ||
 			    spi_def.HashAlgorithmInfo.SHA384HashPresent) {
 				fvm_body_offset += sizeof(PFM_SPI_DEFINITION);
-				fvm_body_offset += (manifest->hash_curve == secp384r1) ?
-					SHA384_SIZE : SHA256_SIZE;
+				if ((manifest->hash_curve == secp384r1) || (manifest->hash_curve == hash_sign_algo384))
+					fvm_body_offset += SHA384_SIZE;
+				else
+					fvm_body_offset += SHA256_SIZE;
 			} else {
 				fvm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}
@@ -395,6 +402,12 @@ int decompress_fv_capsule(struct pfr_manifest *manifest)
 
 	if (manifest->target_fvm_addr == 0)
 		return Failure;
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		signed_fvm_offset = read_address + LMS_PFM_SIG_BLOCK_SIZE;
+		cap_fvm_offset = signed_fvm_offset + LMS_PFM_SIG_BLOCK_SIZE;
+		pbc_offset = cap_fvm_offset + manifest->pc_length;
+	}
 
 	// Erase and update active FVM region.
 	pfr_spi_erase_region(image_type, support_block_erase, manifest->target_fvm_addr,
@@ -427,6 +440,13 @@ int decompress_capsule(struct pfr_manifest *manifest, DECOMPRESSION_TYPE_MASK_EN
 	PFM_STRUCTURE pfm_header;
 	PFM_SPI_DEFINITION spi_def;
 	PBC_HEADER pbc;
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		signed_pfm_offset = read_address + LMS_PFM_SIG_BLOCK_SIZE;
+		cap_pfm_offset = signed_pfm_offset + LMS_PFM_SIG_BLOCK_SIZE;
+		cap_pfm_body_offset = cap_pfm_offset + sizeof(PFM_STRUCTURE);
+		cap_pfm_body_start_addr = cap_pfm_body_offset;
+	}
 
 	if (pfr_spi_read(image_type, cap_pfm_offset, sizeof(PFM_STRUCTURE), (uint8_t *)&pfm_header))
 		return Failure;
@@ -490,8 +510,10 @@ int decompress_capsule(struct pfr_manifest *manifest, DECOMPRESSION_TYPE_MASK_EN
 			if (spi_def.HashAlgorithmInfo.SHA256HashPresent ||
 			    spi_def.HashAlgorithmInfo.SHA384HashPresent) {
 				cap_pfm_body_offset += sizeof(PFM_SPI_DEFINITION);
-				cap_pfm_body_offset += (manifest->hash_curve == secp384r1) ?
-					SHA384_SIZE : SHA256_SIZE;
+				if ((manifest->hash_curve == secp384r1) || (manifest->hash_curve == hash_sign_algo384))
+					cap_pfm_body_offset += SHA384_SIZE;
+				else
+					cap_pfm_body_offset += SHA256_SIZE;
 			} else {
 				cap_pfm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}

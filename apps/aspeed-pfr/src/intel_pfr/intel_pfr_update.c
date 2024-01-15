@@ -126,7 +126,10 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	else if (manifest->image_type == PCH_TYPE)
 		manifest->pc_type = PFR_PCH_PFM;
 
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
 
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification
@@ -354,9 +357,14 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 	}
 
 	pc_length = manifest->pc_length;
-	payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+	int offset = PFM_SIG_BLOCK_SIZE;
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
+	payload_address = manifest->address + offset;
+
 	LOG_INF("AFM update start payload_address=%08x pc_length=%x", payload_address, pc_length);
-	status = pfr_spi_read(manifest->image_type, payload_address + PFM_SIG_BLOCK_SIZE + 4,
+	status = pfr_spi_read(manifest->image_type, payload_address + offset + 4,
 				sizeof(uint8_t), (uint8_t *)&hrot_svn);
 	if (status != Success) {
 		LOG_ERR("Flash read AFM SVN failed");
@@ -560,7 +568,11 @@ int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
 
 	LOG_INF("ROT update capsule verification success");
 	pc_type_status = check_rot_capsule_type(manifest);
-	payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		payload_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+
 	if (pc_type_status == PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON) {
 		// Decommission validation
 		manifest->address = payload_address;

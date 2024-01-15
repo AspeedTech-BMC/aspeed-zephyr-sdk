@@ -221,15 +221,100 @@ int validate_pc_type(struct pfr_manifest *manifest, uint32_t pc_type)
 	return Success;
 }
 
+#include "mbedtls/lms.h"
+#include "lmots.h"
+int intel_block1_block0_entry_verify_lms(struct pfr_manifest *manifest, void *input, int hash_length)
+{
+#if defined(CONFIG_MBEDTLS_LMS_C)
+	BLOCK0ENTRY_lms *block1_buffer_lms = (BLOCK0ENTRY_lms *)input;
+	uint8_t *sig;
+	mbedtls_lms_public_t pub_ctx;
+	int ret;
+
+	sig = block1_buffer_lms->Block0Signature;
+
+	mbedtls_lms_public_init(&pub_ctx);
+	ret = mbedtls_lms_import_public_key(&pub_ctx, manifest->verification->pubkey->lms_key, manifest->verification->pubkey->lms_key_len);
+	if (ret != 0) {
+		LOG_ERR("import public key failed, ret = %x", -ret);
+		if (manifest->verification->pubkey->lms_key_len){
+			manifest->verification->pubkey->lms_key_len = 0;
+			memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+		}
+		return Failure;
+	}
+
+	ret = mbedtls_lms_verify(&pub_ctx, manifest->pfr_hash->hash_out, hash_length, sig+CONFIG_LMS_SIGN_SERIAL_OFFSET, block1_buffer_lms->siglen-CONFIG_LMS_SIGN_SERIAL_OFFSET);
+	if (ret != 0) {
+		LOG_ERR("verify failed, ret = %x, siglen = %d\n", ret, block1_buffer_lms->siglen-4);
+		if (manifest->verification->pubkey->lms_key_len){
+			manifest->verification->pubkey->lms_key_len = 0;
+			memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+		}
+		return Failure;
+	}
+	return Success;
+#else
+	LOG_ERR("Block1 Block0 Entry: LMS support is not enabled");
+	return Failure;
+#endif
+}
+
+int intel_block1_csk_block0_entry_verify_lms(struct pfr_manifest *manifest, void *input, int hash_length)
+{
+#if defined(CONFIG_MBEDTLS_LMS_C)
+	uint8_t *sig;
+	mbedtls_lms_public_t pub_ctx;
+	int ret;
+	CSKENTRY_lms *block1_buffer = (CSKENTRY_lms *)input;
+	sig = block1_buffer->CskSignature;
+
+	mbedtls_lms_public_init(&pub_ctx);
+	ret = mbedtls_lms_import_public_key(&pub_ctx, manifest->verification->pubkey->lms_key, manifest->verification->pubkey->lms_key_len);
+	if (ret != 0) {
+		LOG_ERR("import public key failed, ret = %x", -ret);
+		if (manifest->verification->pubkey->lms_key_len){
+			manifest->verification->pubkey->lms_key_len = 0;
+			memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+		}
+		return Failure;
+	}
+
+	ret = mbedtls_lms_verify(&pub_ctx, manifest->pfr_hash->hash_out, hash_length, sig+CONFIG_LMS_SIGN_SERIAL_OFFSET, block1_buffer->siglen-CONFIG_LMS_SIGN_SERIAL_OFFSET);
+	if (ret != 0) {
+		LOG_ERR("verify failed, ret = %x, siglen = %d, lms_verify_pubkey_len = %d, hash_length = %d\n",
+			ret, block1_buffer->siglen-CONFIG_LMS_SIGN_SERIAL_OFFSET,
+			manifest->verification->pubkey->lms_key_len,
+			hash_length);
+		if (manifest->verification->pubkey->lms_key_len){
+			manifest->verification->pubkey->lms_key_len = 0;
+			memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+		}
+		return Failure;
+	}
+
+	manifest->verification->pubkey->lms_key_len = block1_buffer->CskEntryInitial.keylen - CONFIG_LMS_SIGN_SERIAL_OFFSET;
+	memcpy(manifest->verification->pubkey->lms_key, &block1_buffer->CskEntryInitial.pubkey[CONFIG_LMS_SIGN_SERIAL_OFFSET], manifest->verification->pubkey->lms_key_len);
+	ret = manifest->pfr_authentication->block1_block0_entry_verify(manifest);
+	if (ret != Success)
+		return Failure;
+
+	return Success;
+#else
+	LOG_ERR("Block1 CSK Entry: LMS support is not enabled");
+	return Failure;
+#endif
+}
+
 // Block 1 Block 0 Entry
 int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 {
-	uint8_t buffer[sizeof(BLOCK0ENTRY)] = { 0 };
 	uint8_t block0_signature_curve_magic = 0;
 	uint32_t block0_entry_address = 0;
 	BLOCK0ENTRY *block1_buffer;
 	uint32_t hash_length = 0;
 	int status = 0;
+	int read_size = sizeof(BLOCK0ENTRY);
 
 	// Adjusting Block Address in case of KeyCancellation
 	if (manifest->kc_flag == 0)
@@ -237,7 +322,19 @@ int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 	else
 		block0_entry_address = manifest->address + sizeof(PFR_AUTHENTICATION_BLOCK0) + CSK_START_ADDRESS;
 
-	status = pfr_spi_read(manifest->image_type, block0_entry_address, sizeof(BLOCK0ENTRY), buffer);
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		int offset = sizeof(uint32_t) + sizeof(uint8_t) * 12 + sizeof(KEY_ENTRY_lms);
+
+		read_size = sizeof(BLOCK0ENTRY_lms);
+		if (manifest->kc_flag == 0)
+			block0_entry_address = manifest->address + sizeof(PFR_AUTHENTICATION_BLOCK0) + offset + sizeof(CSKENTRY_lms);
+		else
+			block0_entry_address = manifest->address + sizeof(PFR_AUTHENTICATION_BLOCK0) + offset;
+	}
+	uint8_t buffer[read_size];
+	memset(buffer, 0, read_size);
+
+	status = pfr_spi_read(manifest->image_type, block0_entry_address, read_size, buffer);
 	if (status != Success) {
 		LOG_ERR("Block1 Block0 Entry: Flash read data failed");
 		return Failure;
@@ -258,6 +355,14 @@ int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 		block0_signature_curve_magic = secp384r1;
 		manifest->pfr_hash->type = HASH_TYPE_SHA384;
 		hash_length = SHA384_HASH_LENGTH;
+	} else if (block1_buffer->Block0SignatureMagic == SIGNATURE_LMS384_TAG) {
+		block0_signature_curve_magic = hash_sign_algo384;
+		manifest->pfr_hash->type = HASH_TYPE_SHA384;
+		hash_length = SHA384_HASH_LENGTH;
+	} else if (block1_buffer->Block0SignatureMagic == SIGNATURE_LMS256_TAG){
+		block0_signature_curve_magic = hash_sign_algo256;
+		manifest->pfr_hash->type = HASH_TYPE_SHA256;
+		hash_length = SHA256_HASH_LENGTH;
 	} else {
 		LOG_ERR("Block1 Block0 Entry: Unsupported signature magic, %x", block1_buffer->Block0SignatureMagic);
 		return Failure;
@@ -279,6 +384,9 @@ int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 		LOG_ERR("Block1 Block0 Entry: Get hash failed");
 		return Failure;
 	}
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		return intel_block1_block0_entry_verify_lms(manifest, block1_buffer, hash_length);
 
 	memcpy(manifest->verification->pubkey->signature_r, block1_buffer->Block0SignatureR, hash_length);
 	memcpy(manifest->verification->pubkey->signature_s, block1_buffer->Block0SignatureS, hash_length);
@@ -302,7 +410,6 @@ int intel_block1_block0_entry_verify(struct pfr_manifest *manifest)
 int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 {
 	uint32_t block1_address = manifest->address + sizeof(PFR_AUTHENTICATION_BLOCK0);
-	uint8_t buffer[sizeof(CSKENTRY)] = { 0 };
 	uint8_t csk_sign_curve_magic = 0;
 	uint8_t csk_key_curve_type = 0;
 	uint32_t sign_bit_verify = 0;
@@ -310,15 +417,25 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 	uint32_t hash_length = 0;
 	int status = 0;
 	int i;
+	int read_size = sizeof(CSKENTRY);
+	int offset = CSK_START_ADDRESS;
 
-	status = pfr_spi_read(manifest->image_type, block1_address + CSK_START_ADDRESS, sizeof(CSKENTRY), buffer);
+	CSKENTRY_lms *block1_buffer_lms;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		read_size = sizeof(CSKENTRY_lms);
+	}
+
+	uint8_t buffer[read_size];
+	memset(buffer, 0, sizeof(buffer));
+
+	status = pfr_spi_read(manifest->image_type, block1_address + offset, read_size, buffer);
 	if (status != Success) {
 		LOG_ERR("Block1 CSK Entry: Flash read data failed");
 		return Failure;
 	}
 
 	block1_buffer = (CSKENTRY *)&buffer;
-
+	block1_buffer_lms = (CSKENTRY_lms *)&buffer;
 	// validate CSK entry magic tag
 	if (block1_buffer->CskEntryInitial.Tag != BLOCK1CSKTAG) {
 		LOG_ERR("Block1 CSK Entry: Magic/Tag not matched, %x", block1_buffer->CskEntryInitial.Tag);
@@ -329,6 +446,10 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 		csk_key_curve_type = secp256r1;
 	} else if (block1_buffer->CskEntryInitial.PubCurveMagic == PUBLIC_SECP384_TAG) {
 		csk_key_curve_type = secp384r1;
+	} else if (block1_buffer->CskEntryInitial.PubCurveMagic == PUBLIC_LMS384_TAG) {
+		csk_key_curve_type = hash_sign_algo384;
+	} else if (block1_buffer->CskEntryInitial.PubCurveMagic == PUBLIC_LMS256_TAG) {
+		csk_key_curve_type = hash_sign_algo256;
 	} else {
 		LOG_ERR("Block1 CSK Entry: Unsupported curve magic, %x", block1_buffer->CskEntryInitial.PubCurveMagic);
 		return Failure;
@@ -349,6 +470,14 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 		csk_sign_curve_magic = secp384r1;
 		manifest->pfr_hash->type = HASH_TYPE_SHA384;
 		hash_length = SHA384_DIGEST_LENGTH;
+	} else if (block1_buffer_lms->CskSignatureMagic == SIGNATURE_LMS384_TAG) {
+		csk_sign_curve_magic = hash_sign_algo384;
+		manifest->pfr_hash->type = HASH_TYPE_SHA384;
+		hash_length = SHA384_HASH_LENGTH;
+	} else if (block1_buffer_lms->CskSignatureMagic == SIGNATURE_LMS256_TAG){
+		csk_sign_curve_magic = hash_sign_algo256;
+		manifest->pfr_hash->type = HASH_TYPE_SHA256;
+		hash_length = SHA256_HASH_LENGTH;
 	} else {
 		LOG_ERR("Block1 CSK Entry: Unsupported signature magic, %x", block1_buffer->CskSignatureMagic);
 		return Failure;
@@ -413,10 +542,23 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 		manifest->hash->start_sha384(manifest->hash);
 		manifest->hash->calculate_sha384(manifest->hash, (uint8_t *)&block1_buffer->CskEntryInitial.PubCurveMagic,
 						 CSK_ENTRY_PC_SIZE, manifest->pfr_hash->hash_out, SHA384_HASH_LENGTH);
+	} else if (csk_key_curve_type == hash_sign_algo384) {
+		manifest->hash->start_sha384(manifest->hash);
+		hash_length = SHA384_HASH_LENGTH;
+		manifest->hash->calculate_sha384(manifest->hash, (uint8_t *)&block1_buffer->CskEntryInitial.PubCurveMagic,
+						 sizeof(KEY_ENTRY_lms) - sizeof(uint32_t), manifest->pfr_hash->hash_out, hash_length);
+	} else if (csk_key_curve_type == hash_sign_algo256){
+		manifest->hash->start_sha256(manifest->hash);
+		hash_length = SHA256_HASH_LENGTH;
+		manifest->hash->calculate_sha256(manifest->hash, (uint8_t *)&block1_buffer->CskEntryInitial.PubCurveMagic,
+						 sizeof(KEY_ENTRY_lms) - sizeof(uint32_t), manifest->pfr_hash->hash_out, hash_length);
 	} else	{
 		LOG_ERR("Block1 CSK Entry: Get hash failed, Unsupported curve magic, %x", csk_key_curve_type);
 		return Failure;
 	}
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		return intel_block1_csk_block0_entry_verify_lms(manifest, buffer, hash_length);
 
 	memcpy(manifest->verification->pubkey->signature_r, block1_buffer->CskSignatureR, hash_length);
 	memcpy(manifest->verification->pubkey->signature_s, block1_buffer->CskSignatureS, hash_length);
@@ -476,15 +618,26 @@ int intel_block1_verify(struct pfr_manifest *manifest)
 
 	LOG_INF("Block1 Root Entry: Validation success");
 
-	// Update root key to validate csk entry if csk entry exist or b0 entry if csk entry does not exist
-	memcpy(manifest->verification->pubkey->x, block1_buffer->RootEntry.PubKeyX, sizeof(block1_buffer->RootEntry.PubKeyX));
-	memcpy(manifest->verification->pubkey->y, block1_buffer->RootEntry.PubKeyY, sizeof(block1_buffer->RootEntry.PubKeyY));
+	if (block1_buffer->RootEntry.PubCurveMagic == PUBLIC_LMS384_TAG || block1_buffer->RootEntry.PubCurveMagic == PUBLIC_LMS256_TAG) {
+		PFR_AUTHENTICATION_BLOCK1_lms *block1_lms = (PFR_AUTHENTICATION_BLOCK1_lms *)block1_buffer;
+
+		manifest->verification->pubkey->lms_key_len = block1_lms->RootEntry.keylen - CONFIG_LMS_SIGN_SERIAL_OFFSET;
+		memcpy(manifest->verification->pubkey->lms_key, &block1_lms->RootEntry.pubkey[CONFIG_LMS_SIGN_SERIAL_OFFSET], manifest->verification->pubkey->lms_key_len);
+	} else {
+		// Update root key to validate csk entry if csk entry exist or b0 entry if csk entry does not exist
+		memcpy(manifest->verification->pubkey->x, block1_buffer->RootEntry.PubKeyX, sizeof(block1_buffer->RootEntry.PubKeyX));
+		memcpy(manifest->verification->pubkey->y, block1_buffer->RootEntry.PubKeyY, sizeof(block1_buffer->RootEntry.PubKeyY));
+	}
 
 	if (manifest->kc_flag == 0) {
 		// CSK and Block 0 entry verification
 		status = manifest->pfr_authentication->block1_csk_block0_entry_verify(manifest);
 		if (status != Success) {
 			LOG_ERR("Block1 CSK and Block0 Entry: Validation failed");
+			if (manifest->verification->pubkey->lms_key_len) {
+				manifest->verification->pubkey->lms_key_len = 0;
+				memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+			}
 			return Failure;
 		}
 		LOG_INF("Block1 CSK and Block0 Entry: Validation success");
@@ -492,6 +645,10 @@ int intel_block1_verify(struct pfr_manifest *manifest)
 		status = manifest->pfr_authentication->block1_block0_entry_verify(manifest);
 		if (status != Success) {
 			LOG_ERR("Block1 Block0 Entry: Validation failed");
+			if (manifest->verification->pubkey->lms_key_len) {
+				manifest->verification->pubkey->lms_key_len = 0;
+				memset(manifest->verification->pubkey->lms_key, 0, sizeof(manifest->verification->pubkey->lms_key));
+			}
 			return Failure;
 		}
 		LOG_INF("Block1 Block0 Entry: Validation success");
@@ -566,6 +723,16 @@ int intel_block0_verify(struct pfr_manifest *manifest)
 		manifest->pfr_hash->type = HASH_TYPE_SHA384;
 		hash_length = SHA384_DIGEST_LENGTH;
 		ptr_sha = block0_buffer->Sha384Pc;
+	} else if (manifest->hash_curve == hash_sign_algo384) {
+		manifest->pfr_hash->type = HASH_TYPE_SHA384;
+		hash_length = SHA384_DIGEST_LENGTH;
+		ptr_sha = block0_buffer->Sha384Pc;
+		manifest->pfr_hash->start_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE;
+	} else if (manifest->hash_curve == hash_sign_algo256) {
+		manifest->pfr_hash->type = HASH_TYPE_SHA256;
+		hash_length = SHA256_DIGEST_LENGTH;
+		ptr_sha = block0_buffer->Sha256Pc;
+		manifest->pfr_hash->start_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE;
 	} else  {
 		LOG_ERR("Block0: Unsupported hash curve, %x", manifest->hash_curve);
 		return Failure;
@@ -597,10 +764,11 @@ uint32_t find_fvm_addr(struct pfr_manifest *manifest, uint16_t fv_type)
 	uint32_t act_pfm_body_offset = act_pfm_offset + sizeof(PFM_STRUCTURE);
 	PFM_STRUCTURE act_pfm_header;
 	uint32_t act_pfm_end_addr;
-
 	PFM_SPI_DEFINITION spi_def;
 	PFM_FVM_ADDRESS_DEFINITION *fvm_def;
 
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		act_pfm_offset = manifest->active_pfm_addr + LMS_PFM_SIG_BLOCK_SIZE;
 
 	if (pfr_spi_read(image_type, act_pfm_offset, sizeof(PFM_STRUCTURE),
 				(uint8_t *)&act_pfm_header)) {
@@ -619,8 +787,10 @@ uint32_t find_fvm_addr(struct pfr_manifest *manifest, uint16_t fv_type)
 			if (spi_def.HashAlgorithmInfo.SHA256HashPresent ||
 			    spi_def.HashAlgorithmInfo.SHA384HashPresent) {
 				act_pfm_body_offset += sizeof(PFM_SPI_DEFINITION);
-				act_pfm_body_offset += (manifest->hash_curve == secp384r1) ?
-					SHA384_SIZE : SHA256_SIZE;
+				if ((manifest->hash_curve == secp384r1) || (manifest->hash_curve == hash_sign_algo384))
+					act_pfm_body_offset += SHA384_SIZE;
+				else
+					act_pfm_body_offset += SHA256_SIZE;
 			} else {
 				act_pfm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}
@@ -653,6 +823,8 @@ int intel_fvm_verify(struct pfr_manifest *manifest)
 	FVM_STRUCTURE cap_fvm_header;
 	FVM_STRUCTURE act_fvm_header;
 
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		signed_fvm_offset = read_address + LMS_PFM_SIG_BLOCK_SIZE;
 	if (pfr_spi_read(image_type, cap_fvm_offset, sizeof(FVM_STRUCTURE),
 				(uint8_t *)&cap_fvm_header)) {
 		LOG_ERR("Failed to read capsule FVM");
@@ -668,8 +840,10 @@ int intel_fvm_verify(struct pfr_manifest *manifest)
 		return Failure;
 	}
 
-	act_fvm_offset = target_fvm_addr + PFM_SIG_BLOCK_SIZE;
-
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		act_fvm_offset = target_fvm_addr + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		act_fvm_offset = target_fvm_addr + PFM_SIG_BLOCK_SIZE;
 
 	if (pfr_spi_read(image_type, act_fvm_offset, sizeof(FVM_STRUCTURE),
 				(uint8_t *)&act_fvm_header)) {
@@ -701,6 +875,14 @@ int intel_fvms_verify(struct pfr_manifest *manifest)
 	PFM_STRUCTURE pfm_header;
 	PFM_SPI_DEFINITION spi_def;
 	PFM_FVM_ADDRESS_DEFINITION *fvm_def;
+	int offset = PFM_SIG_BLOCK_SIZE;
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		signed_pfm_offset = read_address + LMS_PFM_SIG_BLOCK_SIZE;
+		cap_pfm_offset = signed_pfm_offset + LMS_PFM_SIG_BLOCK_SIZE;
+		cap_pfm_body_offset = cap_pfm_offset + sizeof(PFM_STRUCTURE);
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
+	}
 
 	if (pfr_spi_read(image_type, cap_pfm_offset, sizeof(PFM_STRUCTURE), (uint8_t *)&pfm_header))
 		return Failure;
@@ -722,8 +904,10 @@ int intel_fvms_verify(struct pfr_manifest *manifest)
 			if (spi_def.HashAlgorithmInfo.SHA256HashPresent ||
 			    spi_def.HashAlgorithmInfo.SHA384HashPresent) {
 				cap_pfm_body_offset += sizeof(PFM_SPI_DEFINITION);
-				cap_pfm_body_offset += (manifest->hash_curve == secp384r1) ?
-					SHA384_SIZE : SHA256_SIZE;
+				if ((manifest->hash_curve == secp384r1) || (manifest->hash_curve == hash_sign_algo384))
+					cap_pfm_body_offset += SHA384_SIZE;
+				else
+					cap_pfm_body_offset += SHA256_SIZE;
 			} else {
 				cap_pfm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}
@@ -733,8 +917,7 @@ int intel_fvms_verify(struct pfr_manifest *manifest)
 			manifest->state = FIRMWARE_UPDATE;
 			fvm_def = (PFM_FVM_ADDRESS_DEFINITION *)&spi_def;
 			fvm_addr = fvm_def->FVMAddress - manifest->active_pfm_addr +
-				+ read_address + PFM_SIG_BLOCK_SIZE;
-
+				+ read_address + offset;
 			manifest->address = fvm_addr;
 			if (manifest->base->verify((struct manifest *)manifest,
 						NULL, NULL, NULL, 0)) {
@@ -772,6 +955,13 @@ int intel_cfms_verify(struct pfr_manifest *manifest)
 	CPLD_PFM_STRUCTURE pfm_header;
 	CPLD_ADDR_DEF_STRUCTURE cpld_addr_def;
 	CFM_STRUCTURE cfm_header;
+	int offset = PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		pfm_sig_offset = cap_base_address + LMS_PFM_SIG_BLOCK_SIZE;
+		pfm_offset = pfm_sig_offset + LMS_PFM_SIG_BLOCK_SIZE;
+		pfm_body_offset = pfm_offset + sizeof(PFM_STRUCTURE);
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
+	}
 
 	if (pfr_spi_read(image_type, pfm_offset, sizeof(CPLD_PFM_STRUCTURE),
 				(uint8_t *)&pfm_header)) {
@@ -822,7 +1012,7 @@ int intel_cfms_verify(struct pfr_manifest *manifest)
 				LOG_ERR("Verify CPLD firmware signature failed");
 				return Failure;
 			}
-			cfm_offset += PFM_SIG_BLOCK_SIZE;
+			cfm_offset += offset;
 			pfr_spi_read(image_type, cfm_offset, sizeof(CFM_STRUCTURE),
 					(uint8_t *)&cfm_header);
 			if (cpld_addr_def.FwType != cfm_header.FwType) {

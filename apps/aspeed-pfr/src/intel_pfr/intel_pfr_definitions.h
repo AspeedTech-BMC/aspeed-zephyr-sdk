@@ -71,6 +71,11 @@
 #define SIGNATURE_RSA4K_512_TAG         0x383c5144
 #define PUBLIC_SECP256_TAG              0xC7B88C74
 #define PUBLIC_SECP384_TAG              0x08F07B47
+#define PUBLIC_LMS384_TAG               0x413d858d
+#define PUBLIC_LMS256_TAG               0xaa4aad02
+#define SIGNATURE_LMS384_TAG            0x66600835
+#define SIGNATURE_LMS256_TAG            0x5266b561
+#define LMS_PFM_SIG_BLOCK_SIZE          5120
 #define PUBLIC_RSA2K_TAG                0x7FAD5E14
 #define PUBLIC_RSA3K_TAG                0x684694E6
 #define PUBLIC_RSA4K_TAG                0xB73AA717
@@ -121,9 +126,11 @@
 #define AFM_RECOVERY_PENDING_UPDATE     0x2
 #define AFM_PENDING_UPDATE_STATE        (AFM_ACTIVE_PENDING_UPDATE | AFM_RECOVERY_PENDING_UPDATE)
 
-enum Ecc_Curve {
+enum CurveHashType {
 	secp384r1 = 1,
 	secp256r1,
+	hash_sign_algo384,
+	hash_sign_algo256
 };
 
 typedef enum {

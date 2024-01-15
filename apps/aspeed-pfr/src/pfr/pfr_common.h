@@ -75,6 +75,8 @@ struct pfr_pubkey {
 	uint8_t y[SHA512_HASH_LENGTH];
 	uint8_t signature_r[SHA512_HASH_LENGTH];
 	uint8_t signature_s[SHA512_HASH_LENGTH];
+	uint8_t lms_key[64];
+	int lms_key_len;
 };
 
 struct pfr_hash {

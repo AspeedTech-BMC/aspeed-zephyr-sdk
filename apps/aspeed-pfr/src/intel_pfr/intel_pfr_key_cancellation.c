@@ -49,7 +49,10 @@ int validate_key_cancellation_flag(struct pfr_manifest *manifest)
 	if ((manifest->pc_type == CPLD_CAPSULE_CANCELLATION) || (manifest->pc_type == PCH_PFM_CANCELLATION)
 	    || (manifest->pc_type == PCH_CAPSULE_CANCELLATION) || (manifest->pc_type == BMC_PFM_CANCELLATION)
 	    || (manifest->pc_type == BMC_CAPSULE_CANCELLATION)) {
-		reserved_address = manifest->address + PFM_SIG_BLOCK_SIZE + 4;
+		if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+			reserved_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE + 4;
+		else
+			reserved_address = manifest->address + PFM_SIG_BLOCK_SIZE + 4;
 		status = pfr_spi_read(manifest->image_type, reserved_address, sizeof(read_buffer), (uint8_t *)read_buffer);
 		if (status != Success) {
 			LOG_ERR("Flash read reserved data failed for key cancellation capsule");

@@ -405,6 +405,11 @@ void spdm_run_attester()
 	int max_afm = CONFIG_PFR_SPDM_ATTESTATION_MAX_DEVICES;
 
 	uint32_t event = osEventFlagsGet(spdm_attester_event);
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
+	int offset = PFM_SIG_BLOCK_SIZE;
+
+	if (pfr_manifest->hash_curve == hash_sign_algo384 || pfr_manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
 	if (!(event & SPDM_REQ_EVT_ENABLE)) {
 		LOG_WRN("SPDM Requester not enabled");
 	} else if (!(event & SPDM_REQ_EVT_T0)) {
@@ -427,7 +432,7 @@ void spdm_run_attester()
 				continue;
 			}
 			if (magic_num == BLOCK0TAG) {
-				afm_list[i] = (i * CONFIG_PFR_SPDM_ATTESTATION_DEVICE_OFFSET) + 0x400;
+				afm_list[i] = (i * CONFIG_PFR_SPDM_ATTESTATION_DEVICE_OFFSET) + offset;
 				LOG_INF("Add afm device offset [%08x]", afm_list[i]);
 				} else {
 				/* Offset 0x0000 is block0/1 header not AFM device structure,

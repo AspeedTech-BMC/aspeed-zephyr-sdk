@@ -28,7 +28,10 @@ int get_active_pfm_version_details(struct pfr_manifest *manifest, uint32_t addre
 	uint8_t buffer[sizeof(PFM_STRUCTURE)];
 
 	// PFM data start address after signature
-	pfm_data_address = address + PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		pfm_data_address = address + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		pfm_data_address = address + PFM_SIG_BLOCK_SIZE;
 
 	status = pfr_spi_read(manifest->image_type, pfm_data_address, sizeof(PFM_STRUCTURE), buffer);
 	if (status != Success) {
@@ -89,7 +92,10 @@ int get_recover_pfm_version_details(struct pfr_manifest *manifest, uint32_t addr
 	uint8_t buffer[sizeof(PFM_STRUCTURE)];
 
 	// PFM data start address after Recovery block and PFM block
-	pfm_data_address = address + PFM_SIG_BLOCK_SIZE + PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		pfm_data_address = address + LMS_PFM_SIG_BLOCK_SIZE + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		pfm_data_address = address + PFM_SIG_BLOCK_SIZE + PFM_SIG_BLOCK_SIZE;
 
 	status = pfr_spi_read(manifest->image_type, pfm_data_address, sizeof(PFM_STRUCTURE),
 			buffer);
@@ -225,6 +231,10 @@ int fvm_spi_region_verification(struct pfr_manifest *manifest)
 	PFM_SPI_DEFINITION spi_definition = { 0 };
 	uint8_t pfm_spi_hash[SHA384_SIZE] = { 0 };
 
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256) {
+		fvm_addr = read_address + LMS_PFM_SIG_BLOCK_SIZE;
+	}
+
 	LOG_INF("Verifying FVM...");
 	if (manifest->base->verify((struct manifest *)manifest, manifest->hash,
 			manifest->verification->base, manifest->pfr_hash->hash_out,
@@ -291,6 +301,9 @@ int pfm_spi_region_verification(struct pfr_manifest *manifest)
 #endif
 	PFM_SPI_DEFINITION spi_definition = { 0 };
 	uint8_t pfm_spi_hash[SHA384_SIZE] = { 0 };
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		pfm_addr = read_address + LMS_PFM_SIG_BLOCK_SIZE;
 
 	if (pfr_spi_read(manifest->image_type, pfm_addr,
 			sizeof(PFM_STRUCTURE), (uint8_t *)&pfm_data))

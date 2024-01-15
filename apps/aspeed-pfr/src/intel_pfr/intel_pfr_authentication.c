@@ -84,8 +84,11 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 #endif
 
 	// Recovery region PFM verification
-	manifest->address += PFM_SIG_BLOCK_SIZE;
-
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
+	LOG_INF("Hash curve = %d", manifest->hash_curve);
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
