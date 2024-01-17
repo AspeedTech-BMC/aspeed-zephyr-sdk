@@ -151,6 +151,10 @@ int get_staging_hash(uint8_t image_type, CPLD_STATUS *cpld_status, uint8_t *hash
 	return 0;
 }
 
+#if defined(CONFIG_ASPEED_STATE_MACHINE_EVENT_STEPPING)
+K_SEM_DEFINE(asm_event_step, 0, 1);
+#endif
+
 void GenerateStateMachineEvent(enum aspeed_pfr_event evt, void *data)
 {
 	struct event_context *event = (struct event_context *)k_malloc(sizeof(struct event_context));
@@ -160,6 +164,10 @@ void GenerateStateMachineEvent(enum aspeed_pfr_event evt, void *data)
 	event_log_idx++;
 	event->event = evt;
 	event->data.ptr = data;
+
+#if defined(CONFIG_ASPEED_STATE_MACHINE_EVENT_STEPPING)
+	k_sem_take(&asm_event_step, K_FOREVER);
+#endif
 
 	k_fifo_put(&aspeed_sm_fifo, event);
 }

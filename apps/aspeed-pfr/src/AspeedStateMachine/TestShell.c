@@ -1083,9 +1083,23 @@ static int cmd_i2c_filter_dump(const struct shell *shell, size_t argc, char **ar
 	return 0;
 }
 
+#if defined(CONFIG_ASPEED_STATE_MACHINE_EVENT_STEPPING)
+static int cmd_asm_event_step(const struct shell *shell, size_t argc, char **argv)
+{
+	extern struct k_sem *asm_event_step;
+
+	k_sem_give(&asm_event_step);
+
+	return 0;
+}
+#endif
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_asm,
 	SHELL_CMD(log, NULL, "Show state machine event log", cmd_asm_log),
 	SHELL_CMD(event, &sub_event, "State Machine Event", NULL),
+#if defined(CONFIG_ASPEED_STATE_MACHINE_EVENT_STEPPING)
+	SHELL_CMD(step, NULL, "State machine event stepping", cmd_asm_event_step),
+#endif
 	SHELL_CMD(abr, NULL, "Control FMCWDT2 timer manually: enable or disable", cmd_asm_abr),
 	SHELL_CMD(rot_rc, NULL, "ROT firmware recoery", cmd_asm_rot_recovery),
 	SHELL_CMD(ufm_status, NULL, "Dump UFM status flag for update flow", cmd_asm_ufm_status),

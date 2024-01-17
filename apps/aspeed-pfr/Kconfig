@@ -210,5 +210,9 @@ config PROVISION_SHELL
         help
           provision debug shell command
 
+config ASPEED_STATE_MACHINE_EVENT_STEPPING
+	depends on ASPEED_STATE_MACHINE_SHELL
+	bool "Event stepping for state machine"
+	default n
 
 source "Kconfig.zephyr"
