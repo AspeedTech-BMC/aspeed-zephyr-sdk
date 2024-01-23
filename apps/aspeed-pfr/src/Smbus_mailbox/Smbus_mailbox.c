@@ -1289,7 +1289,7 @@ void process_provision_command(void)
  **/
 void UpdateBmcCheckpoint(byte Data)
 {
-	if (gWdtBootStatus == WDT_BMC_BOOT_DONE_MASK) {
+	if (gWdtBootStatus & WDT_BMC_BOOT_DONE_MASK) {
 		SetBmcCheckpoint(CompletingExecutionBlock);
 	} else {
 		SetBmcCheckpoint(Data);
@@ -1306,7 +1306,7 @@ void UpdateBmcCheckpoint(byte Data)
  **/
 void UpdateAcmCheckpoint(byte Data)
 {
-	if (gWdtBootStatus == WDT_ACM_BOOT_DONE_MASK) {
+	if (gWdtBootStatus & WDT_ACM_BOOT_DONE_MASK) {
 		SetAcmCheckpoint(CompletingExecutionBlock);
 	} else {
 		SetAcmCheckpoint(Data);
