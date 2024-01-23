@@ -60,6 +60,9 @@
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #include "SPDM/SPDMCommon.h"
+#if defined (CONFIG_INTEL_PFR) 
+uint8_t AfmStatus = 0;
+#endif
 #endif
 
 #define MAX_UPD_FAILED_ALLOWED 10
@@ -1257,6 +1260,54 @@ int handle_recovery_requested(CPLD_STATUS *cpld_status,
 	return 0;
 }
 
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if defined (CONFIG_INTEL_PFR) 
+extern uint8_t get_ufm_svn(uint32_t offset);
+int validate_afm_update_type(CPLD_STATUS *cpld_update_status, uint32_t *image_type, uint32_t flash_select, struct event_context *evt_ctx)
+{
+	uint32_t payload_address;
+	uint32_t hrot_svn = 0;
+	int status = 0;
+	uint8_t current_svn;
+
+	if (AfmStatus & AFM_RECOVERY_PENDING_UPDATE) {
+		evt_ctx->data.bit8[2] |= BootDoneRecovery;
+		return Success;
+	}
+
+	payload_address = CONFIG_BMC_AFM_STAGING_OFFSET + PFM_SIG_BLOCK_SIZE;
+	LOG_INF("AFM update start payload_address=%08x", payload_address );
+	status = pfr_spi_read(BMC_TYPE, payload_address + PFM_SIG_BLOCK_SIZE + 4,
+				sizeof(uint8_t), (uint8_t *)&hrot_svn);
+	if (status != Success) {
+		LOG_ERR("Flash read AFM SVN failed");
+		return Failure;
+	}
+	if (hrot_svn > SVN_MAX) {
+		LOG_ERR("invalid SVN");
+		*image_type = 0xffffffff;
+		return Failure;
+	}
+
+	current_svn = get_ufm_svn(SVN_POLICY_FOR_AFM);
+	if (hrot_svn > current_svn) {
+		if (evt_ctx->data.bit8[1] == AfmRecoveryUpdate) {
+			AfmStatus = AFM_ACTIVE_PENDING_UPDATE|AFM_RECOVERY_PENDING_UPDATE;
+			LOG_WRN("go to T-1 stage for updating the AFM regions with incremented SVN");
+			cpld_update_status->Region[AFM_REGION].Recoveryregion = BMC_INTENT2_AFM_SVN_UPDATE;
+			return Success;
+		} else {
+			LogLastPanic(BMC_UPDATE_INTENT);
+			LOG_ERR("the incremented SVN should be updated via recovery AFM update, to reject this request (%d, %d)", hrot_svn, current_svn);
+			*image_type = 0xffffffff;
+			return Failure;
+		}
+	}
+	return Success;
+}
+#endif
+#endif
+
 void handle_update_requested(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
@@ -1382,8 +1433,17 @@ void handle_update_requested(void *o)
 			}
 			else if (evt_ctx->data.bit8[0] == BmcUpdateIntent2) {
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if defined (CONFIG_INTEL_PFR)
 				if (update_region & AfmActiveAndRecoveryUpdate) {
 					image_type = AFM_TYPE;
+					if (validate_afm_update_type(&cpld_update_status,
+									&image_type,
+									evt_ctx_wrap.flash,
+									evt_ctx) != 0) {
+						update_region &= ~AfmActiveUpdate;
+						ret = Failure;
+						break;
+					}
 					if (update_region & AfmRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
@@ -1402,6 +1462,7 @@ void handle_update_requested(void *o)
 					ao_data_wrap = &state->afm_active_object;
 					break;
 				}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 				if (update_region & CPLDUpdate) {
@@ -1444,7 +1505,15 @@ void handle_update_requested(void *o)
 	if (memcmp(&cached_status, &cpld_update_status, sizeof(CPLD_STATUS))) {
 		ufm_write(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
 	}
-
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if defined (CONFIG_INTEL_PFR)
+	if (AfmStatus & AFM_PENDING_UPDATE_STATE) {
+		evt_ctx->data.bit8[0] = BmcUpdateIntent2;
+		evt_ctx->data.bit8[1] = AfmRecoveryUpdate;
+		GenerateStateMachineEvent(UPDATE_REQUESTED, evt_ctx->data.ptr);
+	}
+#endif
+#endif
 }
 
 #if defined(CONFIG_SEAMLESS_UPDATE)

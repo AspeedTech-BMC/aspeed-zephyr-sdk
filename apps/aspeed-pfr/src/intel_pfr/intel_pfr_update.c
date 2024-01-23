@@ -31,6 +31,9 @@
 #include "intel_pfr_cpld_utils.h"
 #endif
 
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+extern uint8_t AfmStatus;
+#endif
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
 int pfr_staging_verify(struct pfr_manifest *manifest)
@@ -379,6 +382,9 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 			LOG_ERR("Update AFM Active failed");
 			return Failure;
 		}
+		if (AfmStatus & AFM_ACTIVE_PENDING_UPDATE) {
+			AfmStatus &= ~AFM_ACTIVE_PENDING_UPDATE;
+		}
 	} else if (flash_select == SECONDARY_FLASH_REGION) {
 		if (ActiveObjectData->RestrictActiveUpdate == 1) {
 			manifest->image_type = AFM_TYPE;
@@ -394,7 +400,9 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 			LOG_ERR("Update AFM Recovery failed");
 			return Failure;
 		}
-
+		if (AfmStatus & AFM_RECOVERY_PENDING_UPDATE) {
+			AfmStatus &= ~AFM_RECOVERY_PENDING_UPDATE;
+		}
 		set_ufm_svn(SVN_POLICY_FOR_AFM, hrot_svn);
 	}
 
