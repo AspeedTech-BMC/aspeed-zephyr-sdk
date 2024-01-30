@@ -2,7 +2,6 @@
 #include "ast1060_dcscm_gpio_mp.dts"
 
 &i2cfilter {
-	pinctrl-0 = <&pinctrl_smbflt_default>;
 	status = "okay";
 };
 
@@ -12,7 +11,6 @@
 
 &i2c0 {
 	status = "okay";
-	pinctrl-0 = <&pinctrl_i2c0_default>;
 
 	swmbx0: swmbx0@38 {
 		compatible = "aspeed,swmbx-dev";
@@ -25,12 +23,10 @@
 };
 
 &i2c1 {
-	pinctrl-0 = <&pinctrl_i2c1_default>;
 	status = "okay";
 };
 
 &i2c2 {
-	pinctrl-0 = <&pinctrl_i2c2_default>;
 	status = "okay";
 
 	swmbx1: swmbx1@70 {
@@ -44,28 +40,23 @@
 };
 
 &i2c4 {
-	pinctrl-0 = <&pinctrl_i2c4_default>;
 	status = "okay";
 };
 
 &i2c5 {
-	pinctrl-0 = <&pinctrl_i2c5_default>;
 	status = "okay";
 };
 
 &i2c6 {
-	pinctrl-0 = <&pinctrl_i2c6_default>;
 	status = "okay";
 };
 
 &i2c7 {
-	pinctrl-0 = <&pinctrl_i2c7_default>;
 	status = "okay";
 };
 
 // for i2c filter testing
 &i2c8 {
-	pinctrl-0 = <&pinctrl_i2c8_default>;
 	status = "okay";
 };
 
