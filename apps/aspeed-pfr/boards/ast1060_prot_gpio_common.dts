@@ -1,3 +1,5 @@
+#include <dt-bindings/gpio/gpio.h>
+
 / {
 	pfr_gpio_common {
 		compatible = "aspeed,pfr-gpio-common";

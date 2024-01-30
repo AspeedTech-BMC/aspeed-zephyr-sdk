@@ -198,8 +198,8 @@
 &spim1 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 15 31 3b 3c];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim1_cs &pinctrl_spim1_in_default &pinctrl_spim1_qspi_in_default
-				&pinctrl_spim1_rst_out &pinctrl_spim1_muxsel>;
+	pinctrl-0 = <pinctrl_spim1_quad_default>;
+	pinctrl-names = "default";
 
 	flash-device = <&spi1_cs0>;
 	status = "okay";
@@ -211,9 +211,8 @@
 &spim2 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 15 31 3b 3c];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim2_cs &pinctrl_spim2_in_default &pinctrl_spim2_out_default
-				&pinctrl_spim2_qspi_in_default &pinctrl_spim2_qspi_out_default
-				&pinctrl_spim2_rst_out>;
+	pinctrl-0 = <pinctrl_spim2_quad_default>;
+	pinctrl-names = "default";
 
 	flash-device = <&spi2_cs0>;
 	status = "okay";
@@ -225,9 +224,8 @@
 &spim3 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 15 31 3b 3c];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim3_cs &pinctrl_spim3_in_default &pinctrl_spim3_out_default
-				&pinctrl_spim3_qspi_in_default &pinctrl_spim3_qspi_out_default
-				&pinctrl_spim3_rst_out>;
+	pinctrl-0 = <pinctrl_spim3_quad_default>;
+	pinctrl-names = "default";
 
 	flash-device = <&spi2_cs1>;
 	status = "okay";
@@ -251,9 +249,8 @@
 	>;
 	*/
 
-	pinctrl-0 = <&pinctrl_spim4_cs &pinctrl_spim4_in_default &pinctrl_spim4_out_default
-				&pinctrl_spim4_qspi_in_default &pinctrl_spim4_qspi_out_default
-				&pinctrl_spim4_rst_out>;
+	pinctrl-0 = <pinctrl_spim4_quad_default>;
+	pinctrl-names = "default";
 
 	flash-device = <&spi2_cs2>;
 	status = "okay";

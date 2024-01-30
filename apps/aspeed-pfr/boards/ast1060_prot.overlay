@@ -1,3 +1,4 @@
+#include <aspeed/ast10x0.dtsi>
 #include "ast1060_prot_gpio_common.dts"
 #include "ast1060_prot_gpio_bhs.dts"
 
@@ -217,8 +218,10 @@
 &spim1 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim1_cs &pinctrl_spim1_in_default &pinctrl_spim1_qspi_in_default>;
+	pinctrl-0 = <&pin_spim1csin &pin_spim1clkin &pin_spim1mosiin &pin_spim1misoin
+		&pin_spim1csout &pin_spim1io2in &pin_spim1io3in>;
 
+	pinctrl-names = "default";
 	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
@@ -233,8 +236,10 @@
 &spim2 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim2_cs &pinctrl_spim2_in_default &pinctrl_spim2_qspi_in_default>;
+	pinctrl-0 = <&pin_spim2csin &pin_spim2clkin &pin_spim2mosiin &pin_spim2misoin
+		&pin_spim2csout &pin_spim2io2in &pin_spim2io3in>;
 
+	pinctrl-names = "default";
 	flash-device = <&spi1_cs1>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
@@ -250,9 +255,11 @@
 &spim3 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim3_cs &pinctrl_spim3_in_default &pinctrl_spim3_out_default
-		&pinctrl_spim3_qspi_in_default &pinctrl_spim3_qspi_out_default>;
+	pinctrl-0 = <&pin_spim3csin &pin_spim3clkin &pin_spim3mosiin &pin_spim3misoin
+		&pin_spim3csout &pin_spim3io2in &pin_spim3io3in &pin_spim3clkout
+		&pin_spim3misoout &pin_spim3mosiout &pin_spim3io2out &pin_spim3io3out>;
 
+	pinctrl-names = "default";
 	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */
@@ -267,9 +274,11 @@
 &spim4 {
 	allow-cmds = [03 13 0b 0c 6b 6c 01 05 35 06 04 20 21 9f 5a b7 e9 32 34 d8 dc 02 12 3b 3c 70 bb bc];
 	log-ram-size = <0x200>;
-	pinctrl-0 = <&pinctrl_spim4_cs &pinctrl_spim4_in_default &pinctrl_spim4_out_default
-		&pinctrl_spim4_qspi_in_default &pinctrl_spim4_qspi_out_default>;
+	pinctrl-0 = <&pin_spim4csin &pin_spim4clkin &pin_spim4mosiin &pin_spim4misoin
+		&pin_spim4csout &pin_spim4io2in &pin_spim4io3in &pin_spim4clkout
+		&pin_spim4misoout &pin_spim4mosiout &pin_spim4io2out &pin_spim4io3out>;
 
+	pinctrl-names = "default";
 	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */

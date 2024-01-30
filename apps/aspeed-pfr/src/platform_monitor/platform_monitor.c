@@ -302,6 +302,7 @@ static struct gpio_callback fp_pwr_btn_cb_data;
 
 static void power_btn_passthrough_update()
 {
+#ifdef INTEL_BHS
 	struct gpio_dt_spec power_btn_in =
 		GPIO_DT_SPEC_GET_BY_IDX(DT_INST(0, aspeed_pfr_gpio_bhs), fp_pwr_btn_in_gpios, 0);
 	struct gpio_dt_spec power_btn_out =
@@ -312,6 +313,7 @@ static void power_btn_passthrough_update()
 	gpio_pin_set(power_btn_out.port, power_btn_out.pin, ret);
 	gpio_pin_configure_dt(&power_btn_out, GPIO_OUTPUT);
 	LOG_INF("[PFR->BMC] PWR_BTN[%s %d] = %d", power_btn_out.port->name, power_btn_out.pin, ret);
+#endif
 }
 
 static void power_btn_work_handler(struct k_work *item)
