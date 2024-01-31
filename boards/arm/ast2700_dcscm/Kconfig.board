@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Aspeed AST2700 DCSCM PFR board configuration
+#
+# Copyright (c) 2024 ASPEED Technology Inc.
+
+config BOARD_AST2700_DCSCM
+	bool "ASPEED AST2700 DCSCM Evaluation Board"
+	depends on SOC_AST1060
+

@@ -1,0 +1,25 @@
+/ {
+	pfr_gpio_bhs {
+		compatible = "aspeed,pfr-gpio-bhs";
+		/* For AST2700 DCSCM Card */
+		rst-pltrst-in-gpios = <&sgpiom_a_d 18 0>; /* SGPIO 18 */
+		pwrgd-cpu0-out-gpios = <&sgpiom_a_d 21 0>;      /* SGPIO 21 */
+		rst-rtcrst-cpu0-out-gpios = <&sgpiom_a_d 20 0>; /* SGPIO 20 */
+		rst-pltrst-cpu0-out-gpios = <&sgpiom_a_d 22 0>; /* SGPIO 22 */
+		rst-rtcrst-cpu1-out-gpios = <&sgpiom_a_d 23 0>; /* SGPIO 23 */
+		pwrgd-cpu1-out-gpios = <&sgpiom_a_d 24 0>;      /* SGPIO 24 */
+		rst-pltrst-cpu1-out-gpios = <&sgpiom_a_d 25 0>; /* SGPIO 25 */
+		i3c-mng-mux-sel-out-gpios = <&sgpiom_a_d 6 0>; /* SGPIO 6 */
+		scm-board-id0-in-gpios = <&sgpiom_a_d 5 0>;
+		scm-board-id1-in-gpios = <&sgpiom_a_d 4 0>;
+		scm-board-id2-in-gpios = <&sgpiom_a_d 3 0>;
+		scm-board-id3-in-gpios = <&sgpiom_a_d 2 0>;
+		scm-board-id4-in-gpios = <&sgpiom_a_d 1 0>;
+		scm-board-id5-in-gpios = <&sgpiom_a_d 0 0>;
+		scm-rsu-hide-done-in-gpios = <&sgpiom_a_d 26 0>; /* SGPIO 26 */
+		scm-rsu-hide-out-gpios = <&sgpiom_a_d 16 0>; /* SGPIO 16 */
+		fp-pwr-btn-in-gpios = <&sgpiom_a_d 25 0>; /* SGPIO 25 */
+		bmc-pwr-btn-out-gpios = <&sgpiom_a_d 9 0>; /* SGPIO 9 */
+	};
+};
+
