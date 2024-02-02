@@ -93,10 +93,29 @@ static int ast1060_prot_post_init(const struct device *arg)
 	return 0;
 }
 
+static int ast1060_prot_gpio_post_init(void)
+{
+	/* Initial setup for SGPIO */
+	const struct device *dev = device_get_binding("sgpiom_a_d");
+	if (dev) {
+		/* RST_SPI_PFR_CPU0_RESET_N */
+		gpio_pin_set_raw(dev, 6, 1);
+		/* RST_PFR_BMC_SPI_RESET_N */
+		gpio_pin_set_raw(dev, 7, 1);
+		/* RST_PFR_RTCRST_CPU0_N */
+		gpio_pin_set_raw(dev, 11, 1);
+	} else {
+		LOG_ERR("Unabled to find sgpiom_a_d device");
+	}
+
+	return 0;
+}
+
 static int ast1060_prot_init(const struct device *arg)
 {
 	return 0;
 }
 
+SYS_INIT(ast1060_prot_gpio_post_init, POST_KERNEL, 45);
 SYS_INIT(ast1060_prot_post_init, POST_KERNEL, 85);
 SYS_INIT(ast1060_prot_init, APPLICATION, 0);
