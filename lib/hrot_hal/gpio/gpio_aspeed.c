@@ -140,7 +140,9 @@ int PCHBootHold(void)
 	RTCRSTControl(true);
 	AUXPowerGoodControl(false);
 	/* Hold PCH Reset */
-	// pch_rst_enable_ctrl(true);
+#ifndef INTEL_BHS
+	pch_rst_enable_ctrl(true);
+#endif
 
 	dev_m = device_get_binding(PCH_SPI_MONITOR);
 	/* config spi monitor as master mode */
