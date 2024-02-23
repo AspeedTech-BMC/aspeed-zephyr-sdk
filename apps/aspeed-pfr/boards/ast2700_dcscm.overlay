@@ -55,7 +55,7 @@
 };
 
 // For mctp over i3c
-// AST2600 i3c-1 -> AST1060 i3c-2
+// AST2700 i3c-0 -> AST1060 i3c-2
 &i3c2 {
 	status = "okay";
 	sda-tx-hold-ns = <20>;
@@ -64,9 +64,9 @@
 
 	pinctrl-0 = <pinctrl_i3c2_default>;
 
-	i3cdev@7ec05031000 {
+	i3cdev@7ec06000000 {
 		compatible = "i3c-dummy-device";
-		reg = <0x0 0x7ec 0x05031000>;
+		reg = <0x0 0x7ec 0x06000000>;
 		status = "okay";
 	};
 };
