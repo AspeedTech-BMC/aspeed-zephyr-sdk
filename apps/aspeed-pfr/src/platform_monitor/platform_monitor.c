@@ -67,9 +67,16 @@ static void platform_reset_handler(const struct device *dev, struct gpio_callbac
 	int ret = gpio_pin_get(dev, gpio_pin);
 	LOG_INF("[CPU->PFR] PLTRST_SYNC[%s %d] = %d", dev->name, gpio_pin, ret);
 
-	platform_reset_monitor_remove();
-	extern bool pltrst_sync;
-	pltrst_sync = true;
+	// platform_reset_monitor_remove();
+	if (ret == 0) {
+		RSTPlatformReset(true);
+	} else {
+		RSTPlatformReset(false);
+		// platform_reset_monitor_remove();
+		extern bool pltrst_sync;
+		pltrst_sync = true;
+
+	}
 
 #endif
 #ifdef INTEL_EGS
@@ -103,7 +110,7 @@ static void platform_reset_monitor_init(void)
 
 	ret = gpio_pin_configure_dt(&rst_pltrst, GPIO_INPUT);
 	LOG_INF("Platform: gpio_pin_configure_dt[%s %d] = %d", rst_pltrst.port->name, rst_pltrst.pin, ret);
-	ret = gpio_pin_interrupt_configure_dt(&rst_pltrst, GPIO_INT_EDGE_RISING);
+	ret = gpio_pin_interrupt_configure_dt(&rst_pltrst, GPIO_INT_EDGE_BOTH);
 	LOG_INF("Platform: gpio_pin_interrupt_configure_dt = %d", ret);
 	gpio_init_callback(&rst_pltrst_cb_data, platform_reset_handler, BIT(rst_pltrst.pin));
 	ret = gpio_add_callback(rst_pltrst.port, &rst_pltrst_cb_data);

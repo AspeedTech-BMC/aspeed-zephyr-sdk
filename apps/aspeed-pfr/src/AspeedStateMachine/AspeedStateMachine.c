@@ -108,6 +108,7 @@ static uint8_t last_cpld_recovery_verify_status = Failure;
 static bool reset_from_unprovision_state = false;
 
 size_t event_log_idx = 0;
+K_EVENT_DEFINE(pfr_system_event);
 
 extern enum boot_indicator get_boot_indicator(void);
 void clear_pending_recovery_update(CPLD_STATUS *cpld_update_status)
@@ -1182,6 +1183,23 @@ void handle_provision_image(void *o)
 }
 #endif
 
+void handle_unprovisioned_checkpoint(void *o)
+{
+	struct smf_context *state = (struct smf_context *)o;
+	struct event_context *evt_ctx = state->event_ctx;
+
+	switch(evt_ctx->data.bit8[0]) {
+	case BmcCheckpoint:
+		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+			LOG_INF("BMC Boot complete UNPROVISIONED");
+			k_event_post(&pfr_system_event, PFR_SYSTEM_BMC_BOOTED);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void handle_checkpoint(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
@@ -1191,6 +1209,8 @@ void handle_checkpoint(void *o)
 	case BmcCheckpoint:
 		UpdateBmcCheckpoint(evt_ctx->data.bit8[1]);
 		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+			LOG_INF("BMC Boot complete RUNTIME");
+			k_event_post(&pfr_system_event, PFR_SYSTEM_BMC_BOOTED);
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 			if (state->afm_active_object.ActiveImageStatus == Success) {
 				spdm_run_attester();
@@ -1722,6 +1742,7 @@ void do_unprovisioned(void *o)
 #endif
 		break;
 	case WDT_CHECKPOINT:
+		handle_unprovisioned_checkpoint(o);
 #if defined(CONFIG_PFR_MCTP_I3C)
 		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
 			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,

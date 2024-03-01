@@ -31,44 +31,85 @@ static int ast2700_dcscm_init(void)
 	dev = device_get_binding("gpio0_e_h");
 	gpio_pin_configure(dev, 27, GPIO_OUTPUT_ACTIVE);
 #endif
+	const struct device *dev;
+	dev = device_get_binding("sgpiom_a_d");
+	if (dev) {
+		LOG_INF("SGPIOM_A_D PIN[3,4,5,18,19,24] to 1");
+		gpio_pin_set_raw(dev, 3, 1);
+		gpio_pin_set_raw(dev, 4, 1);
+		gpio_pin_set_raw(dev, 5, 1);
+		gpio_pin_set_raw(dev, 18, 1);
+		gpio_pin_set_raw(dev, 19, 1);
+		gpio_pin_set_raw(dev, 24, 1);
+	}
+
+	dev = device_get_binding("sgpiom_e_h");
+	if (dev) {
+		LOG_INF("SGPIOM_E_H PIN[16,17,18,19,20] to 1");
+		gpio_pin_set_raw(dev, 16, 1);
+		gpio_pin_set_raw(dev, 17, 1);
+		gpio_pin_set_raw(dev, 18, 1);
+		gpio_pin_set_raw(dev, 19, 1);
+		gpio_pin_set_raw(dev, 20, 1);
+	}
+
+	dev = device_get_binding("sgpiom_i_l");
+	if (dev) {
+		LOG_INF("SGPIOM_I_L PIN[2,6,7] to 1");
+		gpio_pin_set_raw(dev, 2, 1);
+		gpio_pin_set_raw(dev, 6, 1);
+		gpio_pin_set_raw(dev, 7, 1);
+	}
 
 	return 0;
 }
 
-static void sgpio_passthrough_workaround(struct k_timer *timer_id) {
+static void sgpio_passthrough_workaround(struct k_timer *timer_id)
+{
 	const struct device *dev = NULL;
-	uint32_t mask = 0;
+	extern struct k_event pfr_system_event;
 
-	/* Bit 31:0 */
-	dev = device_get_binding("sgpiom_a_d");
-	mask = 0x00000000;
-	if (dev && mask) {
-		LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
-		sgpio_passthrough(dev, mask);
-	}
+	if (k_event_wait(&pfr_system_event, BIT(0), false, K_NO_WAIT)) {
+		LOG_DBG("SGPIO Passthrough");
+		uint32_t mask = 0;
 
-	/* Bit 63:32 */
-	dev = device_get_binding("sgpiom_e_h");
-	mask = 0xFFFF0000;
-	if (dev && mask) {
-		LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
-		sgpio_passthrough(dev, mask);
-	}
+		/* Bit 31:0 */
+		dev = device_get_binding("sgpiom_a_d");
+		mask = 0x00000000;
+		if (dev && mask) {
+			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			sgpio_passthrough(dev, mask);
+		}
 
-	/* Bit 95:64 */
-	dev = device_get_binding("sgpiom_i_l");
-	mask = 0xFFFFFFFF;
-	if (dev && mask) {
-		LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
-		sgpio_passthrough(dev, mask);
-	}
+		/* Bit 63:32 */
+		dev = device_get_binding("sgpiom_e_h");
+		mask = 0xFFFFFF00;
+		if (dev && mask) {
+			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			sgpio_passthrough(dev, mask);
+		}
 
-	/* Bit 127:96 */
-	dev = device_get_binding("sgpiom_m_p");
-	mask = 0xFFFFFFFF;
-	if (dev && mask) {
-		LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
-		sgpio_passthrough(dev, mask);
+		/* Bit 95:64 */
+		dev = device_get_binding("sgpiom_i_l");
+		mask = 0xFFFFFFFF;
+		if (dev && mask) {
+			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			sgpio_passthrough(dev, mask);
+		}
+
+		/* Bit 127:96 */
+		dev = device_get_binding("sgpiom_m_p");
+		mask = 0xFFFFFFFF;
+		if (dev && mask) {
+			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			sgpio_passthrough(dev, mask);
+		}
+	} else {
+		static uint32_t count = 0;
+		if ((++count & 0xFF) == 0) {
+			/* Do not flood the console log */
+			LOG_WRN("SGPIO Passthrough wait for BMC Boot complete flag");
+		}
 	}
 }
 

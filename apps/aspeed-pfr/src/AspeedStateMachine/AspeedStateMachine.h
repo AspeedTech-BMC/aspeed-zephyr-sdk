@@ -157,6 +157,9 @@ struct smf_context {
 extern struct k_fifo aspeed_sm_fifo;
 extern enum aspeed_pfr_event event_log[128];
 extern size_t event_log_idx;
+extern struct k_event pfr_system_event;
+
+#define PFR_SYSTEM_BMC_BOOTED BIT(0)
 
 void GenerateStateMachineEvent(enum aspeed_pfr_event evt, void *data);
 void AspeedStateMachine(void);
