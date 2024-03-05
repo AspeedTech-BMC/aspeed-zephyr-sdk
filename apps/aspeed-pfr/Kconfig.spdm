@@ -67,4 +67,10 @@ config PFR_SPDM_I3C_CPU_DEV_PID
 	default 0x7ec05032000
 	hex "I3C device pid for CPU"
 
+config AFM_SPEC_VERSION
+	range 3 4
+	int "AFM Spec. version"
+	help
+	  To define AFM Spec. version. The valid values are 3 or 4.
+
 endif # PFR_SPDM_ATTESTATION

@@ -279,8 +279,8 @@ int update_rot_fw(uint32_t address, uint32_t length, uint32_t flash_select)
 }
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
-{
+#if (CONFIG_AFM_SPEC_VERSION == 3)
+int update_afm_v30(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length) {
 	uint32_t region_size = pfr_spi_get_device_size(ROT_INTERNAL_AFM);
 	uint32_t source_address = address;
 	uint32_t length_page_align;
@@ -323,8 +323,56 @@ int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
 	} else {
 		return Failure;
 	}
-
 	return Success;
+}
+#endif
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length) {
+	uint32_t region_size = pfr_spi_get_device_size(ROT_EXT_AFM_ACT_1);
+	uint32_t source_address = address;
+	uint32_t length_page_align;
+	uint8_t flash_type, source_flash_type;
+
+	length_page_align =
+		(length % PAGE_SIZE) ? (length + (PAGE_SIZE - (length % PAGE_SIZE))) : length;
+	if (length_page_align > region_size) {
+		LOG_ERR("length(%x) exceed region size(%x)", length_page_align, region_size);
+		return Failure;
+	}
+
+	if (part == AFM_PART_ACT_1) {
+		flash_type = ROT_EXT_AFM_ACT_1;
+		source_flash_type = ROT_EXT_AFM_RC_1;
+	} else if (part == AFM_PART_RCV_1) {
+		flash_type = ROT_EXT_AFM_RC_1;
+		source_flash_type = BMC_SPI;
+		source_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+	} else {
+		return Failure;
+	}
+
+	if (pfr_spi_erase_region(flash_type, true, 0, region_size)) {
+		LOG_ERR("Failed to erase AFM Active Partition");
+		return Failure;
+	}
+	if (pfr_spi_region_read_write_between_spi(source_flash_type, source_address,
+				flash_type, 0, length_page_align)) {
+		LOG_ERR("Failed to write AFM Active Partition");
+		return Failure;
+	}
+	return Success;
+}
+#endif
+
+int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
+{
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	return update_afm_v40(part, address, length);
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
+	return update_afm_v30(part, address, length);
+#else
+	return Failure;
+#endif
 }
 
 int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void *AoData)

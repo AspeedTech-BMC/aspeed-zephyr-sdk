@@ -48,12 +48,21 @@ int recover_image(void *AoData, void *EventContext)
 		pfr_manifest->image_type = PCH_TYPE;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (EventData->image == AFM_EVENT) {
+		LOG_INF("Image Type: AFM");
+		pfr_manifest->image_type = AFM_TYPE;
+		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		pfr_manifest->recovery_address = 0;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (EventData->image == AFM_EVENT) {
 		LOG_INF("Image Type: AFM");
 		pfr_manifest->image_type = AFM_TYPE;
 		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
 		pfr_manifest->recovery_address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (EventData->image == CPLD_EVENT) {
@@ -202,10 +211,17 @@ int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_
 	else if (image_type == PCH_TYPE)
 		area_size = CONFIG_PCH_STAGING_SIZE;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (image_type == AFM_TYPE) {
+		area_size = FIXED_PARTITION_SIZE(afm_rcv1_partition);
+		image_type = ROT_EXT_AFM_RC_1;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (image_type == AFM_TYPE) {
 		area_size = FIXED_PARTITION_SIZE(afm_act_1_partition);
 		image_type = BMC_TYPE;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (image_type == CPLD_TYPE) {

@@ -509,7 +509,7 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 	}
 #endif
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	else if (manifest->pc_type == PFR_AFM) {
+	else if (manifest->pc_type == PFR_AFM || manifest->pc_type == PFR_AFM_PER_DEV) {
 		sign_bit_verify = SIGN_AFM_UPDATE_BIT5;
 	}
 #endif

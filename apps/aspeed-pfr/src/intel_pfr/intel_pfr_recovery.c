@@ -86,6 +86,15 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 			return Failure;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == AFM_TYPE) {
+		manifest->image_type = BMC_TYPE;
+		staging_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		/* Fixed partition so starts from zero */
+		act_pfm_image_type = ROT_EXT_AFM_ACT_1;
+		act_pfm_offset = 0;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		manifest->image_type = BMC_TYPE;
 		staging_address = CONFIG_BMC_AFM_STAGING_OFFSET;
@@ -93,6 +102,7 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 		act_pfm_image_type = ROT_INTERNAL_AFM;
 		act_pfm_offset = 0;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {
@@ -209,8 +219,13 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	else if (manifest->image_type == AFM_TYPE) {
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+		manifest->address = 0;
+		manifest->image_type = ROT_EXT_AFM_RC_1;
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 		manifest->address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
 		manifest->image_type = BMC_TYPE;
+#endif
 		if (pfr_spi_read(manifest->image_type, manifest->address,
 			sizeof(PFR_AUTHENTICATION_BLOCK0), buffer)) {
 			LOG_ERR("Block0: Flash read data failed");

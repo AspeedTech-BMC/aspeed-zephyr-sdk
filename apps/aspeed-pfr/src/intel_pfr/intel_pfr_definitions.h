@@ -14,12 +14,9 @@
 #define PCH_TYPE                        2
 
 /* For Intel-PFR 3.0 */
-#if 1
 #define AFM_TYPE                        4
-#else
-/* Reserved for Intel-PFR 4.0 */
-#define AFM_TYPE                        5
-#endif
+/* For Intel-PFR 4.0 */
+#define AFM_TYPE2                       5
 
 #define CPLD_TYPE                       6
 
@@ -118,6 +115,33 @@
 #define PAGE_SIZE                       0x1000
 #define BLOCK_SIZE                      0x10000
 #define UFM_PAGE_SIZE                   16
+
+#define PCH1_AFM_BODY_OFFSET            0x0
+#define PCH2_AFM_BODY_OFFSET            0x2000
+#define BMC_AFM_BODY_OFFSET             0x4000
+#define AFM_BODY_SIZE                   0x2000
+
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+#define MEASUREMENT_PAYLOAD_SIZE 8
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
+#define MEASUREMENT_PAYLOAD_SIZE 4
+#endif
+
+/*
+	Each AFM device data is 8 Kbytes
+	In ROT_INTERNAL_AFM, its size is 64 Kbytes and it stores 3 AFM device data (CPU0, CPU1, BMC).
+	In EXT_AFM_ACT_1, its size is 512 Kbytes and it stores 63 AFM device data (remaining 8 Kbytes are used for AFM capsule BLK0/BLK1 header overhead)
+	In EXT_AFM_ACT_2, its size is 512 Kbytes and it stores 64 AFM device data
+*/
+typedef enum {
+	afm_dev_idx_cpu0 = 0,
+	afm_dev_idx_cpu1 = 1,
+	afm_dev_idx_bmc = 2,
+	afm_dev_idx_onboard_first = 3,
+	afm_dev_idx_onboard_final = 16,
+	afm_dev_idx_addon_first = 17,
+	afm_dev_idx_addon_final = 32
+} AFM_DEV_INDEX;
 
 #define BLOCK_SUPPORT_1KB               1
 #define BLOCK_SUPPORT_3KB               0

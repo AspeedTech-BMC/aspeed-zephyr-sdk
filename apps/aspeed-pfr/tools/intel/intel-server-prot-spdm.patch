@@ -1,0 +1,37 @@
+diff --git a/intelprot/bmc.py b/intelprot/bmc.py
+index d543fb2..c2ce435 100644
+--- a/intelprot/bmc.py
++++ b/intelprot/bmc.py
+@@ -830,7 +830,7 @@ class BHS_PFR_BMC_AFM(object):
+     # create "pfm_afm_in_update_cap.bin" file included in recovery capsule
+     self.pfm_afm_in_update_cap = "{}-pfm_afm_in_update_cap.bin".format(self.platform_name)
+     if os.stat(self.pfm_unsigned).st_size < 0x1000:
+-      read_afm_size = 0x1000
++      read_afm_size = os.stat(self.afm_active_capsule).st_size
+       padding_size  = (self.afm_addr - self.pfm_offset) - (self.pfm_size + 0x400)
+     with open(self.pfm_afm_in_update_cap, 'wb') as f1, \
+          open(self.pfm_signed, 'rb') as f2, open(self.afm_active_capsule, 'rb') as f3:
+diff --git a/intelprot/capsule.py b/intelprot/capsule.py
+index 035a477..97f174e 100644
+--- a/intelprot/capsule.py
++++ b/intelprot/capsule.py
+@@ -82,8 +82,8 @@ BLOCK_SIGN_SIZE= 0x400
+ DECOMM_PCTYPE  = 0x200
+ BLK0_MAGIC_TAG = 0xB6EAFD19
+ 
+-AFM_CAP_SIZE   = 128*1024   # 128KB total size
+-AFM_ALIGN_SIZE = 4*1024     # 4KB aligned for each device AFM
++AFM_CAP_SIZE   = 64*1024   # 128KB total size
++AFM_ALIGN_SIZE = 8*1024     # 8KB aligned for each device AFM
+ AFM_SIGN_SIZE  = 1024       # 1KB blocksign size
+ AFM_CAP_TAG    = 0x8883CE1D # AFM Magic/TAG
+ AFM_SPI_TYPE   = 0x3        # AFM SPI_TYPE
+@@ -955,6 +955,8 @@ class AFM_BHS(object):
+       lst_idx_meas_data = self.manifest['afm_data'][dev_name]["measurement"][idx]["measurement"]
+       idx_meas_hexstr =''.join(lst_idx_meas_data)
+       meas_size = int(self.manifest['afm_data'][dev_name]["measurement"][idx]["meas_value_size"], 0)
++      number_of_possible_measurement = int(self.manifest['afm_data'][dev_name]["measurement"][idx]["number_of_possible_measurement"], 0)
++      meas_size *= number_of_possible_measurement
+       #print("\n**** idx={}, idx_meas_hexstr={} \n".format(idx, idx_meas_hexstr))
+       #print("\n**** len(idx_meas_hexstr)={}, meas_size = {}".format(len(idx_meas_hexstr), meas_size))
+       afm_dev_meas += struct.pack("%ds"%(meas_size), bytes.fromhex(idx_meas_hexstr))

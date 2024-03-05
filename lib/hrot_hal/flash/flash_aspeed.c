@@ -211,6 +211,20 @@ int get_rot_region(uint8_t device_id, const struct flash_area **fa)
 	case ROT_INTERNAL_AFM:
 		ret = flash_area_open(FIXED_PARTITION_ID(afm_act_1_partition), fa);
 		break;
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	case ROT_EXT_AFM_ACT_1:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act1_partition), fa);
+		break;
+	case ROT_EXT_AFM_ACT_2:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act2_partition), fa);
+		break;
+	case ROT_EXT_AFM_RC_1:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_rcv1_partition), fa);
+		break;
+	case ROT_EXT_AFM_RC_2:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_rcv2_partition), fa);
+		break;
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	case ROT_EXT_CPLD_ACT:

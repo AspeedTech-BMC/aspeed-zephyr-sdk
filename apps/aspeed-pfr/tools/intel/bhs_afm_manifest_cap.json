@@ -1,0 +1,821 @@
+{
+    "platform" : "birch_stream",
+    "root_private_key" : "rk384_prv.pem",
+    "csk_private_key" : "csk384_prv.pem",
+    "svn" : "0x0",
+    "revision" : "0x0202",
+    "oem_data" : "0xffffffffffffffffffffffffffffffff",
+    "length"   : "0x38",
+    "list_devices": ["device0", "device1", "device2", "device3", "device4", "device5", "device6", "device7", "device8",
+                     "device9", "device10", "device11", "device12", "device13"],
+    "afm_header" : {
+        "device0" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0000800"
+        },
+        "device1" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0002800"
+        },
+        "device2" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0004800"
+        },
+        "device3" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0006800"
+        },
+        "device4" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0008800"
+        },
+        "device5" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x000a800"
+        },
+        "device6" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x000c800"
+        },
+        "device7" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x000e800"
+        },
+        "device8" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0010800"
+        },
+        "device9" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0012800"
+        },
+        "device10" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0014800"
+        },
+        "device11" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0016800"
+        },
+        "device12" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x0018800"
+        },
+        "device13" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x001a800"
+        }
+    },
+    "afm_data" : {
+        "device0" : {
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x06",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device1" : {
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device2" : {
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x00",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0x1d4",
+            "certificate_content" : "0x308201d030820156a003020102021400ca2f39e8fa16fdb0340c85508f5d07e26e4834300a06082a8648ce3d040303301f311d301b06035504030c14696e74656c207465737420454350323536204341301e170d3232303130353036303833335a170d3332303130333036303833335a301f311d301b06035504030c14696e74656c2074657374204543503235362043413076301006072a8648ce3d020106052b8104002203620004922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2aa12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390a3533051301d0603551d0e0416041414c4e7a67c633fdf13f2b1365663f9c1eadd7810301f0603551d2304183016801414c4e7a67c633fdf13f2b1365663f9c1eadd7810300f0603551d130101ff040530030101ff300a06082a8648ce3d0403030368003065023100d79c7f269134a52b79ea661500880a4de7ad71c62ee47e37e186ebe855b02fc5f3a9e090f90b82c5df4a359a0d35384b023040a7fe70397b4bd7c2287293930c621214f070740ffcb12160406d13a3590e2706c1734eca404c2df596486605b1a608",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x3",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "0",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86"
+                    ]
+                },
+                {
+                  "number_of_possible_measurement" : "0x2",
+                  "meas_value_index" : "0",
+                  "meas_value_type" : "0x02",
+                  "meas_value_size" : "0x30",
+                  "measurement" : [
+                    "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                    "95f85671912f24988951d81bb43744cf8ec33b0f86ca9d76484779385a822e9d81f14f4d5510894b44242b1b83a2a2c8"
+                  ]
+                }
+            ]
+        },
+        "device3" : {
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x06",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device4" : {
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device5" : {
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x00",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0x1d4",
+            "certificate_content" : "0x308201d030820156a003020102021400ca2f39e8fa16fdb0340c85508f5d07e26e4834300a06082a8648ce3d040303301f311d301b06035504030c14696e74656c207465737420454350323536204341301e170d3232303130353036303833335a170d3332303130333036303833335a301f311d301b06035504030c14696e74656c2074657374204543503235362043413076301006072a8648ce3d020106052b8104002203620004922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2aa12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390a3533051301d0603551d0e0416041414c4e7a67c633fdf13f2b1365663f9c1eadd7810301f0603551d2304183016801414c4e7a67c633fdf13f2b1365663f9c1eadd7810300f0603551d130101ff040530030101ff300a06082a8648ce3d0403030368003065023100d79c7f269134a52b79ea661500880a4de7ad71c62ee47e37e186ebe855b02fc5f3a9e090f90b82c5df4a359a0d35384b023040a7fe70397b4bd7c2287293930c621214f070740ffcb12160406d13a3590e2706c1734eca404c2df596486605b1a608",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x3",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "0",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86"
+                    ]
+                },
+                {
+                  "number_of_possible_measurement" : "0x2",
+                  "meas_value_index" : "0",
+                  "meas_value_type" : "0x02",
+                  "meas_value_size" : "0x30",
+                  "measurement" : [
+                    "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                    "95f85671912f24988951d81bb43744cf8ec33b0f86ca9d76484779385a822e9d81f14f4d5510894b44242b1b83a2a2c8"
+                  ]
+                }
+            ]
+        },
+        "device6" : {
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x06",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device7" : {
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device8" : {
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x00",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0x1d4",
+            "certificate_content" : "0x308201d030820156a003020102021400ca2f39e8fa16fdb0340c85508f5d07e26e4834300a06082a8648ce3d040303301f311d301b06035504030c14696e74656c207465737420454350323536204341301e170d3232303130353036303833335a170d3332303130333036303833335a301f311d301b06035504030c14696e74656c2074657374204543503235362043413076301006072a8648ce3d020106052b8104002203620004922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2aa12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390a3533051301d0603551d0e0416041414c4e7a67c633fdf13f2b1365663f9c1eadd7810301f0603551d2304183016801414c4e7a67c633fdf13f2b1365663f9c1eadd7810300f0603551d130101ff040530030101ff300a06082a8648ce3d0403030368003065023100d79c7f269134a52b79ea661500880a4de7ad71c62ee47e37e186ebe855b02fc5f3a9e090f90b82c5df4a359a0d35384b023040a7fe70397b4bd7c2287293930c621214f070740ffcb12160406d13a3590e2706c1734eca404c2df596486605b1a608",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x3",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "0",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86"
+                    ]
+                },
+                {
+                  "number_of_possible_measurement" : "0x2",
+                  "meas_value_index" : "0",
+                  "meas_value_type" : "0x02",
+                  "meas_value_size" : "0x30",
+                  "measurement" : [
+                    "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                    "95f85671912f24988951d81bb43744cf8ec33b0f86ca9d76484779385a822e9d81f14f4d5510894b44242b1b83a2a2c8"
+                  ]
+                }
+            ]
+        },
+        "device9" : {
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x06",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device10" : {
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device11" : {
+            "uuid" : "0x03030303030303030303030303030303",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x00",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0x1d4",
+            "certificate_content" : "0x308201d030820156a003020102021400ca2f39e8fa16fdb0340c85508f5d07e26e4834300a06082a8648ce3d040303301f311d301b06035504030c14696e74656c207465737420454350323536204341301e170d3232303130353036303833335a170d3332303130333036303833335a301f311d301b06035504030c14696e74656c2074657374204543503235362043413076301006072a8648ce3d020106052b8104002203620004922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2aa12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390a3533051301d0603551d0e0416041414c4e7a67c633fdf13f2b1365663f9c1eadd7810301f0603551d2304183016801414c4e7a67c633fdf13f2b1365663f9c1eadd7810300f0603551d130101ff040530030101ff300a06082a8648ce3d0403030368003065023100d79c7f269134a52b79ea661500880a4de7ad71c62ee47e37e186ebe855b02fc5f3a9e090f90b82c5df4a359a0d35384b023040a7fe70397b4bd7c2287293930c621214f070740ffcb12160406d13a3590e2706c1734eca404c2df596486605b1a608",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x3",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x2",
+                    "meas_value_index" : "0",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86"
+                    ]
+                },
+                {
+                  "number_of_possible_measurement" : "0x2",
+                  "meas_value_index" : "0",
+                  "meas_value_type" : "0x02",
+                  "meas_value_size" : "0x30",
+                  "measurement" : [
+                    "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                    "95f85671912f24988951d81bb43744cf8ec33b0f86ca9d76484779385a822e9d81f14f4d5510894b44242b1b83a2a2c8"
+                  ]
+                }
+            ]
+        },
+        "device12" : {
+            "uuid" : "0x01010101010101010101010101010101",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x06",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        },
+        "device13" : {
+            "uuid" : "0x02020202020202020202020202020202",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x02",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        }
+    }
+}

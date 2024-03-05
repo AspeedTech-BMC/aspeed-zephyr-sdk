@@ -15,6 +15,7 @@
 #include "intel_pfr_definitions.h"
 #include "intel_pfr_pfm_manifest.h"
 #include "intel_pfr_verification.h"
+#include "intel_pfr_provision.h"
 #include "common/common.h"
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
@@ -258,15 +259,22 @@ bool is_pbc_valid(PBC_HEADER *pbc)
 	return true;
 }
 
-#if defined(CONFIG_SEAMLESS_UPDATE)
-int get_total_pfm_fvm_size(struct pfr_manifest *manifest, uint32_t signed_pfm_offset,
+#if defined(CONFIG_SEAMLESS_UPDATE) || (CONFIG_AFM_SPEC_VERSION == 4)
+int get_total_pfm_size(struct pfr_manifest *manifest, uint32_t signed_pfm_offset,
 		uint32_t cap_pfm_body_start_addr, uint32_t cap_pfm_body_end_addr)
 {
 	PFM_SPI_DEFINITION spi_def;
+	uint8_t def_map = 0;
+#if defined(CONFIG_SEAMLESS_UPDATE)
 	PFM_FVM_ADDRESS_DEFINITION *fvm_def;
 	uint32_t last_fvm_start_addr = 0;
+#endif
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	uint32_t afm_start_addr = 0;
+#endif
 	uint32_t image_type = manifest->image_type;
 	uint32_t cap_pfm_body_offset = cap_pfm_body_start_addr;
+	LOG_INF("To read %x from image %d", cap_pfm_body_offset, image_type);
 
 	while (cap_pfm_body_offset < cap_pfm_body_end_addr) {
 		pfr_spi_read(image_type, cap_pfm_body_offset, sizeof(PFM_SPI_DEFINITION),
@@ -284,22 +292,50 @@ int get_total_pfm_fvm_size(struct pfr_manifest *manifest, uint32_t signed_pfm_of
 			} else {
 				cap_pfm_body_offset += SPI_REGION_DEF_MIN_SIZE;
 			}
+#if defined(CONFIG_SEAMLESS_UPDATE)
 		} else if (spi_def.PFMDefinitionType == FVM_ADDR_DEF) {
 			fvm_def = (PFM_FVM_ADDRESS_DEFINITION *)&spi_def;
 			if (fvm_def->FVMAddress > last_fvm_start_addr)
 				last_fvm_start_addr = fvm_def->FVMAddress;
 
 			cap_pfm_body_offset += sizeof(PFM_FVM_ADDRESS_DEFINITION);
+			def_map |= (1 << FVM_ADDR_DEF);
 		} else if (spi_def.PFMDefinitionType == FVM_CAP) {
 			cap_pfm_body_offset += sizeof(FVM_CAPABLITIES);
+#endif
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+		} else if (spi_def.PFMDefinitionType == AFM_ADDR_DEF) {
+			AFM_ADDRESS_DEFINITION_v40 afm_def;
+			pfr_spi_read(image_type, cap_pfm_body_offset, sizeof(AFM_ADDRESS_DEFINITION_v40),
+					(uint8_t *)&afm_def);
+			cap_pfm_body_offset += sizeof(AFM_ADDRESS_DEFINITION_v40);
+			afm_start_addr = afm_def.AfmAddress;
+			def_map |= (1 << AFM_ADDR_DEF);
+			LOG_INF("Get an AFM defintion, afm_start_addr = %x", afm_start_addr);
+#endif
 		} else {
 			break;
 		}
 	}
 
-	uint32_t total_pfm_fvm_size;
+	uint32_t total_pfm_size = manifest->pc_length;
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	if (def_map & (1 << AFM_ADDR_DEF)) {
+		PFR_AUTHENTICATION_BLOCK0 signed_afm;
+		uint32_t afm_start_addr_in_pfm =
+			afm_start_addr - manifest->active_pfm_addr;
+		uint32_t signed_afm_offset = signed_pfm_offset + afm_start_addr_in_pfm;
+
+		pfr_spi_read(image_type, signed_afm_offset, sizeof(PFR_AUTHENTICATION_BLOCK0),
+				(uint8_t *)&signed_afm);
+		total_pfm_size = afm_start_addr_in_pfm + signed_afm.PcLength + AFM_BODY_SIZE;
+		/* the AFM device info should be the last part of the PFM, we don't need to calculate the FVM size if AFM is presented */
+		return total_pfm_size;
+	}
+#endif
+#if defined(CONFIG_SEAMLESS_UPDATE)
 	// Get length from the header of the last fvm.
-	if (last_fvm_start_addr) {
+	if (def_map & (1 << FVM_ADDR_DEF)) {
 		PFR_AUTHENTICATION_BLOCK0 signed_fvm;
 		uint32_t last_fvm_start_addr_in_pfm =
 			last_fvm_start_addr - manifest->active_pfm_addr;
@@ -307,14 +343,14 @@ int get_total_pfm_fvm_size(struct pfr_manifest *manifest, uint32_t signed_pfm_of
 
 		pfr_spi_read(image_type, last_signed_fvm_offset, sizeof(PFR_AUTHENTICATION_BLOCK0),
 				(uint8_t *)&signed_fvm);
-		total_pfm_fvm_size = last_fvm_start_addr_in_pfm + signed_fvm.PcLength;
-	} else {
-		total_pfm_fvm_size = manifest->pc_length;
+		total_pfm_size = last_fvm_start_addr_in_pfm + signed_fvm.PcLength;
 	}
-
-	return total_pfm_fvm_size;
+#endif
+	return total_pfm_size;
 }
+#endif
 
+#if defined(CONFIG_SEAMLESS_UPDATE)
 int decompress_fvm_spi_region(struct pfr_manifest *manifest, PBC_HEADER *pbc,
 		uint32_t pbc_offset, uint32_t cap_fvm_offset,
 		DECOMPRESSION_TYPE_MASK_ENUM decomp_type)
@@ -381,6 +417,8 @@ int decompress_fvm_spi_region(struct pfr_manifest *manifest, PBC_HEADER *pbc,
 			}
 		} else if (spi_def.PFMDefinitionType == FVM_CAP) {
 			fvm_body_offset += sizeof(FVM_CAPABLITIES);
+		} else if (spi_def.PFMDefinitionType == AFM_ADDR_DEF) {
+			fvm_body_offset += sizeof(AFM_ADDRESS_DEFINITION_v40);
 		} else {
 			break;
 		}
@@ -425,6 +463,58 @@ int decompress_fv_capsule(struct pfr_manifest *manifest)
 }
 #endif
 
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+#include <pfr/pfr_ufm.h>
+int decompress_afm_capsule(struct pfr_manifest *pfr_manifest,
+		AFM_ADDRESS_DEFINITION_v40 *afm_def) {
+	int status;
+	uint32_t staging_address;
+	uint32_t afm_start_addr = afm_def->AfmAddress;
+	uint32_t afm_start_addr_in_pfm =
+		afm_start_addr - pfr_manifest->active_pfm_addr;
+	uint32_t org_address;
+
+	if (pfr_manifest->image_type == BMC_TYPE) {
+		status = ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET,
+				(uint8_t *)&staging_address, sizeof(staging_address));
+	} else if (pfr_manifest->image_type == PCH_TYPE) {
+		status = ufm_read(PROVISION_UFM, PCH_STAGING_REGION_OFFSET,
+				(uint8_t *)&staging_address, sizeof(staging_address));
+	} else {
+		LOG_ERR("AFM is not existed in image %d", pfr_manifest->image_type);
+		return -1;
+	}
+	if (status != Success)
+		return status;
+
+	afm_start_addr_in_pfm += staging_address ;
+	afm_start_addr_in_pfm += AFM_BODY_SIZE;
+
+	org_address = pfr_manifest->address;
+	pfr_manifest->address = afm_start_addr_in_pfm;
+	// Staging area verification
+	LOG_INF("Staging Area verification, %x", afm_start_addr_in_pfm);
+
+	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
+			NULL);
+	pfr_manifest->address = org_address;
+	if (status != Success) {
+		LOG_ERR("Staging Area verification failed, status = %x", status);
+		return -1;
+	}
+
+	pfr_spi_erase_region(pfr_manifest->image_type, true, afm_start_addr + AFM_BODY_SIZE, AFM_BODY_SIZE);
+	if (pfr_spi_region_read_write_between_spi(pfr_manifest->image_type, afm_start_addr_in_pfm,
+				pfr_manifest->image_type, afm_start_addr + AFM_BODY_SIZE, AFM_BODY_SIZE)) {
+		LOG_ERR("AFM body update failed");
+		return Failure;
+	}
+
+	return 0;
+}
+
+#endif
+
 int decompress_capsule(struct pfr_manifest *manifest, DECOMPRESSION_TYPE_MASK_ENUM decomp_type)
 {
 	uint32_t image_type = manifest->image_type;
@@ -453,8 +543,8 @@ int decompress_capsule(struct pfr_manifest *manifest, DECOMPRESSION_TYPE_MASK_EN
 
 	cap_pfm_body_end_addr = cap_pfm_body_offset + pfm_header.Length - sizeof(PFM_STRUCTURE);
 
-#if defined(CONFIG_SEAMLESS_UPDATE)
-	pfm_size = get_total_pfm_fvm_size(manifest, signed_pfm_offset,
+#if defined(CONFIG_SEAMLESS_UPDATE) || (CONFIG_AFM_SPEC_VERSION == 4)
+	pfm_size = get_total_pfm_size(manifest, signed_pfm_offset,
 			cap_pfm_body_start_addr, cap_pfm_body_end_addr);
 #else
 	pfm_size = manifest->pc_length;
@@ -533,6 +623,16 @@ int decompress_capsule(struct pfr_manifest *manifest, DECOMPRESSION_TYPE_MASK_EN
 			cap_pfm_body_offset += sizeof(PFM_FVM_ADDRESS_DEFINITION);
 		} else if (spi_def.PFMDefinitionType == FVM_CAP) {
 			cap_pfm_body_offset += sizeof(FVM_CAPABLITIES);
+		}
+#endif
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+		else if (spi_def.PFMDefinitionType == AFM_ADDR_DEF) {
+			AFM_ADDRESS_DEFINITION_v40 afm_def;
+			pfr_spi_read(image_type, cap_pfm_body_offset, sizeof(AFM_ADDRESS_DEFINITION_v40),
+					(uint8_t *)&afm_def);
+			cap_pfm_body_offset += sizeof(AFM_ADDRESS_DEFINITION_v40);
+			if (decompress_afm_capsule(manifest, &afm_def))
+				return Failure;
 		}
 #endif
 		else {

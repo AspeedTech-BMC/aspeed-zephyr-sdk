@@ -30,7 +30,7 @@ int get_cancellation_policy_offset(uint32_t pc_type)
 	else if ((pc_type == BMC_CAPSULE_CANCELLATION) || (pc_type == PFR_BMC_UPDATE_CAPSULE))
 		return KEY_CANCELLATION_POLICY_FOR_SIGNING_BMC_UPDATE_CAPSULE;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	else if ((pc_type == AFM_CANCELLATION) || (pc_type == PFR_AFM))
+	else if ((pc_type == AFM_CANCELLATION) || (pc_type == PFR_AFM) || (pc_type == PFR_AFM_PER_DEV))
 		return KEY_CANCELLATION_POLICY_FOR_AFM;
 #endif
 

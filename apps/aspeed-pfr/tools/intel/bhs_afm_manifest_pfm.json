@@ -1,0 +1,68 @@
+{
+    "platform" : "birch_stream",
+    "root_private_key" : "rk384_prv.pem",
+    "csk_private_key" : "csk384_prv.pem",
+    "svn" : "0x0",
+    "revision" : "0x0202",
+    "oem_data" : "0xffffffffffffffffffffffffffffffff",
+    "length"   : "0x38",
+    "list_devices": ["device0"],
+    "afm_header" : {
+        "device0" : {
+            "device_addr" : "0x10",
+            "uuid" : "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "afm_length" : "0x2000",
+            "afm_addr" : "0x4000800"
+        }    },
+    "afm_data" : {
+        "device0" : {
+            "uuid" : "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+            "device_platform_id" : "0xaabbccdd",
+            "device_platform_model" : "0x0011223344556677",
+            "device_platform_version" : "0x9a9a",
+            "bus_id" : "0x00",
+            "smbus_addr" : "0x10",
+            "binding_spec" : "0x01",
+            "binding_spec_version" : "0x0101",
+            "policy" : "0x00",
+            "svn" : "0x0",
+            "afm_version" : "0x0303",
+            "public_key_curve_magic" : "0x08F07B47",
+            "manufacture_string" : "0x01",
+            "manufacture_id_model" : "0x01",
+            "public_key_X" : "922fd3bd8b60bbf75ee480251410478c79ad82fb413ac4ad39f8011a9d472990d6bb8641078d866611da6dc9ed9b0e2a",
+            "public_key_Y" : "a12a51c2dd55ab3d1d7b3c3d3828807261203e25f99939824e4aba93d1ab1fce5a9b3dbea5bc1b96f0b7b5fb10f92390",
+            "size_of_public_key" : "0x60",
+            "size_of_certificate" : "0",
+            "public_key_exponent" : "0x4e4e4e4e",
+            "total_number_of_measurement" : "0x2",
+            "measurement" : [
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "1",
+                    "meas_value_type" : "0x00",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "a1d6755d00a66c12e3b5f8fe514441594ed86e8a821ddc55b2961fa71b6d8a12f8f42588b7c5d8362b22c6dd532950dc",
+                        "936987C4AB8243FBB3BB4BFD8B5AA78D4BA2CA363CE7299C610EB02A754E5A658D72B620E159B852A389310E037C7E15"
+                    ]
+                },
+                {
+                    "number_of_possible_measurement" : "0x3",
+                    "meas_value_index" : "2",
+                    "meas_value_type" : "0x01",
+                    "meas_value_size" : "0x30",
+                    "measurement" : [
+                        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "542dd40a5c224dc4e705820d384f38c0d59b79e128e62a797232010b55425878172bedf268d74a0c689d9d7cbe33cf86",
+                        "3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a"
+                    ]
+                }
+            ]
+        }
+    }
+}
