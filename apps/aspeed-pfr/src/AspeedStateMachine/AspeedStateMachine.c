@@ -1154,6 +1154,13 @@ void handle_checkpoint(void *o)
 #endif
 	case BiosCheckpoint:
 		UpdateBiosCheckpoint(evt_ctx->data.bit8[1]);
+		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+			if (state->afm_active_object.ActiveImageStatus == Success) {
+				spdm_run_attester();
+			}
+#endif
+		}
 		break;
 	default:
 		break;
