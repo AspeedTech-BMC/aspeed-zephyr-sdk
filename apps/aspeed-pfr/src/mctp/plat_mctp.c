@@ -17,7 +17,11 @@
 LOG_MODULE_REGISTER(plat_mctp, CONFIG_LOG_DEFAULT_LEVEL);
 
 /* i2c dev bus */
+#if defined(CONFIG_BOARD_AST2700_DCSCM)
+#define I2C_BUS_BMC 0x05
+#else
 #define I2C_BUS_BMC 0x00
+#endif
 #define I2C_BUS_PCH 0x02
 
 /* i2c 7 bit address */
