@@ -34,13 +34,15 @@ static int ast2700_dcscm_init(void)
 	const struct device *dev;
 	dev = device_get_binding("sgpiom_a_d");
 	if (dev) {
-		LOG_INF("SGPIOM_A_D PIN[3,4,5,18,19,24] to 1");
+		LOG_INF("SGPIOM_A_D PIN[3,4,5,18,19,20(RTC_CPU0),23(RTC_CPU1),24] to 1");
 		gpio_pin_set_raw(dev, 3, 1);
 		gpio_pin_set_raw(dev, 4, 1);
 		gpio_pin_set_raw(dev, 5, 1);
 		gpio_pin_set_raw(dev, 18, 1);
 		gpio_pin_set_raw(dev, 19, 1);
+		gpio_pin_set_raw(dev, 20, 1); // RTCRST CPU0
 		gpio_pin_set_raw(dev, 24, 1);
+		gpio_pin_set_raw(dev, 23, 1); // RTCRST CPU1
 	}
 
 	dev = device_get_binding("sgpiom_e_h");
@@ -68,6 +70,7 @@ static void sgpio_passthrough_workaround(struct k_timer *timer_id)
 {
 	const struct device *dev = NULL;
 	extern struct k_event pfr_system_event;
+	static bool printed = false;
 
 	if (k_event_wait(&pfr_system_event, BIT(0), false, K_NO_WAIT)) {
 		LOG_DBG("SGPIO Passthrough");
@@ -77,7 +80,8 @@ static void sgpio_passthrough_workaround(struct k_timer *timer_id)
 		dev = device_get_binding("sgpiom_a_d");
 		mask = 0x00000000;
 		if (dev && mask) {
-			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			if (printed == false)
+				LOG_WRN("PASSTHROUGH [%s %08x]", dev->name, mask);
 			sgpio_passthrough(dev, mask);
 		}
 
@@ -85,7 +89,8 @@ static void sgpio_passthrough_workaround(struct k_timer *timer_id)
 		dev = device_get_binding("sgpiom_e_h");
 		mask = 0xFFFFFF00;
 		if (dev && mask) {
-			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			if (printed == false)
+				LOG_WRN("PASSTHROUGH [%s %08x]", dev->name, mask);
 			sgpio_passthrough(dev, mask);
 		}
 
@@ -93,7 +98,8 @@ static void sgpio_passthrough_workaround(struct k_timer *timer_id)
 		dev = device_get_binding("sgpiom_i_l");
 		mask = 0xFFFFFFFF;
 		if (dev && mask) {
-			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			if (printed == false)
+				LOG_WRN("PASSTHROUGH [%s %08x]", dev->name, mask);
 			sgpio_passthrough(dev, mask);
 		}
 
@@ -101,9 +107,12 @@ static void sgpio_passthrough_workaround(struct k_timer *timer_id)
 		dev = device_get_binding("sgpiom_m_p");
 		mask = 0xFFFFFFFF;
 		if (dev && mask) {
-			LOG_DBG("PASSTHROUGH [%s %08x]", dev->name, mask);
+			if (printed == false)
+				LOG_WRN("PASSTHROUGH [%s %08x]", dev->name, mask);
 			sgpio_passthrough(dev, mask);
 		}
+		if (printed == false)
+			printed = true;
 	} else {
 		static uint32_t count = 0;
 		if ((++count & 0xFF) == 0) {

@@ -137,7 +137,7 @@ int PCHBootHold(void)
 
 	RSTPlatformReset(true);
 	/* Hold low AUX PWRGD */
-	RTCRSTControl(true);
+	// RTCRSTControl(true);
 	AUXPowerGoodControl(false);
 	/* Hold PCH Reset */
 #ifndef INTEL_BHS
@@ -236,7 +236,7 @@ int PCHBootRelease(void)
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
 #endif
 
-	RTCRSTControl(false);
+	// RTCRSTControl(false);
 	AUXPowerGoodControl(true);
 
 	// pch_rst_enable_ctrl(false);
