@@ -60,7 +60,7 @@
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #include "SPDM/SPDMCommon.h"
-#if defined (CONFIG_INTEL_PFR) 
+#if defined (CONFIG_INTEL_PFR)
 uint8_t AfmStatus = 0;
 #endif
 #endif
@@ -1272,7 +1272,7 @@ int handle_recovery_requested(CPLD_STATUS *cpld_status,
 }
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-#if defined (CONFIG_INTEL_PFR) 
+#if defined (CONFIG_INTEL_PFR)
 extern uint8_t get_ufm_svn(uint32_t offset);
 int validate_afm_update_type(CPLD_STATUS *cpld_update_status, uint32_t *image_type, uint32_t flash_select, struct event_context *evt_ctx)
 {
@@ -2037,6 +2037,7 @@ void AspeedStateMachine(void)
 #endif
 				break;
 			case UPDATE_INTENT_2_REQUESTED:
+#if defined(CONFIG_INTEL_PFR)
 				if (getFailedUpdateAttemptsCount() >= MAX_UPD_FAILED_ALLOWED) {
 					LogUpdateFailure(UPD_EXCEED_MAX_FAIL_ATTEMPT, 0);
 					break;
@@ -2047,6 +2048,7 @@ void AspeedStateMachine(void)
 #if defined(CONFIG_SEAMLESS_UPDATE)
 				else if (fifo_in->data.bit8[1] & SeamlessUpdate)
 					next_state = &state_table[SEAMLESS_UPDATE];
+#endif
 #endif
 				break;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
