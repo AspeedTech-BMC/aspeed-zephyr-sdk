@@ -113,6 +113,20 @@ static int ast1060_prot_gpio_post_init(void)
 
 static int ast1060_prot_init(const struct device *arg)
 {
+	// Workaround:
+	// Will be removed if zephyr sdk supports changing pin function to GPI Tx when ADC engine
+	// is disabled.
+#define ADC_ENGINE_CTRL    0x7e6e9000
+#define SCU_PIN_CTRL5      0x7e6e2430
+
+	uint32_t pinctrl_val = sys_read32(SCU_PIN_CTRL5);
+	uint32_t adc_engine_en = sys_read32(ADC_ENGINE_CTRL);
+	if (!(adc_engine_en & 1)) {
+		// Enable GPI T0 - T7
+		pinctrl_val |= 0xff000000;
+		sys_write32(pinctrl_val, SCU_PIN_CTRL5);
+	}
+
 	return 0;
 }
 
