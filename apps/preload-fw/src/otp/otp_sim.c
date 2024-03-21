@@ -511,7 +511,6 @@ int aspeed_otp_prog_image(uint32_t addr)
 {
 	struct otp_image_layout image_layout;
 	struct otp_header *otp_header;
-	uint32_t data[2048];
 	uint32_t scu_pro[2];
 	uint32_t conf[16];
 	uint8_t *checksum;
@@ -591,7 +590,6 @@ int aspeed_otp_prog_image(uint32_t addr)
 		if (info_cb.pro_sts.pro_sec) {
 			ret = OTP_PROTECTED;
 		}
-		aspeed_otp_read_data(0, data, OTP_DATA_DW_SIZE);
 	}
 	if (otp_header->image_info & OTP_INC_CONFIG) {
 		if (info_cb.pro_sts.pro_conf) {
