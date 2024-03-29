@@ -65,6 +65,23 @@ uint8_t AfmStatus = 0;
 #endif
 #endif
 
+#if defined(CONFIG_OTP_ASPEED) || defined(CONFIG_OTP_SIM)
+#if defined(CONFIG_OTP_KEY_RETIRE) || defined(CONFIG_OTP_KEY_ADD)
+#include <zephyr/storage/flash_map.h>
+#include "otp/otp_utils.h"
+
+extern int32_t otp_retire_key_id;
+extern uint8_t otp_header_slot;
+extern uint8_t otp_key_id;
+extern uint8_t otp_key_type;
+extern uint8_t otp_key_param;
+extern uint16_t otp_key_exp_len;
+extern uint32_t otp_key_offset;
+extern uint32_t otp_key_len;
+extern const uint8_t otp_pub_key[];
+#endif
+#endif
+
 #define MAX_UPD_FAILED_ALLOWED 10
 
 LOG_MODULE_REGISTER(aspeed_state_machine, LOG_LEVEL_DBG);
@@ -191,6 +208,20 @@ void do_init(void *o)
 	struct smf_context *state = (struct smf_context *)o;
 
 	LOG_DBG("Start");
+
+#if defined(CONFIG_OTP_ASPEED) || defined(CONFIG_OTP_SIM)
+#if defined(CONFIG_OTP_KEY_RETIRE) || defined(CONFIG_OTP_KEY_ADD)
+	const struct flash_area *fa;
+	flash_area_open(FIXED_PARTITION_ID(intel_state_partition), &fa);
+	if (otp_key_type) {
+		otpu_write_key(otp_header_slot, otp_key_param, otp_key_type, otp_key_offset,
+				otp_key_id, otp_key_exp_len, otp_key_len, otp_pub_key);
+	} else {
+		if (otp_retire_key_id >= 0)
+			otpu_retire_key((uint32_t)otp_retire_key_id);
+	}
+#endif
+#endif
 
 #if defined(CONFIG_FRONT_PANEL_LED)
 	initializeFPLEDs();

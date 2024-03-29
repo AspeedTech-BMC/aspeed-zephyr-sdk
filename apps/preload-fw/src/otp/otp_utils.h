@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include <zephyr/kernel.h>
 #include <zephyr/drivers/misc/aspeed/otp_aspeed.h>
 
 #define OTP_IMAGE_ADDR 0x800e0000

@@ -495,10 +495,10 @@ void spdm_attester_main(void *a, void *b, void *c)
 					 * AFM1: CPU0 (1-based, but device in 0-based)
 					 * AFM2: CPU1
 					 * AFM3: BMC
-					 * afmn: Devices 
+					 * afmn: Devices
 					 */
 					event.bit8[0] = device;
-					event.bit8[1] = afm_device->BindingSpec; 
+					event.bit8[1] = afm_device->BindingSpec;
 					event.bit8[2] = afm_device->Policy;
 					event.bit8[3] = ret;
 

@@ -27,6 +27,7 @@ config SPI_MUX_INVERSE
 
 config OTP_SIM
 	depends on !OTP_ASPEED
+	depends on !PFR_SPDM_ATTESTATION
 	default n
 	bool "Simulate OTP"
 	help

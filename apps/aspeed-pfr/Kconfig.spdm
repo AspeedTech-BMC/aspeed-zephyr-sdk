@@ -7,18 +7,19 @@ config PFR_MCTP
 	help
 	  Enable PFR MCTP support.
 
+config PFR_SPDM_ATTESTATION
+	depends on PFR_MCTP
+	default n
+	bool "SPDM attestation support"
+
 config PFR_MCTP_I3C
+	depends on PFR_SPDM_ATTESTATION
 	depends on PFR_MCTP
 	depends on I3C
 	default n
 	bool "PFR MCTP over I3C support"
 	help
 	  Enable MCTP over I3C support
-
-config PFR_SPDM_ATTESTATION
-	depends on PFR_MCTP
-	default n
-	bool "SPDM attestation support"
 
 config PFR_SPDM_RESPONDER
 	depends on PFR_MCTP

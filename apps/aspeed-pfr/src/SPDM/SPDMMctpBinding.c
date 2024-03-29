@@ -35,7 +35,7 @@ int spdm_mctp_send_recv(void *ctx, void *request_buf, void *response_buf)
 			conn->dst_addr, conn->dst_eid,
 			conn->request_buf, 1 + sizeof(req_msg->header) + req_msg->buffer.write_ptr,
 			conn->request_buf, sizeof(conn->request_buf),
-			1000
+			5000
 			);
 	if (ret == 0) {
 		// SPDM Header
@@ -86,7 +86,7 @@ bool spdm_mctp_init_req(void *ctx, SPDM_MEDIUM medium, uint8_t bus, uint8_t dst_
 #endif
 	default:
 		LOG_ERR("Unsupported Binding Spec 0x%02x", medium);
-		return;
+		return false;
 	}
 
 	if (mctp_inst != NULL) {

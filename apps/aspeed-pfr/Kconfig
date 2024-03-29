@@ -197,6 +197,34 @@ config LMS_SIGN_SERIAL_OFFSET
 	help
 	  If there is no serial number, to set it to 0. Otherwise, to set it to 4.
 
+config OTP_SIM
+	depends on !OTP_ASPEED
+	depends on !PFR_SPDM_ATTESTATION
+	default n
+	bool "Simulate OTP"
+	help
+	  Enable using flash to simulate OTP memory
+
+config OTP_SIM_SHELL
+	depends on OTP_SIM
+	default n
+	bool "OTP shell commands"
+	help
+	  Enable OTP commands for read otp data from flash
+
+config OTP_KEY_ADD
+	default n
+	bool "Add new key in OTP"
+	help
+	  Add new pub key in OTP region for owner transfer
+
+config OTP_KEY_RETIRE
+	depends on !OTP_KEY_ADD
+	default n
+	bool "Retire key in OTP"
+	help
+	  Retire previous key after new owner's key is added in OTP.
+
 rsource "Kconfig.spdm"
 rsource "Kconfig.rsu"
 
