@@ -11,7 +11,7 @@
    Note. the json files for BMC PFM and AFM capsule should be separately. Normally, the json file for BMC PFM should only carry one device info and the json file for AFM capsule could carry multiple device info.
 
 3. to use the json file in above step and issue the below command to generate the AFM image for BMC PFM
-   python3 -m intelprot.capsule afm -a bhs_afm_manifest_pfm.json -p bhs
+   python3 -m intelprot.capsule afm -a bhs_afm_manifest_pfm.json
 
 4. to issue the below command to generate the BMC template file (bhs_pfr_bmc_manifest.json is the example file)
    a. python3 -m intelprot.bmc -start_build -r bhs
@@ -21,5 +21,5 @@
    python3 -m intelprot.bmc -m bhs_pfr_bmc_manifest.json -r bhs
 
 7. to issue the below command to generate the AFM capsule image.
-   python3 -m intelprot.capsule afm -a bhs_afm_manifest_cap.json -p bhs
+   python3 -m intelprot.capsule afm -a bhs_afm_manifest_cap.json
 

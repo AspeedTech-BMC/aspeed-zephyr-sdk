@@ -11,6 +11,12 @@ cd workspace
 west update
 ```
 
+## AST2700 DCSCM board
+
+```
+west build -b ast2700_dcscm -p auto aspeed-zephyr-project/apps/aspeed-pfr
+```
+
 ## AST2600 DCSCM board
 
 ```
