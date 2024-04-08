@@ -6,11 +6,11 @@
 
 #include <soc.h>
 #include <stdint.h>
-#include <drivers/flash.h>
-#include <drivers/gpio.h>
-#include <drivers/spi_nor.h>
-#include <drivers/misc/aspeed/otp_aspeed.h>
-#include <logging/log.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/spi_nor.h>
+#include <zephyr/drivers/misc/aspeed/otp_aspeed.h>
+#include <zephyr/logging/log.h>
 
 #include "gpio/gpio_ctrl.h"
 
@@ -98,7 +98,7 @@ int prog_otp_and_rot(void)
 		goto error;
 	}
 
-	flash_dev = device_get_binding("fmc_cs0");
+	flash_dev = device_get_binding("fmc@0");
 	// erase otp image
 	if (mp_erase_spi_region(flash_dev, otp_image_offset, otp_image_size)) {
 		LOG_ERR("Failed to erase otp image");

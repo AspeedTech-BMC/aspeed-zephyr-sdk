@@ -4,7 +4,7 @@
  *  License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/libspdm/blob/main/LICENSE.md
  **/
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <logging/log.h>
 
 LOG_MODULE_REGISTER(spdm_debug, CONFIG_LOG_DEFAULT_LEVEL);

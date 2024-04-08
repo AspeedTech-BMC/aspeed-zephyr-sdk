@@ -5,7 +5,8 @@
  */
 
 #include "abr_aspeed.h"
-#include <init.h>
+#include <zephyr/init.h>
+#include <zephyr/kernel.h>
 
 void print_abr_wdt_info(void)
 {

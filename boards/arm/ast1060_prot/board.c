@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <init.h>
-#include <zephyr.h>
-#include <logging/log.h>
-#include <drivers/gpio.h>
-#include <sys/sys_io.h>
+#include <zephyr/init.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/sys_io.h>
 
 #define LOG_MODULE_NAME board
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
@@ -93,10 +93,43 @@ static int ast1060_prot_post_init(const struct device *arg)
 	return 0;
 }
 
-static int ast1060_prot_init(const struct device *arg)
+static int ast1060_prot_gpio_post_init(void)
 {
+	/* Initial setup for SGPIO */
+	const struct device *dev = device_get_binding("sgpiom_a_d");
+	if (dev) {
+		/* RST_SPI_PFR_CPU0_RESET_N */
+		gpio_pin_set_raw(dev, 6, 1);
+		/* RST_PFR_BMC_SPI_RESET_N */
+		gpio_pin_set_raw(dev, 7, 1);
+		/* RST_PFR_RTCRST_CPU0_N */
+		gpio_pin_set_raw(dev, 11, 1);
+	} else {
+		LOG_ERR("Unabled to find sgpiom_a_d device");
+	}
+
 	return 0;
 }
 
+static int ast1060_prot_init(const struct device *arg)
+{
+	// Workaround:
+	// Will be removed if zephyr sdk supports changing pin function to GPI Tx when ADC engine
+	// is disabled.
+#define ADC_ENGINE_CTRL    0x7e6e9000
+#define SCU_PIN_CTRL5      0x7e6e2430
+
+	uint32_t pinctrl_val = sys_read32(SCU_PIN_CTRL5);
+	uint32_t adc_engine_en = sys_read32(ADC_ENGINE_CTRL);
+	if (!(adc_engine_en & 1)) {
+		// Enable GPI T0 - T7
+		pinctrl_val |= 0xff000000;
+		sys_write32(pinctrl_val, SCU_PIN_CTRL5);
+	}
+
+	return 0;
+}
+
+SYS_INIT(ast1060_prot_gpio_post_init, POST_KERNEL, 45);
 SYS_INIT(ast1060_prot_post_init, POST_KERNEL, 85);
 SYS_INIT(ast1060_prot_init, APPLICATION, 0);

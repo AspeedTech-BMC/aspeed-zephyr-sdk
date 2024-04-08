@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <storage/flash_map.h>
-#include <drivers/i2c.h>
-#include <drivers/i2c/pfr/swmbx.h>
-#include <drivers/spi_nor.h>
-#include <logging/log.h>
-#include <drivers/gpio.h>
-#include <shell/shell.h>
+#include <zephyr/kernel.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/i2c/pfr/swmbx.h>
+#include <zephyr/drivers/spi_nor.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/shell/shell.h>
 #include "Smbus_mailbox.h"
 #include "common/common.h"
 

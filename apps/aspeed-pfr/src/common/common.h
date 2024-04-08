@@ -8,15 +8,15 @@
 
 
 /* Cerberus Includes*/
-#include <common/signature_verification.h>
+#include <crypto/signature_verification.h>
 
 #include <crypto/aes.h>
-#include <crypto/base64.h>
+#include <asn1/base64.h>
 #include <crypto/ecc.h>
 #include <crypto/hash.h>
 #include <crypto/rng.h>
 #include <crypto/rsa.h>
-#include <crypto/x509.h>
+#include <asn1/x509.h>
 
 #include <crypto/rsa_wrapper.h>
 #include <crypto/signature_verification_rsa_wrapper.h>

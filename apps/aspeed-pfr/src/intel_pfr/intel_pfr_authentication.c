@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 #include <flash/flash_aspeed.h>
 
 #include "pfr/pfr_common.h"
@@ -39,12 +39,27 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 		manifest->pc_type = PFR_PCH_UPDATE_CAPSULE;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == ROT_EXT_AFM_RC_1) {
+		read_address = 0;
+		manifest->pc_type = PFR_AFM;
+		//manifest->image_type = ROT_EXT_AFM_RC_1;
+		verify_afm = true;
+	}
+	else if (manifest->image_type == ROT_EXT_AFM_RC_2) {
+		read_address = 0;
+		manifest->pc_type = PFR_AFM;
+		//manifest->image_type = ROT_EXT_AFM_RC_2;
+		verify_afm = true;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		read_address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
 		manifest->pc_type = PFR_AFM;
 		manifest->image_type = BMC_TYPE;
 		verify_afm = true;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {
@@ -84,8 +99,11 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 #endif
 
 	// Recovery region PFM verification
-	manifest->address += PFM_SIG_BLOCK_SIZE;
-
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
+	LOG_INF("Hash curve = %d", manifest->hash_curve);
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
@@ -120,11 +138,24 @@ int pfr_active_verify(struct pfr_manifest *manifest)
 		manifest->pc_type = PFR_PCH_PFM;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == ROT_EXT_AFM_ACT_1) {
+		/* Fixed partition so starts from zero */
+		read_address = 0;
+		manifest->pc_type = PFR_AFM;
+	}
+	else if (manifest->image_type == ROT_EXT_AFM_ACT_2) {
+		/* Fixed partition so starts from zero */
+		read_address = 0;
+		manifest->pc_type = PFR_AFM;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == ROT_INTERNAL_AFM) {
 		/* Fixed partition so starts from zero */
 		read_address = 0;
 		manifest->pc_type = PFR_AFM;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {

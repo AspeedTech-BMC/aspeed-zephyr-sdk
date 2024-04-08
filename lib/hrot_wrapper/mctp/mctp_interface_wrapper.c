@@ -5,14 +5,18 @@
  */
 
 #if defined(CONFIG_PFR_MCTP)
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "cmd_interface/device_manager.h"
 #include "cmd_interface/cmd_interface.h"
 #include "cmd_interface/cmd_interface_system.h"
 #include "mctp/mctp_base_protocol.h"
 #include "mctp/cmd_interface_mctp_control.h"
 #include "mctp_interface_wrapper.h"
+
+extern int device_manager_update_not_attestable_device_entry (struct device_manager *mgr, int device_num,
+	uint8_t eid, uint8_t smbus_addr, uint8_t pcd_component_index);
+#define NOT_USED 0 // currently, pcd_component_index doesn't have any functionality in code, to set it to zero
 
 LOG_MODULE_REGISTER(mctp_interface_wrapper, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -29,22 +33,23 @@ int mctp_interface_wrapper_init(struct mctp_interface_wrapper *mctp_wrapper, uin
 
 	int status;
 
-	status = device_manager_init(&mctp_wrapper->device_mgr, 2, DEVICE_MANAGER_PA_ROT_MODE,
-			DEVICE_MANAGER_MASTER_AND_SLAVE_BUS_ROLE);
+	status = device_manager_init(&mctp_wrapper->device_mgr, 2, 0, DEVICE_MANAGER_PA_ROT_MODE,
+			DEVICE_MANAGER_MASTER_AND_SLAVE_BUS_ROLE, 1000, 0, 0, 0, 0, 0, 0);
+
 	if (status != 0) {
 		LOG_ERR("device manager init failed");
 		return status;
 	}
 
-	status = device_manager_update_device_entry(&mctp_wrapper->device_mgr,
-			DEVICE_MANAGER_SELF_DEVICE_NUM, MCTP_BASE_PROTOCOL_PA_ROT_CTRL_EID, rot_addr);
+	status = device_manager_update_not_attestable_device_entry(&mctp_wrapper->device_mgr,
+			DEVICE_MANAGER_SELF_DEVICE_NUM, MCTP_BASE_PROTOCOL_PA_ROT_CTRL_EID, rot_addr, NOT_USED);
 	if (status != 0) {
 		LOG_ERR("update self device failed");
 		return status;
 	}
 
-	status = device_manager_update_device_entry(&mctp_wrapper->device_mgr,
-			DEVICE_MANAGER_MCTP_BRIDGE_DEVICE_NUM, MCTP_BASE_PROTOCOL_BMC_EID, 0x10);
+	status = device_manager_update_not_attestable_device_entry(&mctp_wrapper->device_mgr,
+			DEVICE_MANAGER_MCTP_BRIDGE_DEVICE_NUM, MCTP_BASE_PROTOCOL_BMC_EID, 0x10, NOT_USED);
 	if (status != 0) {
 		LOG_ERR("update bridge device failed");
 		return status;
@@ -66,7 +71,7 @@ int mctp_interface_wrapper_init(struct mctp_interface_wrapper *mctp_wrapper, uin
 	mctp_wrapper->cmd_cerberus.generate_error_packet = cmd_interface_generate_error_packet;
 
 	status = mctp_interface_init(&mctp_wrapper->mctp_interface, &mctp_wrapper->cmd_cerberus,
-			&mctp_wrapper->cmd_mctp_control.base, &mctp_wrapper->device_mgr);
+			&mctp_wrapper->cmd_mctp_control.base, NULL, &mctp_wrapper->device_mgr);
 	if (status != 0) {
 		LOG_ERR("mctp interface init failed");
 		goto error_cmd_interface;
@@ -90,15 +95,15 @@ int mctp_i3c_wrapper_init(struct mctp_interface_wrapper *mctp_wrapper, uint8_t r
 	int status;
 	struct device_manager *device_mgr = &mctp_wrapper->device_mgr;
 
-	status = device_manager_init(device_mgr, 2, DEVICE_MANAGER_PA_ROT_MODE,
-			DEVICE_MANAGER_I3C_SLAVE_BUS_ROLE);
+	status = device_manager_init(device_mgr, 2, 0, DEVICE_MANAGER_PA_ROT_MODE,
+		DEVICE_MANAGER_I3C_SLAVE_BUS_ROLE, 1000, 0, 0, 0, 0, 0, 0);
 	if (status != 0) {
 		LOG_ERR("device manager init failed");
 		return status;
 	}
 
-	status = device_manager_update_device_entry(device_mgr,
-			DEVICE_MANAGER_SELF_DEVICE_NUM, MCTP_BASE_PROTOCOL_NULL_EID, 0);
+	status = device_manager_update_not_attestable_device_entry(device_mgr,
+			DEVICE_MANAGER_SELF_DEVICE_NUM, MCTP_BASE_PROTOCOL_NULL_EID, 0, NOT_USED);
 	if (status != 0) {
 		LOG_ERR("update self device failed");
 		return status;
@@ -112,9 +117,8 @@ int mctp_i3c_wrapper_init(struct mctp_interface_wrapper *mctp_wrapper, uint8_t r
 		return status;
 	}
 
-	status = device_manager_update_device_entry(device_mgr,
-			DEVICE_MANAGER_MCTP_BRIDGE_DEVICE_NUM, MCTP_BASE_PROTOCOL_NULL_EID, 0);
-
+	status = device_manager_update_not_attestable_device_entry(device_mgr,
+			DEVICE_MANAGER_MCTP_BRIDGE_DEVICE_NUM, MCTP_BASE_PROTOCOL_NULL_EID, 0, NOT_USED);
 	if (status != 0) {
 		LOG_ERR("update self device failed");
 		return status;
@@ -132,7 +136,7 @@ int mctp_i3c_wrapper_init(struct mctp_interface_wrapper *mctp_wrapper, uint8_t r
 	mctp_wrapper->cmd_cerberus.generate_error_packet = cmd_interface_generate_error_packet;
 
 	status = mctp_interface_init(&mctp_wrapper->mctp_interface, &mctp_wrapper->cmd_cerberus,
-			&mctp_wrapper->cmd_mctp_control.base, device_mgr);
+			&mctp_wrapper->cmd_mctp_control.base, NULL, device_mgr);
 	if (status != 0) {
 		LOG_ERR("mctp interface init failed");
 		goto error_cmd_interface;

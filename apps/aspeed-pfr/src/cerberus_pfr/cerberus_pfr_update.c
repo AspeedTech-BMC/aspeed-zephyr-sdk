@@ -5,7 +5,7 @@
  */
 
 #include <stdlib.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "pfr/pfr_update.h"
 #include "pfr/pfr_recovery.h"
@@ -469,7 +469,7 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 
 	// BMC/PCH Firmware Update for Active/Recovery Region
 	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
-			NULL, NULL);
+			NULL);
 	if (status != Success) {
 		LOG_ERR("Staging Area verification failed.");
 		if (flash_select == PRIMARY_FLASH_REGION)

@@ -5,7 +5,7 @@
  */
 
 #include "otp_aspeed.h"
-#include <shell/shell.h>
+#include <zephyr/shell/shell.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>

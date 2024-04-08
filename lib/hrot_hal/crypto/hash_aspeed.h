@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <crypto/hash_structs.h>
+#include <zephyr/crypto/hash.h>
 
 #define ZEPHYR_HASH_API_MIDLEYER_TEST_SUPPORT 1    // non-zero for support hash functions testing
 

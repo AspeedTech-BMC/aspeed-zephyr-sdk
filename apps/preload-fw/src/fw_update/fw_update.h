@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include "sw_mailbox/sw_mailbox.h"
 
 #define PAGE_SIZE 4096

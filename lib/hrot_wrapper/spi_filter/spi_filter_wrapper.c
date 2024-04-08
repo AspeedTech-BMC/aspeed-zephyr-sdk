@@ -10,10 +10,10 @@
 #define SPIM_NUM  4
 
 static char *spim_devs[SPIM_NUM] = {
-	"spi_m1",
-	"spi_m2",
-	"spi_m3",
-	"spi_m4"
+	"spim@1",
+	"spim@2",
+	"spim@3",
+	"spim@4"
 };
 
 int Wrapper_spi_filter_enable(struct spi_filter_interface *spi_filter, bool enable)

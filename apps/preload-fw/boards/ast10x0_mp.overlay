@@ -26,14 +26,9 @@
 };
 
 &fmc_cs0 {
-	/delete-property/ broken-sfdp;
 	/delete-property/ write-block-size;
 	status = "okay";
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
-};
-
-&timer0 {
-	status = "okay";
 };
 

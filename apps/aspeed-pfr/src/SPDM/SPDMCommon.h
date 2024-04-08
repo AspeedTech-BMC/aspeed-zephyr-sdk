@@ -6,8 +6,8 @@
 
 #pragma once
 #include <stdint.h>
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include "SPDM/SPDMContext.h"
 #include "SPDM/SPDMCrypto.h"

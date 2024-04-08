@@ -124,6 +124,40 @@ typedef struct _BLOCK0ENTRY_3K {
 	};
 } BLOCK0ENTRY_3K;
 
+typedef struct _RootEntry_lms {
+	uint32_t Tag;
+	uint32_t PubCurveMagic;
+	uint32_t KeyPermission;
+	uint32_t KeyId;
+    int32_t keylen;
+    uint8_t pubkey[100];
+	uint8_t Reserved[12];
+} KEY_ENTRY_lms;
+
+typedef struct _CSKENTRY_lms {
+	KEY_ENTRY_lms CskEntryInitial;
+	uint32_t CskSignatureMagic;
+	int32_t siglen;
+	uint8_t CskSignature[2048];
+} CSKENTRY_lms;
+
+typedef struct _BLOCK0ENTRY_lms {
+	uint32_t TagBlock0Entry;
+	uint32_t Block0SignatureMagic;
+	int32_t siglen;
+	uint8_t Block0Signature[2048];
+} BLOCK0ENTRY_lms;
+
+typedef struct _PFR_AUTHENTICATION_BLOCK1_lms {
+	// Block 1
+	uint32_t TagBlock1;
+	uint8_t ReservedBlock1[12];
+	// -----------Signature chain---------
+	KEY_ENTRY_lms RootEntry;   // 132byte
+	CSKENTRY_lms CskEntry;
+	BLOCK0ENTRY_lms Block0Entry;
+} PFR_AUTHENTICATION_BLOCK1_lms;
+
 typedef struct _PFR_AUTHENTICATION_BLOCK1 {
 	// Block 1
 	uint32_t TagBlock1;
@@ -179,6 +213,7 @@ enum {
 	PFR_PCH_SEAMLESS_UPDATE_CAPSULE,
 	PFR_AFM,
 	PFR_INTEL_CPLD_UPDATE_CAPSULE,
+	PFR_AFM_PER_DEV,
 	PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON = 0x200
 };
 

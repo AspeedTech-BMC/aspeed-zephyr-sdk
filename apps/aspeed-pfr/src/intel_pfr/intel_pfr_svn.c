@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include "pfr/pfr_common.h"
 #include "pfr/pfr_ufm.h"
@@ -95,7 +95,10 @@ int read_statging_area_pfm_svn(struct pfr_manifest *manifest, uint8_t *svn_versi
 	uint8_t buffer[sizeof(PFM_STRUCTURE)];
 
 	// PFM data start address after Staging block and PFM block
-	pfm_start_address = manifest->address + PFM_SIG_BLOCK_SIZE + PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		pfm_start_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		pfm_start_address = manifest->address + PFM_SIG_BLOCK_SIZE + PFM_SIG_BLOCK_SIZE;
 
 	if (manifest->image_type == AFM_TYPE)
 		status = pfr_spi_read(BMC_TYPE, pfm_start_address, sizeof(PFM_STRUCTURE),

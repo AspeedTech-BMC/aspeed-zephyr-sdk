@@ -5,12 +5,15 @@
  */
 
 #if defined(CONFIG_OTP_SIM)
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/sys/sys_io.h>
 #include <stdio.h>
 #include <string.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/sha512.h>
+#include <aspeed_util.h>
 
 #include "otp_sim.h"
 
@@ -22,8 +25,8 @@
 static struct otp_info_cb info_cb;
 struct otpstrap_status strap_status[64];
 
-static uint32_t otp_data_buf[OTP_DATA_DW_SIZE];
-static uint32_t otp_conf_buf[OTP_CONF_DW_SIZE];
+static uint32_t otp_data_buf[OTP_DATA_DW_SIZE] NON_CACHED_BSS_ALIGN16;
+static uint32_t otp_conf_buf[OTP_CONF_DW_SIZE] NON_CACHED_BSS_ALIGN16;
 const struct device *otp_sim_dev;
 const struct flash_area *otp_sim_fa;
 
@@ -68,18 +71,19 @@ int aspeed_otp_read_data(uint32_t offset, uint32_t *buf, uint32_t len)
 		return OTP_USAGE;
 
 	init_otp_sim_region();
-	flash_read(otp_sim_dev, OTP_SIM_BASE_ADDR + flash_offset, buf, (len * DWORD));
+	flash_read(otp_sim_dev, OTP_SIM_BASE_ADDR + flash_offset, otp_data_buf, (len * DWORD));
 	for (i = 0; i < len; i++) {
-		if (buf[i] == 0xffffffff) {
+		if (otp_data_buf[i] == 0xffffffff) {
 			if (offset % 2) {
 				if (i % 2)
-					buf[i] = 0;
+					otp_data_buf[i] = 0;
 			} else {
 				if (!(i % 2))
-					buf[i] = 0;
+					otp_data_buf[i] = 0;
 			}
 		}
 	}
+	memcpy(buf, otp_data_buf, (len * DWORD));
 
 	return OTP_SUCCESS;
 }
@@ -276,8 +280,8 @@ static int _aspeed_otp_prog_conf(struct otp_image_layout *image_layout,
 	uint32_t buf_masked;
 	int i;
 
-	flash_read(otp_sim_dev, (OTP_SIM_BASE_ADDR + OTP_DATA_BASE_ADDR), otp_data_buf,
-			sizeof(otp_data_buf));
+	flash_read(otp_sim_dev, (OTP_SIM_BASE_ADDR + OTP_CONF_BASE_ADDR), otp_conf_buf,
+			sizeof(otp_conf_buf));
 
 	for (i = 0; i < 16; i++) {
 		data_masked = otp_conf[i]  & ~conf_ignore[i];
@@ -507,7 +511,6 @@ int aspeed_otp_prog_image(uint32_t addr)
 {
 	struct otp_image_layout image_layout;
 	struct otp_header *otp_header;
-	uint32_t data[2048];
 	uint32_t scu_pro[2];
 	uint32_t conf[16];
 	uint8_t *checksum;
@@ -587,7 +590,6 @@ int aspeed_otp_prog_image(uint32_t addr)
 		if (info_cb.pro_sts.pro_sec) {
 			ret = OTP_PROTECTED;
 		}
-		aspeed_otp_read_data(0, data, OTP_DATA_DW_SIZE);
 	}
 	if (otp_header->image_info & OTP_INC_CONFIG) {
 		if (info_cb.pro_sts.pro_conf) {

@@ -5,11 +5,11 @@
  */
 
 #include <assert.h>
-#include <logging/log.h>
-#include <zephyr.h>
-#include <device.h>
-#include <logging/log.h>
-#include <drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/i2c/pfr/i2c_filter.h>
 
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "crypto/hash_wrapper.h"
@@ -70,9 +70,9 @@ int initializeEngines(void)
 }
 
 #if defined(CONFIG_SEAMLESS_UPDATE)
-void apply_fvm_spi_protection(uint32_t fvm_addr)
+void apply_fvm_spi_protection(uint32_t fvm_addr, int offset)
 {
-	uint32_t fvm_offset = fvm_addr + PFM_SIG_BLOCK_SIZE;
+	uint32_t fvm_offset = fvm_addr + offset;
 	uint32_t fvm_body_offset = fvm_offset + sizeof(FVM_STRUCTURE);
 	FVM_STRUCTURE fvm;
 	PFM_SPI_DEFINITION spi_def;

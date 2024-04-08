@@ -13,6 +13,8 @@
         ]
     },
     "config_region": {
-	    "Signature Scheme": "ECDSA384"
+	    "Signature Scheme": "ECDSA384",
+	    "User define data: random number low": "0x13245768",
+	    "User define data: random number high": "0x86754231"
     }
 }

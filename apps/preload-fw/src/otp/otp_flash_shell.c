@@ -5,13 +5,13 @@
  */
 #if defined(CONFIG_OTP_SIM)
 #if defined(CONFIG_OTP_SIM_SHELL)
-#include <zephyr.h>
-#include <sys/util.h>
-#include <shell/shell.h>
-#include <soc.h>
-#include <storage/flash_map.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/storage/flash_map.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <aspeed_util.h>
 #include "otp/otp_utils.h"
 #include "otp/otp_sim.h"
 #include "mp/mp_util.h"

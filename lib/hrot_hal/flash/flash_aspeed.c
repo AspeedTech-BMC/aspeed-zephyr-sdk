@@ -4,32 +4,31 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <drivers/flash.h>
-#include <drivers/spi_nor.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/spi_nor.h>
 #include <flash/flash_aspeed.h>
-#include <kernel.h>
-#include <sys/util.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
 #include <stdlib.h>
 #include <string.h>
-#include <zephyr.h>
-#include <flash_map.h>
+#include <zephyr/storage/flash_map.h>
 #include <soc.h>
 
 #define LOG_MODULE_NAME spi_api
-#define NON_CACHED_SRAM_START      DT_REG_ADDR_BY_IDX(DT_NODELABEL(sram0), 1)
-#define NON_CACHED_SRAM_SIZE       DT_REG_SIZE_BY_IDX(DT_NODELABEL(sram0), 1)
+#define NON_CACHED_SRAM_START      DT_REG_ADDR(DT_NODELABEL(sram1))
+#define NON_CACHED_SRAM_SIZE       DT_REG_SIZE(DT_NODELABEL(sram1))
 #define NON_CACHED_SRAM_END        (NON_CACHED_SRAM_START + NON_CACHED_SRAM_SIZE)
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(LOG_MODULE_NAME, LOG_LEVEL_DBG);
 
 static char *Flash_Devices_List[6] = {
-	"spi1_cs0",
-	"spi1_cs1",
-	"spi2_cs0",
-	"spi2_cs1",
-	"fmc_cs0",
-	"fmc_cs1"
+	"spi1@0",
+	"spi1@1",
+	"spi2@0",
+	"spi2@1",
+	"fmc@0",
+	"fmc@1"
 };
 
 #if defined(CONFIG_SPI_DMA_SUPPORT_ASPEED) || defined(CONFIG_SPI_WRITE_DMA_SUPPORT_ASPEED)
@@ -189,36 +188,50 @@ int get_rot_region(uint8_t device_id, const struct flash_area **fa)
 
 	switch (device_id) {
 	case ROT_INTERNAL_ACTIVE:
-		ret = flash_area_open(FLASH_AREA_ID(active), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(active_partition), fa);
 		break;
 	case ROT_INTERNAL_RECOVERY:
-		ret = flash_area_open(FLASH_AREA_ID(recovery), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(recovery_partition), fa);
 		break;
 	case ROT_INTERNAL_STATE:
-		ret = flash_area_open(FLASH_AREA_ID(state), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(state_partition), fa);
 		break;
 	case ROT_INTERNAL_INTEL_STATE:
-		ret = flash_area_open(FLASH_AREA_ID(intel_state), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(intel_state_partition), fa);
 		break;
 	case ROT_INTERNAL_KEY:
-		ret = flash_area_open(FLASH_AREA_ID(key), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(key_partition), fa);
 		break;
 #if defined(CONFIG_BOOTLOADER_MCUBOOT)
 	case ROT_INTERNAL_CERTIFICATE:
-		ret = flash_area_open(FLASH_AREA_ID(certificate), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(certificate_partition), fa);
 		break;
 #endif
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	case ROT_INTERNAL_AFM:
-		ret = flash_area_open(FLASH_AREA_ID(afm_act_1), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act_1_partition), fa);
 		break;
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	case ROT_EXT_AFM_ACT_1:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act1_partition), fa);
+		break;
+	case ROT_EXT_AFM_ACT_2:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_act2_partition), fa);
+		break;
+	case ROT_EXT_AFM_RC_1:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_rcv1_partition), fa);
+		break;
+	case ROT_EXT_AFM_RC_2:
+		ret = flash_area_open(FIXED_PARTITION_ID(afm_rcv2_partition), fa);
+		break;
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	case ROT_EXT_CPLD_ACT:
-		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_act), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(intel_cpld_act_partition), fa);
 		break;
 	case ROT_EXT_CPLD_RC:
-		ret = flash_area_open(FLASH_AREA_ID(intel_cpld_rc), fa);
+		ret = flash_area_open(FIXED_PARTITION_ID(intel_cpld_rc_partition), fa);
 		break;
 #endif
 	default:
@@ -365,7 +378,7 @@ int rot_flash_erase(uint8_t device_id, uint32_t address, uint32_t size, bool sec
 	if (ret)
 		return ret;
 
-	flash_dev = device_get_binding(fa->fa_dev_name);
+	flash_dev = fa->fa_dev;
 	if (!flash_dev)
 		return -1;
 

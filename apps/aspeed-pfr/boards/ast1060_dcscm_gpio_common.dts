@@ -1,3 +1,5 @@
+#include <dt-bindings/gpio/gpio.h>
+
 / {
 	pfr_gpio_common {
 		compatible = "aspeed,pfr-gpio-common";
@@ -23,11 +25,8 @@
 	};
 
 	aliases {
-		led0 = &pfr_fp_green_led_out;
-		led1 = &pfr_fp_amber_led_out;
 		fp-input0 = &bmc_fp_green_led_in;
 		fp-input1 = &bmc_fp_amber_led_in;
-		hbled0 = &pfr_hb_led_out;
 	};
 
 	gpio_keys {

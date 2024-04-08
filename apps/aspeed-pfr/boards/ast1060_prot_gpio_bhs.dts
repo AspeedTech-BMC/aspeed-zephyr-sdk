@@ -9,12 +9,12 @@
 		bmc-pwr-btn-out-gpios = <&sgpiom_a_d 15 0>;
 		scm-rsu-hide-out-gpios = <&sgpiom_a_d 13 0>;
 
-		mb-board-id0-in-gpios = <&sgpiom_a_d 14 0>;
-		mb-board-id1-in-gpios = <&sgpiom_a_d 15 0>;
-		mb-board-id2-in-gpios = <&sgpiom_a_d 16 0>;
-		mb-board-id3-in-gpios = <&sgpiom_a_d 17 0>;
-		mb-board-id4-in-gpios = <&sgpiom_a_d 18 0>;
-		mb-board-id5-in-gpios = <&sgpiom_a_d 19 0>;
+		mb-board-id0-in-gpios = <&sgpiom_a_d 5 0>;
+		mb-board-id1-in-gpios = <&sgpiom_a_d 6 0>;
+		mb-board-id2-in-gpios = <&sgpiom_a_d 7 0>;
+		mb-board-id3-in-gpios = <&sgpiom_a_d 8 0>;
+		mb-board-id4-in-gpios = <&sgpiom_a_d 9 0>;
+		mb-board-id5-in-gpios = <&sgpiom_a_d 10 0>;
 		mb-board-revid0-in-gpios = <&sgpiom_a_d 11 0>;
 		mb-board-revid1-in-gpios = <&sgpiom_a_d 12 0>;
 		mb-board-revid2-in-gpios = <&sgpiom_a_d 13 0>;
@@ -27,8 +27,8 @@
 		scm-board-id5-in-gpios = <&sgpiom_a_d 19 0>;
 
 		// 32-63
-		rst-pltrst-in-gpios = <&sgpiom_e_h 2 0>;
-		fp-pwr-btn-in-gpios = <&sgpiom_e_h 25 0>;
+		rst-pltrst-in-gpios = <&sgpiom_a_d 2 0>; /* SGPIO IN #2 */
+		fp-pwr-btn-in-gpios = <&sgpiom_a_d 25 0>; /* SGPIO IN #26 */
 	};
 };
 

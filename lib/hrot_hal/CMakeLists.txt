@@ -26,8 +26,6 @@ if (CONFIG_HROT_HAL)
 	    ${HROT_MIDDLEWARE_ROOT}/spi_filter/spi_filter_aspeed.c
 	)
 
-	zephyr_library_sources_ifdef(CONFIG_PFR_MCTP_I3C ${HROT_MIDDLEWARE_ROOT}/i3c/hal_i3c.c)
-
 	zephyr_library_include_directories(
 	    .
 	    $ENV{ZEPHYR_BASE}/build/zephyr/include/generated/

@@ -108,6 +108,9 @@ struct spdm_context {
 
 	/* Random number wrapper */
 	int (*random_callback)(void *context, unsigned char *output, size_t output_len);
+
+	/* private data */
+	void *private_data;
 };
 
 struct spdm_req_fifo_data {

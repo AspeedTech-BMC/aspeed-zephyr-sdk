@@ -5,8 +5,8 @@
  */
 
 #include <stdlib.h>
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 #include "common/common.h"
 #include "pfr/pfr_common.h"
 #include "pfr/pfr_ufm.h"
@@ -274,7 +274,7 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	if (manifest->state == FIRMWARE_RECOVERY) {
 		LOG_INF("PCH staging region verification");
 		status = manifest->update_fw->base->verify((struct firmware_image *)manifest,
-				NULL, NULL);
+				NULL);
 		if (status != Success)
 			return Failure;
 	}

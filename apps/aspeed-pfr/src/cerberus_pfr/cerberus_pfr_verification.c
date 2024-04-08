@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "common/common.h"
 #include "pfr/pfr_common.h"
@@ -293,7 +293,7 @@ int rsa_verify_signature(struct signature_verification *verification,
 	if (cerberus_pfr_verify_root_key(pfr_manifest, &rsa_public))
 		return Failure;
 
-	status = rsa->base.sig_verify(&rsa->base, &rsa_public, signature, sig_length, digest, length);
+	status = rsa->base.sig_verify(&rsa->base, &rsa_public, signature, sig_length, HASH_TYPE_SHA256, digest, length);
 	if (status != Success) {
 		LOG_ERR("public key mod length = 0x%x", rsa_public.mod_length);
 		LOG_ERR("public key exponent = 0x%x", rsa_public.exponent);

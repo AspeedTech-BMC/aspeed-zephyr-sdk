@@ -1,0 +1,24 @@
+{
+    "name": "ast1060a2_owner_xfer",
+    "version": "1060A2",
+    "data_region": {
+        "ecc_region": false,
+        "key": [
+            {
+                "types": "ecdsa_pub",
+                "key_pem": "ecdsa384.pub.pem",
+                "offset": "0x40",
+                "number_id": 0
+            },
+            {
+                "types": "ecdsa_pub",
+                "key_pem": "ecdsa384_1.pub.pem",
+                "offset": "0xA0",
+                "number_id": 1
+            }
+        ]
+    },
+    "config_region": {
+	    "Signature Scheme": "ECDSA384"
+    }
+}

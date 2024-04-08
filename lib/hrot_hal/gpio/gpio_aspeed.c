@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <drivers/flash.h>
-#include <drivers/spi_nor.h>
-#include <kernel.h>
-#include <sys/util.h>
+#include <stdbool.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/spi_nor.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
 #include <stdlib.h>
 #include <string.h>
-#include <zephyr.h>
-#include <drivers/gpio.h>
+#include <zephyr/drivers/gpio.h>
 #include "gpio_aspeed.h"
 
 #define LOG_MODULE_NAME gpio_api
@@ -106,25 +106,23 @@ int BMCBootHold(void)
 	if (first_time_boot)
 		bmc_srst_enable_ctrl(true);
 	dev_m = device_get_binding(BMC_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
-	flash_dev = device_get_binding("spi1_cs0");
+	flash_dev = device_get_binding("spi1@0");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
-		LOG_ERR("Failed to bind spi1_cs0");
+		LOG_ERR("Failed to bind spi1@0");
 	}
 #if defined(CONFIG_BMC_DUAL_FLASH)
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
-	flash_dev = device_get_binding("spi1_cs1");
+	flash_dev = device_get_binding("spi1@1");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
-		LOG_ERR("Failed to bind spi1_cs1");
+		LOG_ERR("Failed to bind spi1@1");
 	}
 #endif
 	LOG_INF("hold BMC");
@@ -142,13 +140,14 @@ int PCHBootHold(void)
 	RTCRSTControl(true);
 	AUXPowerGoodControl(false);
 	/* Hold PCH Reset */
-	// pch_rst_enable_ctrl(true);
+#ifndef INTEL_BHS
+	pch_rst_enable_ctrl(true);
+#endif
 
 	dev_m = device_get_binding(PCH_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
-	flash_dev = device_get_binding("spi2_cs0");
+	flash_dev = device_get_binding("spi2@0");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
@@ -157,14 +156,13 @@ int PCHBootHold(void)
 
 #if defined(CONFIG_CPU_DUAL_FLASH)
 	dev_m = device_get_binding(PCH_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	/* config spi monitor as master mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
-	flash_dev = device_get_binding("spi2_cs1");
+	flash_dev = device_get_binding("spi2@1");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
-		LOG_ERR("Failed to bind spi2_cs1");
+		LOG_ERR("Failed to bind spi2@1");
 	}
 #endif
 	LOG_INF("hold PCH");
@@ -176,26 +174,24 @@ int BMCBootRelease(void)
 	const struct device *dev_m = NULL;
 	const struct device *flash_dev = NULL;
 
-	flash_dev = device_get_binding("spi1_cs0");
+	flash_dev = device_get_binding("spi1@0");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
-		LOG_ERR("Failed to bind spi1_cs0");
+		LOG_ERR("Failed to bind spi1@0");
 	}
 	dev_m = device_get_binding(BMC_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
 #if defined(CONFIG_BMC_DUAL_FLASH)
-	flash_dev = device_get_binding("spi1_cs1");
+	flash_dev = device_get_binding("spi1@1");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
 		LOG_ERR("Failed to bind spi1_cs1");
 	}
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
@@ -216,27 +212,25 @@ int PCHBootRelease(void)
 	const struct device *dev_m = NULL;
 	const struct device *flash_dev = NULL;
 
-	flash_dev = device_get_binding("spi2_cs0");
+	flash_dev = device_get_binding("spi2@0");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
 		LOG_ERR("Failed to bind spi2_cs0");
 	}
 	dev_m = device_get_binding(PCH_SPI_MONITOR);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
 
 #if defined(CONFIG_CPU_DUAL_FLASH)
-	flash_dev = device_get_binding("spi2_cs1");
+	flash_dev = device_get_binding("spi2@1");
 	if (flash_dev) {
 		spi_nor_rst_by_cmd(flash_dev);
 	} else {
 		LOG_ERR("Failed to bind spi2_cs1");
 	}
 	dev_m = device_get_binding(PCH_SPI_MONITOR_2);
-	spim_passthrough_config(dev_m, 0, false);
 	aspeed_spi_monitor_sw_rst(dev_m);
 	/* config spi monitor as monitor mode */
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
@@ -251,7 +245,6 @@ int PCHBootRelease(void)
 }
 
 #if defined(CONFIG_PFR_MCTP_I3C)
-#if !defined(CONFIG_I3C_SLAVE)
 static int i3c_mng_mux_owner = I3C_MNG_OWNER_BMC;
 void switch_i3c_mng_owner(int owner)
 {
@@ -271,7 +264,6 @@ int get_i3c_mng_owner(void)
 {
 	return i3c_mng_mux_owner;
 }
-#endif
 #endif
 
 void AUXPowerGoodControl(bool assert)

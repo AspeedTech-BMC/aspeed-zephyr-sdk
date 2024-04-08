@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
-#include <drivers/flash.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/flash.h>
 #include "pfr/pfr_update.h"
 #include "pfr/pfr_ufm.h"
 #include "pfr/pfr_util.h"
@@ -31,6 +31,9 @@
 #include "intel_pfr_cpld_utils.h"
 #endif
 
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+extern uint8_t AfmStatus;
+#endif
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
 int pfr_staging_verify(struct pfr_manifest *manifest)
@@ -77,6 +80,16 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		}
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == AFM_TYPE) {
+		LOG_INF("AFM Staging Region Verification");
+		manifest->image_type = BMC_TYPE;
+		read_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		target_address = 0;
+		manifest->pc_type = PFR_AFM;
+		afm_update = true;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		LOG_INF("AFM Staging Region Verification");
 		manifest->image_type = BMC_TYPE;
@@ -85,6 +98,7 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		manifest->pc_type = PFR_AFM;
 		afm_update = true;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {
@@ -123,7 +137,10 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	else if (manifest->image_type == PCH_TYPE)
 		manifest->pc_type = PFR_PCH_PFM;
 
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
 
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification
@@ -273,8 +290,8 @@ int update_rot_fw(uint32_t address, uint32_t length, uint32_t flash_select)
 }
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
-{
+#if (CONFIG_AFM_SPEC_VERSION == 3)
+int update_afm_v30(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length) {
 	uint32_t region_size = pfr_spi_get_device_size(ROT_INTERNAL_AFM);
 	uint32_t source_address = address;
 	uint32_t length_page_align;
@@ -317,8 +334,56 @@ int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
 	} else {
 		return Failure;
 	}
-
 	return Success;
+}
+#endif
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length) {
+	uint32_t region_size = pfr_spi_get_device_size(ROT_EXT_AFM_ACT_1);
+	uint32_t source_address = address;
+	uint32_t length_page_align;
+	uint8_t flash_type, source_flash_type;
+
+	length_page_align =
+		(length % PAGE_SIZE) ? (length + (PAGE_SIZE - (length % PAGE_SIZE))) : length;
+	if (length_page_align > region_size) {
+		LOG_ERR("length(%x) exceed region size(%x)", length_page_align, region_size);
+		return Failure;
+	}
+
+	if (part == AFM_PART_ACT_1) {
+		flash_type = ROT_EXT_AFM_ACT_1;
+		source_flash_type = ROT_EXT_AFM_RC_1;
+	} else if (part == AFM_PART_RCV_1) {
+		flash_type = ROT_EXT_AFM_RC_1;
+		source_flash_type = BMC_SPI;
+		source_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+	} else {
+		return Failure;
+	}
+
+	if (pfr_spi_erase_region(flash_type, true, 0, region_size)) {
+		LOG_ERR("Failed to erase AFM Active Partition");
+		return Failure;
+	}
+	if (pfr_spi_region_read_write_between_spi(source_flash_type, source_address,
+				flash_type, 0, length_page_align)) {
+		LOG_ERR("Failed to write AFM Active Partition");
+		return Failure;
+	}
+	return Success;
+}
+#endif
+
+int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length)
+{
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	return update_afm_v40(part, address, length);
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
+	return update_afm_v30(part, address, length);
+#else
+	return Failure;
+#endif
 }
 
 int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void *AoData)
@@ -351,9 +416,14 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 	}
 
 	pc_length = manifest->pc_length;
-	payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+	int offset = PFM_SIG_BLOCK_SIZE;
+
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
+	payload_address = manifest->address + offset;
+
 	LOG_INF("AFM update start payload_address=%08x pc_length=%x", payload_address, pc_length);
-	status = pfr_spi_read(manifest->image_type, payload_address + PFM_SIG_BLOCK_SIZE + 4,
+	status = pfr_spi_read(manifest->image_type, payload_address + offset + 4,
 				sizeof(uint8_t), (uint8_t *)&hrot_svn);
 	if (status != Success) {
 		LOG_ERR("Flash read AFM SVN failed");
@@ -379,6 +449,9 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 			LOG_ERR("Update AFM Active failed");
 			return Failure;
 		}
+		if (AfmStatus & AFM_ACTIVE_PENDING_UPDATE) {
+			AfmStatus &= ~AFM_ACTIVE_PENDING_UPDATE;
+		}
 	} else if (flash_select == SECONDARY_FLASH_REGION) {
 		if (ActiveObjectData->RestrictActiveUpdate == 1) {
 			manifest->image_type = AFM_TYPE;
@@ -394,7 +467,9 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 			LOG_ERR("Update AFM Recovery failed");
 			return Failure;
 		}
-
+		if (AfmStatus & AFM_RECOVERY_PENDING_UPDATE) {
+			AfmStatus &= ~AFM_RECOVERY_PENDING_UPDATE;
+		}
 		set_ufm_svn(SVN_POLICY_FOR_AFM, hrot_svn);
 	}
 
@@ -552,7 +627,11 @@ int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
 
 	LOG_INF("ROT update capsule verification success");
 	pc_type_status = check_rot_capsule_type(manifest);
-	payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		payload_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		payload_address = manifest->address + PFM_SIG_BLOCK_SIZE;
+
 	if (pc_type_status == PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON) {
 		// Decommission validation
 		manifest->address = payload_address;
@@ -714,7 +793,7 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 	// Staging area verification
 	LOG_INF("Staging Area verification");
 	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
-			NULL, NULL);
+			NULL);
 	if (status != Success) {
 		LOG_ERR("Staging Area verification failed");
 		if (flash_select == PRIMARY_FLASH_REGION) {
@@ -925,7 +1004,7 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 	// Staging area verification
 	LOG_INF("Staging Area verification");
 	status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest,
-			NULL, NULL);
+			NULL);
 	if (status != Success) {
 		LOG_ERR("Staging Area verification failed");
 		goto release_pch_mux;

@@ -7,8 +7,9 @@
 #pragma once
 
 #include <zephyr/types.h>
+#include <zephyr/kernel.h>
 #include <stddef.h>
-#include <device.h>
+#include <zephyr/device.h>
 
 #define SECTOR_SIZE 0x1000
 #define BLOCK_SIZE  0x10000

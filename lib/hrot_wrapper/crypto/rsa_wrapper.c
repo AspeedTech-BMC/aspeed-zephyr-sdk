@@ -5,9 +5,9 @@
  */
 
 #include <string.h>
-#include <crypto/rsa_structs.h>
+#include <zephyr/crypto/rsa_structs.h>
+#include <zephyr/crypto/rsa.h>
 #include <crypto/rsa_aspeed.h>
-#include <crypto/rsa.h>
 #include "rsa_wrapper.h"
 
 int rsa_wrapper_generate_key(struct rsa_engine *engine, struct rsa_private_key *key, int bits)
@@ -52,7 +52,7 @@ int rsa_wrapper_decrypt(struct rsa_engine *engine, const struct rsa_private_key 
 }
 
 int rsa_wrapper_sig_verify(struct rsa_engine *engine, const struct rsa_public_key *key,
-			   const uint8_t *signature, size_t sig_length, const uint8_t *match, size_t match_length)
+			   const uint8_t *signature, size_t sig_length, enum hash_type sig_hash, const uint8_t *match, size_t match_length)
 {
 	struct rsa_key driver_key;
 

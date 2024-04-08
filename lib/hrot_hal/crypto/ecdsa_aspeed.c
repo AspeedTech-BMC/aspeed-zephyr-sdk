@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <crypto/ecdsa_structs.h>
-#include <crypto/ecdsa.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/crypto/ecdsa_structs.h>
+#include <zephyr/crypto/ecdsa.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ecdsa_middle_aspeed, CONFIG_LOG_DEFAULT_LEVEL);
 
 #ifdef CONFIG_ECDSA_ASPEED
-#define ECDSA_DRV_NAME DT_LABEL(DT_INST(0, aspeed_ecdsa))
+#define ECDSA_DRV_NAME DEVICE_DT_NAME(DT_INST(0, aspeed_ecdsa))
 #endif
 
 /**

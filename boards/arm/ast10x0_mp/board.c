@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <init.h>
-#include <zephyr.h>
-#include <drivers/gpio.h>
+#include <zephyr/init.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
 
 static int ast10x0_dcscm_post_init(const struct device *arg)
 {

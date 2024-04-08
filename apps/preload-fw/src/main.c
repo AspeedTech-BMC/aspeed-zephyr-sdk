@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <zephyr.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/kernel.h>
 #include <build_config.h>
-#include <shell/shell.h>
-#include <drivers/gpio.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/drivers/gpio.h>
 #if defined(CONFIG_AST10X0_PROGRAMMER_MP)
 #include "mp/mp_util.h"
 #else

@@ -11,7 +11,7 @@
 #include <spdm_rsp.h>
 #include <spdm_fifo.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(spdm_rsp, CONFIG_LOG_DEFAULT_LEVEL);
 

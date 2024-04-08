@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <shell/shell.h>
+#include <zephyr/kernel.h>
+#include <zephyr/shell/shell.h>
 #include <stdlib.h>
 #include "mctp/mctp_interface.h"
 #include "mctp_utils.h"
@@ -69,8 +69,8 @@ static int cmd_mctp_send_msg(const struct shell *shell, size_t argc, char **argv
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 static int cmd_mctp_send_msg_i3c(const struct shell *shell, size_t argc, char **argv)
 {
+	extern mctp *mctp_i3c_bmc_inst;
 	struct mctp_interface *mctp_interface = NULL;
-	extern mctp_i3c_dev i3c_dev;
 	mctp *mctp_inst = NULL;
 	int req_len = argc - 4;
 	int argc_req_idx = 4;
@@ -84,7 +84,7 @@ static int cmd_mctp_send_msg_i3c(const struct shell *shell, size_t argc, char **
 	dst_addr = strtol(argv[2], NULL, 16);
 	dst_eid = strtol(argv[3], NULL, 16);
 
-	mctp_inst = i3c_dev.mctp_inst;
+	mctp_inst = mctp_i3c_bmc_inst;
 	if (mctp_inst == NULL) {
 		shell_error(shell, "mctp instance not fould");
 		return 0;

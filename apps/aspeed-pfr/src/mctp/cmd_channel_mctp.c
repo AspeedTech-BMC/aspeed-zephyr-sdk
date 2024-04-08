@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
-#include <sys/util.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 #include "cmd_interface/cmd_channel.h"
 #include "cmd_channel_mctp.h"
 #include "mctp_utils.h"

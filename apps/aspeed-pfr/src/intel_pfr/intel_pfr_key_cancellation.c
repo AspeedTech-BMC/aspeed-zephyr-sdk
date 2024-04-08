@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "pfr/pfr_common.h"
 #include "pfr/pfr_util.h"
@@ -30,7 +30,7 @@ int get_cancellation_policy_offset(uint32_t pc_type)
 	else if ((pc_type == BMC_CAPSULE_CANCELLATION) || (pc_type == PFR_BMC_UPDATE_CAPSULE))
 		return KEY_CANCELLATION_POLICY_FOR_SIGNING_BMC_UPDATE_CAPSULE;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	else if ((pc_type == AFM_CANCELLATION) || (pc_type == PFR_AFM))
+	else if ((pc_type == AFM_CANCELLATION) || (pc_type == PFR_AFM) || (pc_type == PFR_AFM_PER_DEV))
 		return KEY_CANCELLATION_POLICY_FOR_AFM;
 #endif
 
@@ -49,7 +49,10 @@ int validate_key_cancellation_flag(struct pfr_manifest *manifest)
 	if ((manifest->pc_type == CPLD_CAPSULE_CANCELLATION) || (manifest->pc_type == PCH_PFM_CANCELLATION)
 	    || (manifest->pc_type == PCH_CAPSULE_CANCELLATION) || (manifest->pc_type == BMC_PFM_CANCELLATION)
 	    || (manifest->pc_type == BMC_CAPSULE_CANCELLATION)) {
-		reserved_address = manifest->address + PFM_SIG_BLOCK_SIZE + 4;
+		if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+			reserved_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE + 4;
+		else
+			reserved_address = manifest->address + PFM_SIG_BLOCK_SIZE + 4;
 		status = pfr_spi_read(manifest->image_type, reserved_address, sizeof(read_buffer), (uint8_t *)read_buffer);
 		if (status != Success) {
 			LOG_ERR("Flash read reserved data failed for key cancellation capsule");

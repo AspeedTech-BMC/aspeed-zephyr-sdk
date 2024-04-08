@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #if defined(CONFIG_INTEL_PFR)
 #include "intel_pfr/intel_pfr_authentication.h"
 #include "intel_pfr/intel_pfr_verification.h"
@@ -47,6 +47,24 @@ int authentication_image(void *AoData, void *EventContext)
 		pfr_manifest->image_type = PCH_TYPE;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (EventData->image == AFM_EVENT) {
+		// AFM Image
+		LOG_INF("Image Type: AFM");
+		if (EventData->operation == VERIFY_BACKUP)
+			pfr_manifest->image_type = ROT_EXT_AFM_RC_1;
+		else
+			pfr_manifest->image_type = ROT_EXT_AFM_ACT_1;
+	}
+	else if (EventData->image == AFM_EVENT2) {
+		// AFM Image
+		LOG_INF("Image Type: AFM2");
+		if (EventData->operation == VERIFY_BACKUP)
+			pfr_manifest->image_type = ROT_EXT_AFM_RC_2;
+		else
+			pfr_manifest->image_type = ROT_EXT_AFM_ACT_2;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (EventData->image == AFM_EVENT) {
 		// AFM Image
 		LOG_INF("Image Type: AFM");
@@ -55,6 +73,7 @@ int authentication_image(void *AoData, void *EventContext)
 		else
 			pfr_manifest->image_type = ROT_INTERNAL_AFM;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (EventData->image == CPLD_EVENT) {

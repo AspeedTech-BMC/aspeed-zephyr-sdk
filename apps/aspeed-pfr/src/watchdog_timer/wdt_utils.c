@@ -5,9 +5,8 @@
  */
 
 #include <stdint.h>
-#include <zephyr.h>
-#include <kernel.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "include/SmbusMailBoxCom.h"
 #include "AspeedStateMachine/common_smc.h"
 #include "AspeedStateMachine/AspeedStateMachine.h"

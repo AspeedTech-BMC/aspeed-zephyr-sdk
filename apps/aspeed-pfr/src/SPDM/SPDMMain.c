@@ -8,7 +8,7 @@
 #include <mbedtls/ecp.h>
 
 #include <soc.h>
-#include <portability/cmsis_os2.h>
+#include <zephyr/portability/cmsis_os2.h>
 
 #include "SPDM/SPDMCommon.h"
 #include "SPDM/SPDMMctpBinding.h"
@@ -33,7 +33,7 @@ LOG_MODULE_REGISTER(spdm, CONFIG_LOG_DEFAULT_LEVEL);
 #define ECDSA384_PRIVATE_KEY_SIZE         SHA384_HASH_LENGTH + 1
 #define ECDSA384_PUBLIC_KEY_SIZE          SHA384_HASH_LENGTH * 2 + 1
 
-#include <storage/flash_map.h>
+#include <zephyr/storage/flash_map.h>
 #include <mbedtls/sha512.h>
 
 int get_measurement_by_index(uint8_t measurement_index, uint8_t *measurement, size_t *measurement_size)
@@ -53,17 +53,17 @@ int get_measurement_by_index(uint8_t measurement_index, uint8_t *measurement, si
 	LOG_INF("MEASURE Index[%d]", measurement_index);
 	switch (measurement_index) {
 		case 1:
-			ret = flash_area_open(FLASH_AREA_ID(active), &area_measured);
-			area_size = FLASH_AREA_SIZE(active);
+			ret = flash_area_open(FIXED_PARTITION_ID(active_partition), &area_measured);
+			area_size = FIXED_PARTITION_SIZE(active_partition);
 			break;
 #if 0
 		case 2:
-			ret = flash_area_open(FLASH_AREA_ID(active), &area_measured);
-			area_size = FLASH_AREA_SIZE(active);
+			ret = flash_area_open(FIXED_PARTITION_ID(active_partition), &area_measured);
+			area_size = FIXED_PARTITION_SIZE(active_partition);
 			break;
 		case 3:
-			ret = flash_area_open(FLASH_AREA_ID(recovery), &area_measured);
-			area_size = FLASH_AREA_SIZE(recovery);
+			ret = flash_area_open(FIXED_PARTITION_ID(recovery_partition), &area_measured);
+			area_size = FIXED_PARTITION_SIZE(recovery_partition);
 			break;
 #endif
 		default:
@@ -266,8 +266,8 @@ void init_spdm()
 }
 
 #if defined(CONFIG_SHELL)
-#include <shell/shell.h>
-#include <portability/cmsis_os2.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/portability/cmsis_os2.h>
 static int cmd_spdm_run(const struct shell *shell, size_t argc, char **argv)
 {
 	spdm_run_attester();

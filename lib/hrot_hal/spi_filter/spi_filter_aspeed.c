@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <drivers/flash.h>
-#include <drivers/spi_nor.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/spi_nor.h>
 #include <spi_filter/spi_filter_aspeed.h>
 #include <gpio/gpio_aspeed.h>
-#include <kernel.h>
-#include <sys/util.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
 #include <stdlib.h>
 #include <string.h>
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 void SPI_Monitor_Enable(char *dev_name, bool enabled)
 {

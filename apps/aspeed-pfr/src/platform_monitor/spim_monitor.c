@@ -7,14 +7,14 @@
  */
 
 #include <string.h>
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/types.h>
-#include <sys/printk.h>
-#include <drivers/misc/aspeed/pfr_aspeed.h>
-#include <sys/sys_io.h>
-#include <sys/__assert.h>
-#include <sys/util.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/drivers/misc/aspeed/pfr_aspeed.h>
+#include <zephyr/sys/sys_io.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/sys/util.h>
 #include <errno.h>
 
 LOG_MODULE_REGISTER(spim, CONFIG_LOG_DEFAULT_LEVEL);
@@ -96,8 +96,8 @@ static void demo_spim_log_bmc_rst_work(struct k_work *item)
 	int i;
 	const struct device *spim_dev;
 	static char *spim_dev_names[2] = {
-		"spi_m1",
-		"spi_m2",
+		"spim@1",
+		"spim@2",
 	};
 
 	for (i = 0; i < 2; i++) {
@@ -121,10 +121,10 @@ void spim_irq_init(void)
 {
 	uint32_t i;
 	static char *spim_dev_names[4] = {
-		"spi_m1",
-		"spi_m2",
-		"spi_m3",
-		"spi_m4"
+		"spim@1",
+		"spim@2",
+		"spim@3",
+		"spim@4"
 	};
 	if (IS_ENABLED(CONFIG_MULTITHREADING))
 		k_sem_init(&sem_demo_log_op, 1, 1);

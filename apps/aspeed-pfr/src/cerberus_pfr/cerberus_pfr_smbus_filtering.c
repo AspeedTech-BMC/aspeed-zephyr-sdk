@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <device.h>
-#include <logging/log.h>
-#include <drivers/i2c/pfr/i2c_filter.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/i2c/pfr/i2c_filter.h>
 #include "cerberus_pfr/cerberus_pfr_smbus_filtering.h"
 #include "cerberus_pfr/cerberus_pfr_definitions.h"
 #include "flash/flash_aspeed.h"
@@ -23,7 +23,7 @@ void apply_pfm_smbus_protection(uint8_t spi_dev)
 	struct SMBUS_FILTER_MANIFEST i2c_filter;
 	struct SMBUS_FILTER_DEVICE i2c_device;
 	const struct device *flt_dev = NULL;
-	char bus_dev_name[] = "I2C_FILTER_x";
+	char bus_dev_name[] = "i2cfilterx";
 	int status;
 
 	uint32_t i2c_filter_addr;
@@ -41,7 +41,7 @@ void apply_pfm_smbus_protection(uint8_t spi_dev)
 		return;
 
 	for (int i = 0; i < 4; i++) {
-		bus_dev_name[11] = i + '0';
+		bus_dev_name[9] = i + '0';
 		flt_dev = device_get_binding(bus_dev_name);
 		if (flt_dev) {
 			ast_i2c_filter_init(flt_dev);
@@ -56,7 +56,7 @@ void apply_pfm_smbus_protection(uint8_t spi_dev)
 		pfr_spi_read(spi_dev, i2c_filter_addr, sizeof(struct SMBUS_FILTER_MANIFEST),
 				(uint8_t *)&i2c_filter);
 
-		bus_dev_name[11] = i2c_filter.filter_id + '0';
+		bus_dev_name[9] = i2c_filter.filter_id + '0';
 		flt_dev = device_get_binding(bus_dev_name);
 		if (!flt_dev) {
 			LOG_ERR("Failed to get i2c filter: %s", bus_dev_name);

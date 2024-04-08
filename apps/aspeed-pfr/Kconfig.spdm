@@ -7,18 +7,19 @@ config PFR_MCTP
 	help
 	  Enable PFR MCTP support.
 
+config PFR_SPDM_ATTESTATION
+	depends on PFR_MCTP
+	default n
+	bool "SPDM attestation support"
+
 config PFR_MCTP_I3C
+	depends on PFR_SPDM_ATTESTATION
 	depends on PFR_MCTP
 	depends on I3C
 	default n
 	bool "PFR MCTP over I3C support"
 	help
 	  Enable MCTP over I3C support
-
-config PFR_SPDM_ATTESTATION
-	depends on PFR_MCTP
-	default n
-	bool "SPDM attestation support"
 
 config PFR_SPDM_RESPONDER
 	depends on PFR_MCTP
@@ -54,5 +55,23 @@ config PFR_SPDM_ATTESTATION_DEVICE_OFFSET
 config PFR_SPDM_ATTESTATION_MAX_DEVICES
 	default 8
 	int "Maximum supported device in AFM"
+
+config PFR_SPDM_I3C_BUS
+	default 2
+	int "I3C bus for attestation"
+
+config PFR_SPDM_I3C_BMC_DEV_PID
+	default 0x7ec05031000
+	hex "I3C device pid for BMC"
+
+config PFR_SPDM_I3C_CPU_DEV_PID
+	default 0x7ec05032000
+	hex "I3C device pid for CPU"
+
+config AFM_SPEC_VERSION
+	range 3 4
+	int "AFM Spec. version"
+	help
+	  To define AFM Spec. version. The valid values are 3 or 4.
 
 endif # PFR_SPDM_ATTESTATION

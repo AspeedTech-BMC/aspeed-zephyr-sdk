@@ -5,23 +5,23 @@
  */
 
 #include <soc.h>
-#include <logging/log.h>
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
-#include <drivers/spi_nor.h>
-#include <sys/crc.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/drivers/spi_nor.h>
+#include <zephyr/sys/crc.h>
 #include "fw_update.h"
 #include "gpio/gpio_ctrl.h"
 
 LOG_MODULE_REGISTER(fwupdate);
 
 char *flash_devices[6] = {
-	"spi1_cs0",
-	"spi1_cs1",
-	"spi2_cs0",
-	"spi2_cs1",
-	"fmc_cs0",
-	"fmc_cs1"
+	"spi1@0",
+	"spi1@1",
+	"spi2@0",
+	"spi2@1",
+	"fmc@0",
+	"fmc@1"
 };
 
 static uint32_t rot_fw_staging_addr = 0;
@@ -159,7 +159,7 @@ int rot_fw_update(void)
 		goto fwu_error;
 	}
 
-	if (flash_area_open(FLASH_AREA_ID(active), &fa)) {
+	if (flash_area_open(FIXED_PARTITION_ID(active_partition), &fa)) {
 		LOG_ERR("Unknown partition");
 		goto fwu_error;
 	}

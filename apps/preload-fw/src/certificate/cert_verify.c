@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include <soc.h>
-#include <storage/flash_map.h>
+#include <zephyr/kernel.h>
+#include <zephyr/storage/flash_map.h>
 #include <mbedtls/sha256.h>
-#include <drivers/flash.h>
+#include <zephyr/drivers/flash.h>
 #include "cert_verify.h"
 #include "fw_update/fw_update.h"
 #include "mbedtls/x509.h"
@@ -30,7 +31,7 @@ int get_certificate_info(PFR_DEVID_CERT_INFO *devid_cert_info, uint32_t cert_siz
 	PFR_CERT_INFO *cert_info;
 	uint8_t cert_hash[SHA256_HASH_LENGTH];
 
-	if (flash_area_open(FLASH_AREA_ID(certificate), &fa)) {
+	if (flash_area_open(FIXED_PARTITION_ID(certificate_partition), &fa)) {
 		LOG_ERR("Failed to open certificate region");
 		return -1;
 	}
@@ -98,7 +99,7 @@ int write_cert_chain(uint8_t *cert_chain, uint32_t cert_chain_len)
 	memcpy(devid_cert_info.pubkey, devid_pub_key, sizeof(devid_cert_info.pubkey));
 	generate_cert_info(&devid_cert_info.cert, cert_chain, cert_chain_len);
 
-	if (flash_area_open(FLASH_AREA_ID(certificate), &fa)) {
+	if (flash_area_open(FIXED_PARTITION_ID(certificate_partition), &fa)) {
 		LOG_ERR("Failed to open certificate region");
 		return -1;
 	}

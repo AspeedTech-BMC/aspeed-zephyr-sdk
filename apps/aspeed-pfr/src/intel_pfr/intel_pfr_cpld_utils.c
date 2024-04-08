@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <drivers/i2c.h>
-#include <drivers/flash.h>
-#include <drivers/gpio.h>
-#include <sys/crc.h>
-#include <zephyr.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/crc.h>
+#include <zephyr/kernel.h>
 #include "AspeedStateMachine/common_smc.h"
 #include "AspeedStateMachine/AspeedStateMachine.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
@@ -17,6 +17,7 @@
 #include "intel_pfr_cpld_utils.h"
 #include "gpio/gpio_aspeed.h"
 #include "pfr/pfr_util.h"
+#include "i2c/hal_i2c.h"
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -30,19 +31,28 @@ LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
 uint8_t rsu_data_buf[512] __aligned(16);
 
+extern const struct device *dev_i2c[I2C_BUS_MAX_NUM];
+
 int get_rsu_dev(uint8_t rsu_type, const struct device **dev, uint8_t *slave_addr)
 {
+
 	switch (rsu_type) {
 	case CPU_CPLD:
-		*dev = device_get_binding(CONFIG_INTEL_CPU_RSU_DEV);
+		if (CONFIG_INTEL_CPU_RSU_BUS >= I2C_BUS_MAX_NUM)
+			goto error;
+		*dev = dev_i2c[CONFIG_INTEL_CPU_RSU_BUS];
 		*slave_addr = CONFIG_INTEL_CPU_RSU_DEV_ADDR;
 		break;
 	case SCM_CPLD:
-		*dev = device_get_binding(CONFIG_INTEL_SCM_RSU_DEV);
+		if (CONFIG_INTEL_SCM_RSU_BUS >= I2C_BUS_MAX_NUM)
+			goto error;
+		*dev = dev_i2c[CONFIG_INTEL_SCM_RSU_BUS];
 		*slave_addr = CONFIG_INTEL_SCM_RSU_DEV_ADDR;
 		break;
 	case DEBUG_CPLD:
-		*dev = device_get_binding(CONFIG_INTEL_DEBUG_RSU_DEV);
+		if (CONFIG_INTEL_DEBUG_RSU_BUS >= I2C_BUS_MAX_NUM)
+			goto error;
+		*dev = dev_i2c[CONFIG_INTEL_DEBUG_RSU_BUS];
 		*slave_addr = CONFIG_INTEL_DEBUG_RSU_DEV_ADDR;
 		break;
 	default:
@@ -51,6 +61,8 @@ int get_rsu_dev(uint8_t rsu_type, const struct device **dev, uint8_t *slave_addr
 	}
 
 	return Success;
+error:
+	return -1;
 }
 
 uint8_t bit_rev(uint8_t byte) {

@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <zephyr.h>
-#include <logging/log.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include "logging_wrapper.h"
 
 LOG_MODULE_REGISTER(logging_wrapper, CONFIG_LOG_DEFAULT_LEVEL);

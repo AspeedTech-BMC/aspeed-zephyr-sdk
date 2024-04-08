@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #pragma once
 extern struct k_fifo REQ_TO_RSP;

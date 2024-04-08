@@ -18,7 +18,7 @@
 #include "pfr/pfr_util.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ufm, CONFIG_LOG_DEFAULT_LEVEL);
 
 int get_cpld_status(uint32_t offset, uint8_t *data, uint32_t data_length)

@@ -9,6 +9,7 @@
 #include "mbedtls/x509.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_crl.h"
+#include "intel_pfr/intel_pfr_pfm_manifest.h"
 
 LOG_MODULE_DECLARE(spdm_req, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -127,6 +128,17 @@ cleanup:
 		/* Load Root Certificate */
 		mbedtls_x509_crt *ca_cert = spdm_get_root_certificate();
 		uint32_t flags;
+		mbedtls_x509_crt local_ca;
+		AFM_DEVICE_STRUCTURE_v40_p2 *pPubkey;
+
+		if (context->private_data) {
+			mbedtls_x509_crt_init(&local_ca);
+			pPubkey = (AFM_DEVICE_STRUCTURE_v40_p2 *)context->private_data;
+			if (pPubkey->CertificateSize) {
+				mbedtls_x509_crt_parse_der_nocopy(&local_ca, pPubkey->Certificate, pPubkey->CertificateSize);
+				ca_cert = &local_ca;
+			}
+		}
 
 		/* Verify the certificate */
 		mbedtls_x509_crt *remote_cert = &context->remote.certificate.certs[slot_id].chain;
@@ -161,6 +173,9 @@ cleanup:
 		}
 
 		ret = mbedtls_x509_crt_verify(remote_cert, ca_cert, NULL, NULL, &flags, NULL, NULL);
+		if (context->private_data && pPubkey->CertificateSize) {
+			mbedtls_x509_crt_free(ca_cert);
+		}
 		if (ret < 0 || flags != 0) {
 			LOG_ERR("Failed to verify Certificate[%d], reject this cert ret=%x flags=%x", slot_id, -ret, flags);
 			/* Drop the certificate */

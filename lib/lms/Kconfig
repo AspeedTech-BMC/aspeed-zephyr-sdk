@@ -1,0 +1,18 @@
+
+
+config MBEDTLS_LMS_C
+        bool "LMS stateful-hash public-key signature scheme"
+        depends on MBEDTLS_PSA_CRYPTO_C
+
+config MBEDTLS_LMS_PRIVATE
+        bool "LMS private-key operations and signing code"
+        depends on MBEDTLS_LMS_C
+
+config LMS_SHELL
+        bool "Enable LMS sample code"
+        default n
+        depends on MBEDTLS_LMS_C
+        depends on MBEDTLS
+        depends on SHELL
+        help
+          Enable mbedtls LMS sample code.

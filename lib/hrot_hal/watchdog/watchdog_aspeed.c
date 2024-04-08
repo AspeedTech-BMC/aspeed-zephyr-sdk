@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <logging/log.h>
-#include <drivers/watchdog.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/drivers/watchdog.h>
+#include <zephyr/device.h>
 #include "watchdog_aspeed.h"
 
 LOG_MODULE_REGISTER(hal_watchdog, CONFIG_LOG_DEFAULT_LEVEL);

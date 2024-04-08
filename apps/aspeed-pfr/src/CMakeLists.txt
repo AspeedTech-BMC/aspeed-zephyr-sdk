@@ -12,6 +12,7 @@ add_subdirectory(pfr)
 add_subdirectory(platform_monitor)
 add_subdirectory(Smbus_mailbox)
 add_subdirectory(watchdog_timer)
+add_subdirectory(otp)
 
 # Vendor specific layer
 add_subdirectory_ifdef(CONFIG_INTEL_PFR intel_pfr)

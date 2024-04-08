@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-#include <random/rand32.h>
+#include <zephyr/random/rand32.h>
 
 #include "intel_pfr/intel_pfr_pfm_manifest.h"
 #include "SPDM/SPDMCommon.h"
@@ -18,8 +18,11 @@ int spdm_get_measurements(void *ctx,
 	struct spdm_context *context = (struct spdm_context *)ctx;
 	struct spdm_message req_msg, rsp_msg;
 	int ret = 0;
-
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	AFM_DEVICE_MEASUREMENT_VALUE_v40 *possible_measurement = possible_measure;
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	AFM_DEVICE_MEASUREMENT_VALUE *possible_measurement = possible_measure;
+#endif
 
 	req_msg.header.spdm_version = context->local.version.version_number_selected;
 	req_msg.header.request_response_code = SPDM_REQ_GET_MEASUREMENTS;
@@ -147,6 +150,18 @@ int spdm_get_measurements(void *ctx,
 				goto cleanup;
 			}
 			uint8_t *meas_value = possible_measurement->Values;
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+			/* To try the pre-set index first, if this measurement value isn't matched, to search all measurements */
+			meas_value += possible_measurement->ValueSize * possible_measurement->ValueIndex;
+			if (memcmp(device_meas, meas_value, possible_measurement->ValueSize) == 0) {
+				LOG_DBG("ValueIndex = %d, hit", possible_measurement->ValueIndex);
+				ret = 0;
+				goto cleanup;
+			} else {
+				LOG_INF("ValueIndex = %d, not hit", possible_measurement->ValueIndex);
+				meas_value = possible_measurement->Values;
+			}
+#endif
 
 			for (uint8_t i = 0; i<possible_measurement->PossibleMeasurements; ++i) {
 				if (memcmp(device_meas, meas_value, possible_measurement->ValueSize) == 0) {

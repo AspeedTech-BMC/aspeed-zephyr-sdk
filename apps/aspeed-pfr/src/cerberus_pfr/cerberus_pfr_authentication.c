@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "pfr/pfr_common.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "cerberus_pfr_definitions.h"

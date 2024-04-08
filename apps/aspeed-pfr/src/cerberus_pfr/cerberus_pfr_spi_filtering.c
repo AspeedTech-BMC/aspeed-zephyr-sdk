@@ -5,7 +5,7 @@
  */
 
 #include <stdint.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "common/common.h"
 #include "cerberus_pfr_definitions.h"
 #include "cerberus_pfr_provision.h"
@@ -21,10 +21,10 @@ LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 void apply_pfm_protection(int spi_dev)
 {
 	char *spim_devs[SPIM_NUM] = {
-		"spi_m1",
-		"spi_m2",
-		"spi_m3",
-		"spi_m4"
+		"spim@1",
+		"spim@2",
+		"spim@3",
+		"spim@4"
 	};
 
 	struct pfm_firmware_version_element fw_ver_element;

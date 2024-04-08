@@ -17,7 +17,7 @@
 #include "mbedtls/ecdsa.h"
 #endif
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #include "common/common.h"
 #include "flash/flash_wrapper.h"
@@ -31,13 +31,13 @@
 #include "cerberus_pfr/cerberus_pfr_definitions.h"
 #endif
 #include "crypto/ecdsa_aspeed.h"
-#include <sys/reboot.h>
+#include <zephyr/sys/reboot.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <soc.h>
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
 
 #define NON_CACHED_SRAM_START      DT_REG_ADDR_BY_IDX(DT_NODELABEL(sram0), 1)
 #define NON_CACHED_SRAM_SIZE       DT_REG_SIZE_BY_IDX(DT_NODELABEL(sram0), 1)

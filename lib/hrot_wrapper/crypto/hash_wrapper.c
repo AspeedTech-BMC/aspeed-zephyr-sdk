@@ -13,14 +13,14 @@
 static int hash_wrapper_calculate_sha256(struct hash_engine *engine, const uint8_t *data,
 					 size_t length, uint8_t *hash, size_t hash_length)
 {
-	enum hash_algo shaAlgo = HASH_SHA256;
+	enum hash_algo shaAlgo = CRYPTO_HASH_ALGO_SHA256;
 
 	return hash_engine_sha_calculate(shaAlgo, data, length, hash, hash_length);
 }
 
 static int hash_wrapper_start_sha256(struct hash_engine *engine)
 {
-	enum hash_algo shaAlgo = HASH_SHA256;
+	enum hash_algo shaAlgo = CRYPTO_HASH_ALGO_SHA256;
 
 	return hash_engine_start(shaAlgo);
 }
@@ -28,14 +28,14 @@ static int hash_wrapper_start_sha256(struct hash_engine *engine)
 static int hash_wrapper_calculate_sha384(struct hash_engine *engine, const uint8_t *data,
 					 size_t length, uint8_t *hash, size_t hash_length)
 {
-	enum hash_algo shaAlgo = HASH_SHA384;
+	enum hash_algo shaAlgo = CRYPTO_HASH_ALGO_SHA384;
 
 	return hash_engine_sha_calculate(shaAlgo, data, length, hash, hash_length);
 }
 
 static int hash_wrapper_start_sha384(struct hash_engine *engine)
 {
-	enum hash_algo shaAlgo = HASH_SHA384;
+	enum hash_algo shaAlgo = CRYPTO_HASH_ALGO_SHA384;
 
 	return hash_engine_start(shaAlgo);
 }

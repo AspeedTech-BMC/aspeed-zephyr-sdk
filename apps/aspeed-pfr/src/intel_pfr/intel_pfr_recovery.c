@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 #include "common/common.h"
 #include "pfr/pfr_ufm.h"
 #include "pfr/pfr_common.h"
@@ -86,6 +86,15 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 			return Failure;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == AFM_TYPE) {
+		manifest->image_type = BMC_TYPE;
+		staging_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		/* Fixed partition so starts from zero */
+		act_pfm_image_type = ROT_EXT_AFM_ACT_1;
+		act_pfm_offset = 0;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		manifest->image_type = BMC_TYPE;
 		staging_address = CONFIG_BMC_AFM_STAGING_OFFSET;
@@ -93,6 +102,7 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 		act_pfm_image_type = ROT_INTERNAL_AFM;
 		act_pfm_offset = 0;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {
@@ -117,9 +127,13 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 	}
 
 	act_block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)act_pfm_sig_b0;
+	int offset = PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		offset = LMS_PFM_SIG_BLOCK_SIZE;
 
 	// Staging PFM signature start address after Staging block and capsule signature
-	status = pfr_spi_read(manifest->image_type, staging_address + PFM_SIG_BLOCK_SIZE, sizeof(PFR_AUTHENTICATION_BLOCK0), staging_pfm_sig_b0);
+	status = pfr_spi_read(manifest->image_type, staging_address + offset, sizeof(PFR_AUTHENTICATION_BLOCK0), staging_pfm_sig_b0);
+
 	if (status != Success) {
 		LOG_ERR("Staging pfm block0: Flash read data failed");
 		return Failure;
@@ -127,7 +141,7 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 
 	staging_block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)staging_pfm_sig_b0;
 
-	status = pfr_spi_read(manifest->image_type, staging_address + PFM_SIG_BLOCK_SIZE + sizeof(PFR_AUTHENTICATION_BLOCK0),
+	status = pfr_spi_read(manifest->image_type, staging_address + offset + sizeof(PFR_AUTHENTICATION_BLOCK0),
 				sizeof(staging_block1_buffer->TagBlock1) + sizeof(staging_block1_buffer->ReservedBlock1) +
 				sizeof(staging_block1_buffer->RootEntry), staging_pfm_sig_b1);
 	if (status != Success) {
@@ -137,15 +151,20 @@ int does_staged_fw_image_match_active_fw_image(struct pfr_manifest *manifest)
 
 	staging_block1_buffer = (PFR_AUTHENTICATION_BLOCK1 *)staging_pfm_sig_b1;
 
-	if (staging_block1_buffer->RootEntry.PubCurveMagic == PUBLIC_SECP256_TAG) {
-		act_pfm_hash = act_block0_buffer->Sha256Pc;
-		staging_pfm_hash = staging_block0_buffer->Sha256Pc;
-		digest_length = SHA256_DIGEST_LENGTH;
-	} else if (staging_block1_buffer->RootEntry.PubCurveMagic == PUBLIC_SECP384_TAG) {
-		act_pfm_hash = act_block0_buffer->Sha384Pc;
-		staging_pfm_hash = staging_block0_buffer->Sha384Pc;
-		digest_length = SHA384_DIGEST_LENGTH;
-	} else {
+	switch(staging_block1_buffer->RootEntry.PubCurveMagic) {
+		case PUBLIC_SECP256_TAG:
+		case PUBLIC_LMS256_TAG:
+			act_pfm_hash = act_block0_buffer->Sha256Pc;
+			staging_pfm_hash = staging_block0_buffer->Sha256Pc;
+			digest_length = SHA256_DIGEST_LENGTH;
+			break;
+		case PUBLIC_SECP384_TAG:
+		case PUBLIC_LMS384_TAG:
+			act_pfm_hash = act_block0_buffer->Sha384Pc;
+			staging_pfm_hash = staging_block0_buffer->Sha384Pc;
+			digest_length = SHA384_DIGEST_LENGTH;
+			break;
+		default:
 		LOG_ERR("Staging block 1 root entry: Unsupported hash curve, %x", staging_block1_buffer->RootEntry.PubCurveMagic);
 		return Failure;
 	}
@@ -200,8 +219,13 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	else if (manifest->image_type == AFM_TYPE) {
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+		manifest->address = 0;
+		manifest->image_type = ROT_EXT_AFM_RC_1;
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 		manifest->address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
 		manifest->image_type = BMC_TYPE;
+#endif
 		if (pfr_spi_read(manifest->image_type, manifest->address,
 			sizeof(PFR_AUTHENTICATION_BLOCK0), buffer)) {
 			LOG_ERR("Block0: Flash read data failed");
@@ -210,7 +234,10 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 
 		block0_buffer = (PFR_AUTHENTICATION_BLOCK0 *)buffer;
 		manifest->pc_length = block0_buffer->PcLength;
-		manifest->address += PFM_SIG_BLOCK_SIZE;
+		if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+			manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+		else
+			manifest->address += PFM_SIG_BLOCK_SIZE;
 
 		LOG_INF("AFM update start payload_address=%08x pc_length=%x", manifest->address, manifest->pc_length);
 		if (update_afm(AFM_PART_ACT_1, manifest->address, manifest->pc_length))
@@ -275,7 +302,10 @@ int pfr_recover_active_region(struct pfr_manifest *manifest)
 	manifest->staging_address = staging_address;
 	manifest->active_pfm_addr = act_pfm_offset;
 	manifest->address = read_address;
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
 
 	if (pfr_spi_read(manifest->image_type, manifest->address,
 			sizeof(PFR_AUTHENTICATION_BLOCK0), buffer)) {
@@ -346,7 +376,11 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	}
 
 	// Recovery region PFM verification
-	manifest->address += PFM_SIG_BLOCK_SIZE;
+	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
+		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
+	else
+		manifest->address += PFM_SIG_BLOCK_SIZE;
+
 	manifest->pc_type = PFR_PCH_PFM;
 	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
 	// manifest verification
@@ -376,7 +410,7 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	if (manifest->state == FIRMWARE_RECOVERY) {
 		LOG_INF("PCH staging region verification");
 		status = manifest->update_fw->base->verify((struct firmware_image *)manifest,
-				NULL, NULL);
+				NULL);
 		if (status != Success)
 			return Failure;
 	}

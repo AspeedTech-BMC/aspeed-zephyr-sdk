@@ -17,10 +17,18 @@
 		zephyr,sram = &sram0;
 		zephyr,entropy = &rng;
 	};
+
+	sram1: memory@10 {
+	       compatible = "zephyr,memory-region", "mmio-sram";
+	       device_type = "memory";
+	       reg = <0x10 DT_SIZE_K(192)>;
+	       zephyr,memory-region = "RAM_NC";
+	       zephyr,memory-region-mpu = "RAM";
+       };
 };
 
 &sram0 {
-	reg = <0x30000 DT_SIZE_K(575)>, <16 DT_SIZE_K(192)>;
+	reg = <0x30000 DT_SIZE_K(575)>;
 };
 
 &uart5 {

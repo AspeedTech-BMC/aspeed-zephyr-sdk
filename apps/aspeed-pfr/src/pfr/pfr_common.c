@@ -27,7 +27,7 @@
 #include "pfr/pfr_verification.h"
 #include "pfr/pfr_update.h"
 #include "pfr_util.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 struct pfr_manifest pfr_manifest;

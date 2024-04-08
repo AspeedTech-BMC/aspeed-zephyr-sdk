@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <logging/log.h>
-#include <storage/flash_map.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 
 #include "pfr_recovery.h"
 #include "AspeedStateMachine/common_smc.h"
@@ -48,12 +48,21 @@ int recover_image(void *AoData, void *EventContext)
 		pfr_manifest->image_type = PCH_TYPE;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (EventData->image == AFM_EVENT) {
+		LOG_INF("Image Type: AFM");
+		pfr_manifest->image_type = AFM_TYPE;
+		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		pfr_manifest->recovery_address = 0;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (EventData->image == AFM_EVENT) {
 		LOG_INF("Image Type: AFM");
 		pfr_manifest->image_type = AFM_TYPE;
 		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
 		pfr_manifest->recovery_address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (EventData->image == CPLD_EVENT) {
@@ -69,7 +78,7 @@ int recover_image(void *AoData, void *EventContext)
 	}
 
 	if (ActiveObjectData->RecoveryImageStatus != Success) {
-		status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest, NULL, NULL);
+		status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest, NULL);
 		if (status != Success) {
 			LOG_INF("PFR Staging Area Corrupted");
 			if (ActiveObjectData->ActiveImageStatus != Success) {
@@ -196,16 +205,27 @@ int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_
 	int sector_sz;
 	bool support_block_erase;
 	size_t area_size = 0;
+	int src_type = image_type, dst_type = image_type;
 
 	if (image_type == BMC_TYPE)
 		area_size = CONFIG_BMC_STAGING_SIZE;
 	else if (image_type == PCH_TYPE)
 		area_size = CONFIG_PCH_STAGING_SIZE;
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
 	else if (image_type == AFM_TYPE) {
-		area_size = FLASH_AREA_SIZE(afm_act_1);
-		image_type = BMC_TYPE;
+		area_size = FIXED_PARTITION_SIZE(afm_rcv1_partition);
+		src_type = BMC_SPI;
+		dst_type = ROT_EXT_AFM_RC_1;
 	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
+	else if (image_type == AFM_TYPE) {
+		area_size = FIXED_PARTITION_SIZE(afm_act_1_partition);
+		image_type = BMC_TYPE;
+		src_type = BMC_SPI;
+		dst_type = BMC_SPI;
+	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (image_type == CPLD_TYPE) {
@@ -228,19 +248,24 @@ int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_
 		return Success;
 	}
 #endif
-	sector_sz = pfr_spi_get_block_size(image_type);
+	else {
+		LOG_ERR("Unknown type (%d)", image_type);
+		return Failure;
+	}
+
+	sector_sz = pfr_spi_get_block_size(dst_type);
 	support_block_erase = (sector_sz == BLOCK_SIZE);
 	LOG_INF("Recovering...");
 	LOG_INF("image_type=%d, source_address=%x, target_address=%x, length=%x",
-		image_type, source_address, target_address, area_size);
-	if (pfr_spi_erase_region(image_type, support_block_erase, target_address, area_size)) {
+		dst_type, source_address, target_address, area_size);
+	if (pfr_spi_erase_region(dst_type, support_block_erase, target_address, area_size)) {
 		LOG_ERR("Recovery region erase failed");
 		return Failure;
 	}
 
 	// use read_write_between spi for supporting dual flash
-	if (pfr_spi_region_read_write_between_spi(image_type, source_address,
-				image_type, target_address, area_size)) {
+	if (pfr_spi_region_read_write_between_spi(src_type, source_address,
+				dst_type, target_address, area_size)) {
 		LOG_ERR("Recovery region update failed");
 		return Failure;
 	}
