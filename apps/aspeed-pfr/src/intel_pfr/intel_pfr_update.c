@@ -80,6 +80,16 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		}
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->image_type == AFM_TYPE) {
+		LOG_INF("AFM Staging Region Verification");
+		manifest->image_type = BMC_TYPE;
+		read_address = CONFIG_BMC_AFM_STAGING_OFFSET;
+		target_address = 0;
+		manifest->pc_type = PFR_AFM;
+		afm_update = true;
+	}
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		LOG_INF("AFM Staging Region Verification");
 		manifest->image_type = BMC_TYPE;
@@ -88,6 +98,7 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		manifest->pc_type = PFR_AFM;
 		afm_update = true;
 	}
+#endif
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (manifest->image_type == CPLD_TYPE) {
