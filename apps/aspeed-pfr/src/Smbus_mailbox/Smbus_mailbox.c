@@ -401,7 +401,7 @@ void InitializeSoftwareMailbox(void)
 
 	int status;
 
-	swmbx_dev = device_get_binding("swmbx-ctrl");
+	swmbx_dev = device_get_binding("swmbx-ctrl@7e7b0e00");
 	if (swmbx_dev == NULL) {
 		LOG_ERR("%s: fail to bind %s", __func__, "SWMBX");
 		return;
