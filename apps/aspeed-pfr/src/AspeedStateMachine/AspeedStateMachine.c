@@ -635,7 +635,7 @@ void handle_image_verification(void *o)
 			/* Success = 0, Failure = 1 */
 			if (state->bmc_active_object.ActiveImageStatus) {
 				if (state->bmc_active_object.RecoveryImageStatus)
-					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_RECOVERY_AUTH_FAIL);
+					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
 				else
 					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_AUTH_FAIL);
 			} else if (state->bmc_active_object.RecoveryImageStatus) {
@@ -644,12 +644,22 @@ void handle_image_verification(void *o)
 
 			if (state->pch_active_object.ActiveImageStatus) {
 				if (state->pch_active_object.RecoveryImageStatus)
-					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_RECOVERY_AUTH_FAIL);
+					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
 				else
 					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_AUTH_FAIL);
 			} else if (state->pch_active_object.RecoveryImageStatus) {
 				LogErrorCodes(PCH_AUTH_FAIL, RECOVERY_AUTH_FAIL);
 			}
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+			if (state->afm_active_object.ActiveImageStatus) {
+				if (state->afm_active_object.RecoveryImageStatus)
+					LogErrorCodes(BMC_AUTH_FAIL, AFM_ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
+				else
+					LogErrorCodes(BMC_AUTH_FAIL, AFM_ACTIVE_AUTH_FAIL);
+			} else if (state->afm_active_object.RecoveryImageStatus) {
+				LogErrorCodes(BMC_AUTH_FAIL, AFM_RECOVERY_AUTH_FAIL);
+			}
+#endif
 
 			if (state->bmc_active_object.ActiveImageStatus || !state->bmc_active_object.RecoveryImageStatus)
 				state->bmc_active_object.RestrictActiveUpdate = 0;

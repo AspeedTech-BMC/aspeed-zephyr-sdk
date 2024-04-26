@@ -86,9 +86,13 @@ int recover_image(void *AoData, void *EventContext)
 				 * Active | Recovery | Staging
 				 * 0      | 0        | 0
 				 */
+				uint8_t minor_err = ACTIVE_RECOVERY_STAGING_AUTH_FAIL;
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+				if (EventData->image == AFM_EVENT)
+					minor_err = AFM_ACTIVE_RECOVERY_STAGING_AUTH_FAIL;
+#endif
 				LogErrorCodes((pfr_manifest->image_type == BMC_TYPE ?
-							BMC_AUTH_FAIL : PCH_AUTH_FAIL),
-						ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
+							BMC_AUTH_FAIL : PCH_AUTH_FAIL), minor_err);
 				if (pfr_manifest->image_type == PCH_TYPE) {
 					status = pfr_staging_pch_staging(pfr_manifest);
 					if (status != Success)
