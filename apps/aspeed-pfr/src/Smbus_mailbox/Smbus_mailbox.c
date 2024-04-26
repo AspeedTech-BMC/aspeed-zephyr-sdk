@@ -605,6 +605,8 @@ MBX_REG_SETTER_GETTER(IntelCpldActiveSvn);
 MBX_REG_SETTER_GETTER(IntelCpldActiveMajorVersion);
 MBX_REG_SETTER_GETTER(IntelCpldActiveMinorVersion);
 #endif
+MBX_REG_SETTER_GETTER(PfrActivityInfo1);
+MBX_REG_SETTER_GETTER(PfrActivityInfo2);
 
 #if defined(CONFIG_FRONT_PANEL_LED)
 #include <zephyr/drivers/led.h>

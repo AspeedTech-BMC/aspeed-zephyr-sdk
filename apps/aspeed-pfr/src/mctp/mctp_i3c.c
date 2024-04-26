@@ -212,20 +212,32 @@ void mctp_i3c_state_handler(void *a, void *b, void *c)
 	struct device_manager *device_mgr = mctp_wrapper->mctp_interface.device_manager;
 	int dev_state;
 	int duration = MCTP_I3C_MSG_RETRY_INTERVAL;
+	int owner;
+	byte stat;
 
 	while (1) {
 		k_sem_take(&mctp_i3c_sem, K_FOREVER);
+		owner = get_i3c_mng_owner();
 		dev_state = device_manager_get_device_state(device_mgr,
 				DEVICE_MANAGER_SELF_DEVICE_NUM);
 		if (dev_state == DEVICE_MANAGER_SEND_DISCOVERY_NOTIFY) {
 			LOG_DBG("Send discovery notify");
+			stat = (I3C_MNG_OWNER_BMC == owner) ?
+				PFR_ACT1_DAA_I3C_BMC : PFR_ACT1_DAA_I3C_CPU;
+			SetPfrActivityInfo1(stat);
 			mctp_i3c_send_discovery_notify( mctp_instance, &duration);
 		} else if (dev_state == DEVICE_MANAGER_EID_ANNOUNCEMENT) {
 			LOG_DBG("Announce EID");
+			stat = (I3C_MNG_OWNER_BMC == owner) ?
+				PFR_ACT1_SET_EID_I3C_BMC : PFR_ACT1_SET_EID_I3C_CPU;
+			SetPfrActivityInfo1(stat);
 			mctp_i3c_send_eid_announcement(mctp_instance, &duration);
 		}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 		else if (dev_state == DEVICE_MANAGER_PRE_ATTESTATION) {
+			stat = (I3C_MNG_OWNER_BMC == owner) ?
+				PFR_ACT1_EID_REGISTRATION_I3C_BMC : PFR_ACT1_EID_REGISTRATION_I3C_CPU;
+			SetPfrActivityInfo1(stat);
 			mctp_i3c_pre_attestation(device_mgr, &duration);
 		} else if (dev_state == DEVICE_MANAGER_ATTESTATION) {
 			/* Start S3M attestation then release PLTRST_CPU0_N */
