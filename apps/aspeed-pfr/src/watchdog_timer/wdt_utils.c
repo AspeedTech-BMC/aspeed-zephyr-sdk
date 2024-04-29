@@ -19,11 +19,19 @@ uint8_t gWdtBootStatus = 0;
 static void wdt_callback_bmc_timeout(struct k_timer *tmr)
 {
 	union aspeed_event_data data = {0};
+	byte update_intent = GetBmcUpdateIntent2();
 
 	data.bit8[0] = BMC_EVENT;
 	LOG_ERR("BMC Boot WDT Timeout");
-	LogWatchdogRecovery(BMC_LAUNCH_FAIL, BMC_WDT_EXPIRE);
-	GenerateStateMachineEvent(WDT_TIMEOUT, data.ptr);
+	if (update_intent & SeamlessUpdateAck) {
+		LOG_ERR("BMC doesn't clear seamless update ACK");
+		update_intent &= ~SeamlessUpdateAck;
+		SetBmcUpdateIntent2(update_intent);
+		GenerateStateMachineEvent(RESET_DETECTED, NULL);
+	} else {
+		LogWatchdogRecovery(BMC_LAUNCH_FAIL, BMC_WDT_EXPIRE);
+		GenerateStateMachineEvent(WDT_TIMEOUT, data.ptr);
+	}
 	ARG_UNUSED(tmr);
 }
 #if defined(CONFIG_INTEL_PFR)
@@ -146,5 +154,26 @@ void pfr_stop_timer(int type)
 		LOG_INF("Stop BIOS Timer");
 		k_timer_stop(&pfr_bios_timer);
 	}
+}
+
+uint32_t pfr_timer_remaining_get(int type)
+{
+	uint32_t remaining = 0;
+
+	if (type == BMC_TIMER)
+		remaining = k_timer_remaining_get(&pfr_bmc_timer);
+#if defined(CONFIG_INTEL_PFR)
+	else if (type == ACM_TIMER)
+		remaining = k_timer_remaining_get(&pfr_acm_timer);
+#ifdef SUPPORT_ME
+	else if (type == ME_TIMER)
+		remaining = k_timer_remaining_get(&pfr_me_timer);
+
+#endif
+#endif
+	else if (type == BIOS_TIMER)
+		remaining = k_timer_remaining_get(&pfr_bios_timer);
+
+	return remaining;
 }
 

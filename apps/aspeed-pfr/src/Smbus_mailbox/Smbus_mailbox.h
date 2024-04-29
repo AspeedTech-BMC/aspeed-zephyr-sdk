@@ -123,6 +123,7 @@ typedef enum _UPDATE_INTENT_2 {
 	AfmRecoveryUpdate                       = 0x04,
 	AfmActiveAndRecoveryUpdate              = 0x06,
 	CPLDUpdate                              = 0x10,
+	SeamlessUpdateAck                       = 0x80,
 } UPDATE_INTENT_2;
 
 // EVT_DATA_0 : Update Intent(e.g. PchUpdateIntent)
@@ -213,6 +214,8 @@ byte GetBmcPfmRecoverMajorVersion(void);
 void SetBmcPfmRecoverMajorVersion(byte RecoverMajorVersion);
 byte GetBmcPfmRecoverMinorVersion(void);
 void SetBmcPfmRecoverMinorVersion(byte RecoverMinorVersion);
+byte GetBmcUpdateIntent2(void);
+void SetBmcUpdateIntent2(byte UpdateIntent);
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 byte GetAfmActiveSvn(void);
 void SetAfmActiveSvn(byte ActiveSVN);

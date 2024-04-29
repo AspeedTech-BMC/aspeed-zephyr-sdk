@@ -27,6 +27,7 @@
 #include "flash/flash_aspeed.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "gpio/gpio_aspeed.h"
+#include "watchdog_timer/wdt_utils.h"
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 #include "intel_pfr_cpld_utils.h"
 #endif
@@ -1010,10 +1011,18 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 		goto release_pch_mux;
 	}
 
+	LOG_INF("Decompressing seamless capsule");
 	status = decompress_fv_capsule(pfr_manifest);
 	if (status != Success)
 		LOG_ERR("Failed to decompress seamless capsule");
 
+	// ROT finish the seamless update and check the most significant bit of the update intent.
+	// ROT wait up to ‘x’ ( Eg: 30sec) seconds for this significant bit to be cleared,
+	// if not cleared, ROT issue BMC reset.
+	if (GetBmcUpdateIntent2() & SeamlessUpdateAck)
+		pfr_start_timer(BMC_TIMER, 30000);
+
+	LOG_INF("Seamless update completed");
 	goto release_pch_mux;
 
 release_both_muxes:
