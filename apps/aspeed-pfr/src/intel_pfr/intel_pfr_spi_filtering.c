@@ -21,22 +21,6 @@
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
-void init_i2c_filters(void)
-{
-	char bus_dev_name[] = "i2cfilterx";
-	const struct device *flt_dev = NULL;
-
-	for (int i = 0; i < 4; i++) {
-		bus_dev_name[9] = i + '0';
-		flt_dev = device_get_binding(bus_dev_name);
-		if (flt_dev) {
-			ast_i2c_filter_init(flt_dev);
-			ast_i2c_filter_en(flt_dev, true, false, true, true);
-			ast_i2c_filter_default(flt_dev, 0);
-		}
-	}
-}
-
 void apply_pfm_protection(int spi_device_id)
 {
 
@@ -208,9 +192,10 @@ void apply_pfm_protection(int spi_device_id)
 				pfm_region_Start = pfm_region_Start + 16;
 			break;
 		case SMBUS_RULE:
-			if (!i2c_flt_init) {
-				init_i2c_filters();
-				i2c_flt_init = true;
+			// Ignore all smbus rules in pch flash.
+			if (spi_device_id >= PCH_SPI) {
+				LOG_WRN("Found SMBUS Rules in PCH SPI, ignoring the rule.");
+				break;
 			}
 			/* SMBus Rule Definition: 0x02 */
 			LOG_INF("SMBus Rule Bus[%d] RuleId[%d] DeviceAddr[%x]",

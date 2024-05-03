@@ -203,6 +203,22 @@ int is_pltrst_sync(void)
 	return pltrst_sync;
 }
 
+void init_i2c_filters(void)
+{
+	char bus_dev_name[] = "i2cfilterx";
+	const struct device *flt_dev = NULL;
+
+	for (int i = 0; i < 4; i++) {
+		bus_dev_name[9] = i + '0';
+		flt_dev = device_get_binding(bus_dev_name);
+		if (flt_dev) {
+			ast_i2c_filter_init(flt_dev);
+			ast_i2c_filter_en(flt_dev, true, false, true, true);
+			ast_i2c_filter_default(flt_dev, 0);
+		}
+	}
+}
+
 void do_init(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
@@ -331,6 +347,7 @@ void enter_tmin1(void *o)
 	}
 
 	if (bmc_reset_only) {
+		init_i2c_filters();
 		BMCBootHold();
 		evt_ctx->data.bit8[2] |= BmcOnlyReset;
 		gWdtBootStatus &= ~WDT_BMC_BOOT_DONE_MASK;
@@ -351,6 +368,7 @@ void enter_tmin1(void *o)
 #endif
 		SetBiosCheckpoint(0);
 	} else {
+		init_i2c_filters();
 		evt_ctx->data.bit8[2] &= ~(BmcOnlyReset | PchOnlyReset);
 		BMCBootHold();
 		PCHBootHold();
@@ -965,9 +983,6 @@ void enter_tzero(void *o)
 			goto enter_tzero_end;
 		} else if (evt_ctx->data.bit8[2] & PchOnlyReset) {
 			apply_pfm_protection(PCH_SPI);
-#if defined(CONFIG_CERBERUS_PFR)
-			apply_pfm_smbus_protection(PCH_SPI);
-#endif
 			PCHBootRelease();
 			goto enter_tzero_end;
 		}
@@ -989,11 +1004,8 @@ void enter_tzero(void *o)
 		}
 
 		if (state->pch_active_object.ActiveImageStatus == Success) {
-			/* Arm SPI/I2C Filter */
+			/* Arm SPI Filter */
 			apply_pfm_protection(PCH_SPI);
-#if defined(CONFIG_CERBERUS_PFR)
-			apply_pfm_smbus_protection(PCH_SPI);
-#endif
 			PCHBootRelease();
 		} else
 			LOG_ERR("Host firmware is invalid, host won't boot");
