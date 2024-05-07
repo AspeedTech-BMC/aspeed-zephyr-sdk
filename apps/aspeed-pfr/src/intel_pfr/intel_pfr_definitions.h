@@ -87,6 +87,7 @@
 #define PFM_SIG_BLOCK_SIZE_3K           3072
 #define PFMTAG                          0x02B3CE1D
 #define FVMTAG                          0xA8E7C2D4
+#define CFMTAG                          0xA8E7C2D6
 #define PFMTYPE                         0x01
 #define UPDATE_CAPSULE                  1
 #define ACTIVE_PFM                      2

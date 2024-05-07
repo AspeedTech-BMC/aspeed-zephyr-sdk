@@ -1379,37 +1379,43 @@ void handle_update_requested(void *o)
 	AO_DATA *ao_data_wrap = NULL;
 	EVENT_CONTEXT evt_ctx_wrap;
 	int ret = Success;
-	uint8_t update_region = evt_ctx->data.bit8[1] & PchBmcHROTActiveAndRecoveryUpdate;
+	uint8_t update_region = 0;
 	CPLD_STATUS cpld_update_status, cached_status;
 
 	LOG_DBG("FIRMWARE_UPDATE Event Data %02x %02x", evt_ctx->data.bit8[0], evt_ctx->data.bit8[1]);
 
+	evt_ctx->data.bit8[1] &= PchBmcHROTActiveAndRecoveryUpdate;
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status, sizeof(CPLD_STATUS));
 	memcpy(&cpld_update_status, &cached_status, sizeof(CPLD_STATUS));
 
 	switch (evt_ctx->data.bit8[0]) {
 	case PchUpdateIntent:
 		/* CPU/PCH only has access to bit[7:6] and bit[1:0] */
-		update_region &= UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate;
+		update_region = evt_ctx->data.bit8[1] &
+			(UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate);
 		if (!update_region)
 			LogUpdateFailure(INVALID_UPD_INTENT, 0);
 		break;
 	case BmcUpdateIntent:
 		/* BMC has full access */
+		update_region = evt_ctx->data.bit8[1];
 		if ((update_region & PchActiveUpdate) || (update_region & PchRecoveryUpdate)) {
 			cpld_update_status.BmcToPchStatus = 1;
 		}
 		break;
 	case BmcUpdateIntent2:
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-		if (evt_ctx->data.bit8[1] & AfmActiveAndRecoveryUpdate) {
-			update_region &= AfmActiveAndRecoveryUpdate;
+		if (evt_ctx->data.bit8[1] & AfmActiveUpdate) {
+			update_region |= AfmActiveUpdate;
+		}
+		if (evt_ctx->data.bit8[1] & AfmRecoveryUpdate) {
+			update_region |= AfmRecoveryUpdate;
 		}
 		break;
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 		if (evt_ctx->data.bit8[1] & CPLDUpdate) {
-			update_region &= CPLDUpdate;
+			update_region |= CPLDUpdate;
 		}
 		break;
 #endif

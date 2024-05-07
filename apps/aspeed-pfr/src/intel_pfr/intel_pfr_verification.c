@@ -1015,6 +1015,11 @@ int intel_cfms_verify(struct pfr_manifest *manifest)
 			cfm_offset += offset;
 			pfr_spi_read(image_type, cfm_offset, sizeof(CFM_STRUCTURE),
 					(uint8_t *)&cfm_header);
+			if (cfm_header.CfmTag != CFMTAG) {
+				LOG_ERR("CFMTag verification failed...\n expected: %x\n actual: %x",
+						CFMTAG, cfm_header.CfmTag);
+				return Failure;
+			}
 			if (cpld_addr_def.FwType != cfm_header.FwType) {
 				LOG_ERR("Incorrect capsule format");
 				return Failure;
