@@ -17,7 +17,7 @@
 #include "intel_pfr_cpld_utils.h"
 #include "gpio/gpio_aspeed.h"
 #include "pfr/pfr_util.h"
-#include "i2c/hal_i2c.h"
+#include "i2c/i2c_util.h"
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 

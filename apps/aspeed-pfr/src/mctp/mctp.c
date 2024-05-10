@@ -6,7 +6,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include "i2c/hal_i2c.h"
+#include "i2c/i2c_util.h"
 #include "plat_mctp.h"
 
 LOG_MODULE_REGISTER(mctp, CONFIG_LOG_DEFAULT_LEVEL);

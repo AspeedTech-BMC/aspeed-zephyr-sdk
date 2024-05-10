@@ -48,7 +48,7 @@
 #include "platform_monitor/platform_monitor.h"
 #include "platform_monitor/spim_monitor.h"
 #include "engineManager/engine_manager.h"
-#include "spi_filter/spi_filter_wrapper.h"
+#include "spi_filter/spim_util.h"
 #include "pfr/pfr_ufm.h"
 #include "flash/flash_aspeed.h"
 #include "flash/flash_wrapper.h"

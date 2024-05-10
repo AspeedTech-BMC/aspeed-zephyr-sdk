@@ -17,14 +17,10 @@ if (CONFIG_HROT_HAL)
 	    ${HROT_MIDDLEWARE_ROOT}/flash/flash_aspeed.c
 	    ${HROT_MIDDLEWARE_ROOT}/gpio/gpio_aspeed.c
 	    ${HROT_MIDDLEWARE_ROOT}/crypto/hash_aspeed.c
-	    ${HROT_MIDDLEWARE_ROOT}/crypto/rsa_aspeed.c
 	    ${HROT_MIDDLEWARE_ROOT}/crypto/ecdsa_aspeed.c
-	    ${HROT_MIDDLEWARE_ROOT}/i2c/hal_i2c.c
-	    ${HROT_MIDDLEWARE_ROOT}/watchdog/watchdog_aspeed.c
-	    # ${HROT_MIDDLEWARE_ROOT}/otp/otp_aspeed.c
-	    ${HROT_MIDDLEWARE_ROOT}/abr/abr_aspeed.c
-	    ${HROT_MIDDLEWARE_ROOT}/spi_filter/spi_filter_aspeed.c
 	)
+
+	zephyr_library_sources_ifdef(CONFIG_CERBERUS_PFR ${HROT_MIDDLEWARE_ROOT}/crypto/rsa_aspeed.c)
 
 	zephyr_library_include_directories(
 	    .

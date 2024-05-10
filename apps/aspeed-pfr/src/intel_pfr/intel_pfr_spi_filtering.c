@@ -12,6 +12,7 @@
 #include "engineManager/engine_manager.h"
 #include "manifestProcessor/manifestProcessor.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
+#include "spi_filter/spim_util.h"
 #include "intel_pfr/intel_pfr_provision.h"
 #include "intel_pfr/intel_pfr_pfm_manifest.h"
 #include "intel_pfr/intel_pfr_definitions.h"
@@ -25,7 +26,6 @@ void apply_pfm_protection(int spi_device_id)
 {
 
 	int status = 0;
-	bool i2c_flt_init = false;
 	int spi_id = spi_device_id;
 	const char *spim_devs[SPIM_NUM] = {
 		"spim@1",
@@ -34,8 +34,6 @@ void apply_pfm_protection(int spi_device_id)
 		"spim@4"
 	};
 
-	status = spi_filter_wrapper_init(getSpiFilterEngineWrapper());
-	struct spi_filter_engine_wrapper *spi_filter = getSpiFilterEngineWrapper();
 	char bus_dev_name[] = "i2cfilterx";
 	const struct device *flt_dev = NULL;
 
@@ -68,8 +66,6 @@ void apply_pfm_protection(int spi_device_id)
 	// Table 2-14  get Length
 	uint32_t addr_size_of_pfm = pfm_read_address + offset + 0x1c;
 	int region_length;
-	// cerberus define region_id start from 1
-	int region_id = 1;
 	uint8_t region_record[40];
 #if defined(CONFIG_SEAMLESS_UPDATE)
 	PFM_FVM_ADDRESS_DEFINITION *fvm_def;
@@ -139,13 +135,12 @@ void apply_pfm_protection(int spi_device_id)
 			}
 #endif
 
-			spi_filter->dev_id = spi_id;
 			region_length = region_end_address - region_start_address;
 			if (region_record[1] & 0x02) {
 				/* Write allowed region */
-				spi_filter->base.set_filter_rw_region(&spi_filter->base,
-						region_id, region_start_address, region_end_address);
-				region_id++;
+				Set_SPI_Filter_RW_Region((char *)spim_devs[spi_id],
+						SPI_FILTER_WRITE_PRIV, SPI_FILTER_PRIV_ENABLE,
+						region_start_address, region_length);
 				LOG_INF("SPI_ID[%d] write enable  0x%08x to 0x%08x",
 					spi_id, region_start_address, region_end_address);
 			} else {
@@ -250,6 +245,99 @@ void apply_pfm_protection(int spi_device_id)
 			break;
 	}
 
-	spi_filter->base.enable_filter((struct spi_filter_interface *)spi_filter, true);
+	SPI_Monitor_Enable(spim_devs[spi_id], true);
 }
+
+#if defined(CONFIG_SEAMLESS_UPDATE)
+void apply_fvm_spi_protection(uint32_t fvm_addr, int offset)
+{
+	uint32_t fvm_offset = fvm_addr + offset;
+	uint32_t fvm_body_offset = fvm_offset + sizeof(FVM_STRUCTURE);
+	FVM_STRUCTURE fvm;
+	PFM_SPI_DEFINITION spi_def;
+	uint32_t fvm_body_end_addr;
+	uint32_t region_start_address;
+	uint32_t region_end_address;
+	int region_length;
+#if defined(CONFIG_CPU_DUAL_FLASH)
+	int flash_size;
+#endif
+	int spi_id = 0;
+	char *pch_spim_devs[2] = {
+		"spim@3",
+		"spim@4"
+	};
+
+	pfr_spi_read(PCH_SPI, fvm_offset, sizeof(FVM_STRUCTURE), (uint8_t *)&fvm);
+	fvm_body_end_addr = fvm_offset + fvm.Length;
+
+	while (fvm_body_offset < fvm_body_end_addr) {
+		pfr_spi_read(PCH_SPI, fvm_body_offset, sizeof(PFM_SPI_DEFINITION),
+				(uint8_t *)&spi_def);
+		if (spi_def.PFMDefinitionType == SPI_REGION) {
+			region_start_address = spi_def.RegionStartAddress;
+			region_end_address = spi_def.RegionEndAddress;
+			region_length = region_end_address - region_start_address;
+#if defined(CONFIG_CPU_DUAL_FLASH)
+			flash_size = pfr_spi_get_device_size(PCH_SPI);
+			if (region_start_address >= flash_size && (region_end_address - 1) >= flash_size) {
+				region_start_address -= flash_size;
+				region_end_address -= flash_size;
+				spi_id = 1;
+			} else if (region_start_address < flash_size && (region_end_address - 1) >= flash_size) {
+				LOG_ERR("ERROR: region start and end address should be in the same flash");
+				return;
+			} else {
+				spi_id = 0;
+			}
+#endif
+			if (spi_def.ProtectLevelMask.ReadAllowed) {
+				Set_SPI_Filter_RW_Region(pch_spim_devs[spi_id], SPI_FILTER_READ_PRIV,
+						SPI_FILTER_PRIV_ENABLE, region_start_address,
+						region_length);
+				LOG_INF("SPI_ID[2] fvm read enable 0x%08x to 0x%08x",
+					region_start_address,
+					region_end_address);
+			} else {
+				Set_SPI_Filter_RW_Region(pch_spim_devs[spi_id], SPI_FILTER_READ_PRIV,
+						SPI_FILTER_PRIV_DISABLE, region_start_address,
+						region_length);
+				LOG_INF("SPI_ID[2] fvm read disable 0x%08x to 0x%08x",
+					region_start_address,
+					region_end_address);
+			}
+
+			if (spi_def.ProtectLevelMask.WriteAllowed) {
+				Set_SPI_Filter_RW_Region(pch_spim_devs[spi_id], SPI_FILTER_WRITE_PRIV,
+						SPI_FILTER_PRIV_ENABLE, region_start_address,
+						region_length);
+				LOG_INF("SPI_ID[2] fvm write enable 0x%08x to 0x%08x",
+					region_start_address,
+					region_end_address);
+			} else {
+				Set_SPI_Filter_RW_Region(pch_spim_devs[spi_id], SPI_FILTER_WRITE_PRIV,
+						SPI_FILTER_PRIV_DISABLE, region_start_address,
+						region_length);
+				LOG_INF("SPI_ID[2] fvm write disable 0x%08x to 0x%08x",
+					region_start_address,
+					region_end_address);
+			}
+
+			if (spi_def.HashAlgorithmInfo.SHA256HashPresent) {
+				fvm_body_offset += sizeof(PFM_SPI_DEFINITION) + SHA256_SIZE;
+			} else if (spi_def.HashAlgorithmInfo.SHA384HashPresent) {
+				fvm_body_offset += sizeof(PFM_SPI_DEFINITION) + SHA384_SIZE;
+			} else {
+				fvm_body_offset += SPI_REGION_DEF_MIN_SIZE;
+			}
+		} else if (spi_def.PFMDefinitionType == FVM_CAP) {
+			fvm_body_offset += sizeof(FVM_CAPABLITIES);
+		} else {
+			break;
+		}
+	}
+
+	SPI_Monitor_Enable(pch_spim_devs[spi_id], true);
+}
+#endif
 

@@ -13,6 +13,7 @@
 #include "flash/flash_aspeed.h"
 #include "pfr/pfr_util.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
+#include "spi_filter/spim_util.h"
 
 #define SPIM_NUM  4
 

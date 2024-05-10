@@ -20,7 +20,6 @@ struct rsa_engine_wrapper rsaEngineWrapper;
 struct spi_engine_wrapper spiEngineWrapper;
 struct spi_engine_state_wrapper spiEngineStateWrapper;
 struct flash_master_wrapper flashEngineWrapper;
-struct spi_filter_engine_wrapper spiFilterEngineWrapper;
 
 static uint8_t hashStorage[RSA_MAX_KEY_LENGTH] __aligned(16);
 
@@ -96,7 +95,3 @@ uint8_t *getNewHashStorage(void)
 	return hashStorage;
 }
 
-struct spi_filter_engine_wrapper *getSpiFilterEngineWrapper(void)
-{
-	return &spiFilterEngineWrapper;
-}

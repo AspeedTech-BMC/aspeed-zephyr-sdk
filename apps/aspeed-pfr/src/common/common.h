@@ -19,15 +19,12 @@
 #include <asn1/x509.h>
 
 #include <crypto/rsa_wrapper.h>
-#include <crypto/signature_verification_rsa_wrapper.h>
 
 #include <flash/flash.h>
 #include <flash/flash_master.h>
 #include <flash/spi_flash.h>
 
 #include <flash/flash_wrapper.h>
-#include <spi_filter/spi_filter_wrapper.h>
-
 
 #include <keystore/keystore.h>
 
@@ -46,7 +43,6 @@ struct pfm_flash *getPfmFlashInstance(void);
 struct signature_verification *getSignatureVerificationInstance(void);
 struct spi_flash *getSpiFlashInstance(void);
 struct rsa_engine_wrapper *getRsaEngineInstance(void);
-struct spi_filter_engine_wrapper *getSpiFilterEngineWrapper(void);
 struct spi_engine_wrapper *getSpiEngineWrapper(void);
 struct spi_engine_state_wrapper *getSpiEngineStateWrapper(void);
 uint8_t *getNewHashStorage(void);
