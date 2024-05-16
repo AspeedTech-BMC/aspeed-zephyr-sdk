@@ -40,12 +40,6 @@ config OTP_SIM_SHELL
 	help
 	  Enable OTP commands for read otp data from flash
 
-config ODM_ROT_REPLACEMENT
-	default y
-	bool "ODM ROT replacement"
-	help
-	  Replace ROT firmware by mcuboot recovery mechanism after devid provisioned
-
 config AST10X0_PROGRAMMER_MP
 	depends on BOARD_AST10X0_MP
 	default n
