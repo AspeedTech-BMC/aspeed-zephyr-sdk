@@ -388,9 +388,3 @@ int recovery_verify(struct recovery_image *image, struct hash_engine *hash,
 	return Success;
 }
 
-int recovery_apply_to_flash(struct recovery_image *image, struct spi_flash *flash)
-{
-	// TODO
-	return Success;
-}
-

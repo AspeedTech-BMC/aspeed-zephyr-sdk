@@ -568,10 +568,9 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
  *
  * @return 0 if the firmware image is valid or an error code.
  */
-int firmware_image_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa)
+int firmware_image_verify(const struct firmware_image *fw, struct hash_engine *hash)
 {
 	ARG_UNUSED(hash);
-	ARG_UNUSED(rsa);
 	struct pfr_manifest *manifest = (struct pfr_manifest *) fw;
 	struct recovery_header image_header;
 	uint32_t dest_pfm_addr;

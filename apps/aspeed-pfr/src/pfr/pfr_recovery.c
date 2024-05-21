@@ -154,54 +154,9 @@ int recover_image(void *AoData, void *EventContext)
 	return Success;
 }
 
-/**
- * Get the SHA-256 hash of the recovery image data, not including the signature.
- *
- * @param image The recovery image to query.
- * @param hash The hash engine to use for generating the hash.
- * @param hash_out Output buffer for the manifest hash.
- * @param hash_length Length of the hash output buffer.
- *
- * @return 0 if the hash was calculated successfully or an error code.
- */
-int recovery_get_hash(struct recovery_image *image, struct hash_engine *hash, uint8_t *hash_out,
-		      size_t hash_length)
-{
-
-	ARG_UNUSED(image);
-	ARG_UNUSED(hash);
-	ARG_UNUSED(hash_out);
-	ARG_UNUSED(hash_length);
-
-	return Success;
-}
-
-/**
- * Get the version of the recovery image.
- *
- * @param image The recovery image to query.
- * @param version The buffer to hold the version ID.
- * @param len The output buffer length.
- *
- * @return 0 if the ID was successfully retrieved or an error code.
- */
-int recovery_get_version(struct recovery_image *image, char *version, size_t len)
-{
-
-	ARG_UNUSED(image);
-	ARG_UNUSED(version);
-	ARG_UNUSED(len);
-
-	return Success;
-}
-
 void init_recovery_manifest(struct recovery_image *image)
 {
 	image->verify = recovery_verify;
-	image->get_hash = recovery_get_hash;
-	image->get_version = recovery_get_version;
-	image->apply_to_flash = recovery_apply_to_flash;
-
 }
 
 int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_t target_address)

@@ -16,6 +16,7 @@
 #include "intel_pfr/intel_pfr_provision.h"
 #include "intel_pfr/intel_pfr_pfm_manifest.h"
 #include "intel_pfr/intel_pfr_definitions.h"
+#include "intel_pfr/intel_pfr_spi_filtering.h"
 #include "pfr/pfr_util.h"
 
 #define SPIM_NUM  4

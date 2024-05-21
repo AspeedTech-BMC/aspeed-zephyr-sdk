@@ -175,11 +175,10 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	return status;
 }
 
-int intel_pfr_update_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa)
+int intel_pfr_update_verify(const struct firmware_image *fw, struct hash_engine *hash)
 {
 
 	ARG_UNUSED(hash);
-	ARG_UNUSED(rsa);
 
 	struct pfr_manifest *pfr_manifest = (struct pfr_manifest *) fw;
 
@@ -1055,12 +1054,11 @@ release_pch_mux:
  *
  * @param fw The firmware image to validate.
  * @param hash The hash engine to use for validation.
- * @param rsa The RSA engine to use for signature checking.
  *
  * @return 0 if the firmware image is valid or an error code.
  */
-int firmware_image_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa)
+int firmware_image_verify(const struct firmware_image *fw, struct hash_engine *hash)
 {
-	return intel_pfr_update_verify(fw, hash, rsa);
+	return intel_pfr_update_verify(fw, hash);
 }
 
