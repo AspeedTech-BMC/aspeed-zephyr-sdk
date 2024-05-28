@@ -1,5 +1,5 @@
 # Introduction
-This documentation briefly introduce users how to use Intel Platform Firmware Resilience(Intel PFR) tools create Platform Firmware Manifest(PFM) and BIOS update capsule from the active BIOS image, sign the PFM and BIOS update capsule using the `intel-pfr-signing-utility`. Add the signed PFM and signed BIOS update capsule to the BIOS full ROM image compatible Intel PFR.
+This documentation briefly introduce users how to use Intel Platform Firmware Resilience(Intel PFR) tools create Platform Firmware Manifest(PFM) and BIOS update capsule from the BIOS active image, sign the PFM and BIOS update capsule using the `intel-pfr-signing-utility`. Add the signed PFM and signed BIOS update capsule to the BIOS full ROM image compatible Intel PFR.
 
 # Required Tools
 - [intel-pfr-signing-utility](https://github.com/Intel-BMC/intel-pfr-signing-utility)  
@@ -125,7 +125,7 @@ PFM_SIGNED_BIN="${PFM_UNSIGNED_BIN}.signed"
 ./intel-pfr-signing-utility -c ${PFM_CONFIG_XML} -o ${PFM_SIGNED_BIN} ${PFM_UNSIGNED_BIN} -v
 ```
 
-## Add the signed PFM to the full ROM image at the PFM offset 0x03FF_0000
+## Add the signed PFM to the BIOS full ROM image at the PFM offset 0x03FF_0000
 - input
   - the signed PFM: plta-pfm.bin.signed
 - output
@@ -181,13 +181,16 @@ dd if=${BIOS_COMPRESSED_BIN} bs=1k >> ${BIOS_UPDATE_CAPSULE}
 # Update capsule setting
 BIOS_UPDATE_CAPSULE="${PLATFORM_NAME}-bios_cap.bin"
 BIOS_SIGNED_UPDATE_CAPSULE="${BIOS_UPDATE_CAPSULE}.signed"
+BIOS_SIGNED_UPDATE_CAPSULE_LINK="bios_signed_cap.bin"
 
 # Sign the BIOS update capsule
 echo "Sign the BIOS update capsule..."
 ./intel-pfr-signing-utility -c ${BIOS_CONFIG_XML} -o ${BIOS_SIGNED_UPDATE_CAPSULE} ${BIOS_UPDATE_CAPSULE} -v
+
+ln -sf ${BIOS_SIGNED_UPDATE_CAPSULE} ${BIOS_SIGNED_UPDATE_CAPSULE_LINK}
 ```
 
-## Add the signed BIOS update capsule to the full ROM image at the Recovery offset 0x02BF_0000
+## Add the signed BIOS update capsule to the BIOS full ROM image at the Recovery offset 0x02BF_0000
 - input
   - the signed BIOS update capsule: plta-bios_cap.bin.signed
 - output
