@@ -1,9 +1,33 @@
 # Required Packages
 - [intel-pfr-signing-utility](https://github.com/Intel-BMC/intel-pfr-signing-utility)
 
-Download intel pfr signing utility and compile.
+This is the Intel(R) Platform Firmware Resilience Signing Utility. ASPEED created some [pull requests](https://github.com/Intel-BMC/intel-pfr-signing-utility/pulls) to fix this tool issues. However, these pull requests does not be reviewed, yet. Please apply the following patches before complie it.
+
+Users can download these patches from [AspeedTech-BMC/openbmc](https://github.com/AspeedTech-BMC/openbmc/tree/aspeed-master/meta-aspeed-sdk/meta-aspeed-pfr/recipes-intel/pfr/intel-pfr-signing-utility)
+```
+0001-support-openssl-3.0.patch
+0002-fix-verify-error-if-block1-b0sig-hashalg-set-to-sha384.patch
+0003-Fix-signature-RS-extration-error.patch
+```
 
 # Keys
+## Generating Root Keys and Code Signing Keys
+- ECDSA 256
+```
+openssl ecparam -name secp256r1 -genkey -out rk_prv.pem
+openssl ec -in rk_prv.pem -pubout -out rk_pub.pem
+openssl ecparam -name secp256r1 -genkey -out csk_prv.pem
+openssl ec -in csk_prv.pem -pubout -out csk_pub.pem
+```
+
+- ECDSA 384
+```
+openssl ecparam -name secp384r1 -genkey -out rk384_prv.pem
+openssl ec -in rk384_prv.pem -pubout -out rk384_pub.pem
+openssl ecparam -name secp384r1 -genkey -out csk384_prv.pem
+openssl ec -in csk384_prv.pem -pubout -out csk384_pub.pem
+```
+
 ## secp256r1 (ECDSA 256)
 - root private key: `rk_prv.pem`
 - root public key: `rk_pub.pem`
