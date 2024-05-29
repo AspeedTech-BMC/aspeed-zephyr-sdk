@@ -2,7 +2,7 @@
     "exclude-pages":[[11248, 16367], [16368, 16383]],
     "image-parts": [
         {
-            "name": "Reserved",
+            "name": "Reserved-1",
             "index": 0,
             "offset": "0x0",
             "size": "0x20000",
@@ -68,7 +68,7 @@
             "size": "0x10000",
             "prot_mask": 31,
             "pfm": 1,
-            "hash": 1,
+            "hash": 0,
             "compress": 1
         },
         {
@@ -102,7 +102,7 @@
             "compress": 1
         },
         {
-            "name": "BIOS-STG",
+            "name": "Staging",
             "index": 10,
             "offset": "0x17f0000",
             "size": "0x1400000",
@@ -112,7 +112,7 @@
             "compress": 0
         },
         {
-            "name": "BIOS-RC",
+            "name": "Recovery",
             "index": 11,
             "offset": "0x2bf0000",
             "size": "0x1400000",
