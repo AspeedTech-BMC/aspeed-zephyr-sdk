@@ -10,7 +10,7 @@ This documentation briefly introduce users how to use Intel Platform Firmware Re
 # Flash layout
 In this example, the size of BIOS active image is 16MB and the BIOS full ROM image size is 64MB, the partition layout is below:
 |Contents                    |Start Address|End Address(-1)   |Size(KB)| Type    |
-|:---------------------------|:------------|:-----------------|:-------|:--------|
+|--------------------------- |-------------|------------------|--------|---------|
 |Reserved-1                  |0x0000_0000  |0x0002_0000       |128     |Static   |
 |Embedded Firmware Signature |0x0002_0000  |0x0002_4000       |16      |Static   |
 |NVRAM                       |0x0002_4000  |0x0004_4000       |128     |Dynamic  |
@@ -200,8 +200,8 @@ ln -sf ${BIOS_SIGNED_UPDATE_CAPSULE} ${BIOS_SIGNED_UPDATE_CAPSULE_LINK}
 ```
 PFR_RECOVERY_OFFSET="44992"
 
-dd bs=1k conv=notrunc seek=${PFR_PFM_OFFSET} \
-  if=${PFM_SIGNED_BIN} \
+dd bs=1k conv=notrunc seek=${PFR_RECOVERY_OFFSET} \
+  if=${BIOS_SIGNED_UPDATE_CAPSULE} \
   of=${BIOS_PFR_IMAGE}
 ```
 
@@ -224,7 +224,7 @@ ASPEED PFR Keys: copy keys from `apps/aspeed-pfr/tools/intel/` to this directory
 # Notice
 - Please ensuer provisioning the correct offsets of BIOS active, recovery and staging regions.
   |Region    |offset      |
-  |:---------|:-----------|
+  |----------|------------|
   |Active    |0x03FF_0000 |
   |Recovery  |0x02BF_0000 |
   |Staging   |0x017F_0000 |
