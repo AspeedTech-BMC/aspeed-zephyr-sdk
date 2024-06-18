@@ -133,6 +133,68 @@ int verify_csk_key_id(struct pfr_manifest *manifest, uint8_t key_id)
 	return Success;
 }
 
+bool verify_key_unused(uint32_t ufm_offset, uint8_t key_id)
+{
+	uint32_t block1_address;
+	uint32_t image_type;
+	uint32_t base_addr;
+	uint32_t csk_id = 0;
+
+	if (ufm_read(PROVISION_UFM, ufm_offset, (uint8_t *)&base_addr, sizeof(base_addr))) {
+		LOG_ERR("Failed to read UFM");
+		return false;
+	}
+	switch (ufm_offset) {
+	case BMC_RECOVERY_REGION_OFFSET:
+		base_addr += PFM_SIG_BLOCK_SIZE;
+	case BMC_ACTIVE_PFM_OFFSET:
+		image_type = BMC_TYPE;
+		break;
+	case PCH_RECOVERY_REGION_OFFSET:
+		base_addr += PFM_SIG_BLOCK_SIZE;
+	case PCH_ACTIVE_PFM_OFFSET:
+		image_type = PCH_TYPE;
+		break;
+	default:
+		return false;
+	}
+
+	block1_address = base_addr + sizeof(PFR_AUTHENTICATION_BLOCK0);
+	if (pfr_spi_read(image_type, block1_address + CSK_KEY_ID_ADDRESS,
+		      sizeof(csk_id), (uint8_t *)&csk_id)) {
+		LOG_ERR("Flash read block1 CSK key Id failed");
+		return false;
+	}
+
+	if ((uint8_t)csk_id == key_id) {
+		LOG_ERR("Key Id: %d is not unused", key_id);
+		return false;
+	}
+	return true;
+}
+
+bool is_csk_unused(uint8_t key_id)
+{
+	LOG_INF("Verifying key is not used by BMC Active Region");
+	if (!verify_key_unused(BMC_ACTIVE_PFM_OFFSET, key_id))
+		return false;
+
+	LOG_INF("Verifying key is not used by BMC Recovery Region");
+	if (!verify_key_unused(BMC_RECOVERY_REGION_OFFSET, key_id))
+		return false;
+
+	LOG_INF("Verifying key is not used by PCH Active Region");
+	if (!verify_key_unused(PCH_ACTIVE_PFM_OFFSET, key_id))
+		return false;
+
+	LOG_INF("Verifying key is not used by PCH Recovery Region");
+	if (!verify_key_unused(PCH_RECOVERY_REGION_OFFSET, key_id))
+		return false;
+
+	LOG_INF("Key verification succeeded, Key Id: %d is not used by system", key_id);
+	return true;
+}
+
 int cancel_csk_key_id(struct pfr_manifest *manifest, uint8_t key_id)
 {
 	uint32_t ufm_offset = get_cancellation_policy_offset(manifest->pc_type);
@@ -150,6 +212,9 @@ int cancel_csk_key_id(struct pfr_manifest *manifest, uint8_t key_id)
 		LOG_ERR("%s: Invalid key Id: %d", __func__, key_id);
 		return Failure;
 	}
+
+	if (!is_csk_unused(key_id))
+		return Failure;
 
 	ufm_offset += (key_id / 32) * 4;
 	// bit little endian

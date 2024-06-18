@@ -18,11 +18,13 @@
 #if defined(CONFIG_INTEL_PFR)
 #include "intel_pfr/intel_pfr_definitions.h"
 #include "intel_pfr/intel_pfr_recovery.h"
+#include "intel_pfr/intel_pfr_provision.h"
 #endif
 #if defined(CONFIG_CERBERUS_PFR)
 #include "cerberus_pfr/cerberus_pfr_definitions.h"
 #include "cerberus_pfr/cerberus_pfr_recovery.h"
 #include "cerberus_pfr/cerberus_pfr_svn.h"
+#include "cerberus_pfr/cerberus_pfr_provision.h"
 #endif
 
 #include "include/SmbusMailBoxCom.h"
@@ -35,6 +37,7 @@ int recover_image(void *AoData, void *EventContext)
 	int status = 0;
 	AO_DATA *ActiveObjectData = (AO_DATA *) AoData;
 	EVENT_CONTEXT *EventData = (EVENT_CONTEXT *) EventContext;
+	uint32_t act_pfm_addr;
 
 	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 
@@ -43,9 +46,21 @@ int recover_image(void *AoData, void *EventContext)
 	if (EventData->image == BMC_EVENT) {
 		LOG_INF("Image Type: BMC");
 		pfr_manifest->image_type = BMC_TYPE;
+		if (get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, (uint8_t *)&act_pfm_addr,
+				sizeof(act_pfm_addr))) {
+			LOG_ERR("Failed to get PCH active PFM address");
+			return Failure;
+		}
+		pfr_manifest->active_pfm_addr = act_pfm_addr;
 	} else if (EventData->image == PCH_EVENT) {
 		LOG_INF("Image Type: PCH");
 		pfr_manifest->image_type = PCH_TYPE;
+		if (get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, (uint8_t *)&act_pfm_addr,
+				sizeof(act_pfm_addr))) {
+			LOG_ERR("Failed to get PCH active PFM address");
+			return Failure;
+		}
+		pfr_manifest->active_pfm_addr = act_pfm_addr;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #if (CONFIG_AFM_SPEC_VERSION == 4)
@@ -80,7 +95,7 @@ int recover_image(void *AoData, void *EventContext)
 	if (ActiveObjectData->RecoveryImageStatus != Success) {
 		status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest, NULL);
 		if (status != Success) {
-			LOG_INF("PFR Staging Area Corrupted");
+			LOG_ERR("PFR Staging Area Corrupted");
 			if (ActiveObjectData->ActiveImageStatus != Success) {
 				/* Scenarios
 				 * Active | Recovery | Staging

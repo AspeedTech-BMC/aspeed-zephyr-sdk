@@ -214,6 +214,7 @@ enum {
 	PFR_AFM,
 	PFR_INTEL_CPLD_UPDATE_CAPSULE,
 	PFR_AFM_PER_DEV,
+	PFR_AFM_ADD_TO_UPDATE = 0x0A,
 	PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON = 0x200
 };
 
@@ -237,7 +238,7 @@ enum {
 };
 
 struct pfr_authentication {
-	int (*validate_pctye)(struct pfr_manifest *manifest, uint32_t pc_type);
+	int (*validate_pctye)(struct pfr_manifest *manifest);
 	int (*validate_kc)(struct pfr_manifest *manifest);
 	int (*block1_block0_entry_verify)(struct pfr_manifest *manifest);
 	int (*block1_csk_block0_entry_verify)(struct pfr_manifest *manifest);

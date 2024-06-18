@@ -53,6 +53,7 @@
 #include "flash/flash_aspeed.h"
 #include "flash/flash_wrapper.h"
 #include "watchdog_timer/wdt_utils.h"
+#include "i2c/i2c_util.h"
 
 #if defined(CONFIG_PFR_MCTP)
 #include "mctp/mctp.h"
@@ -291,6 +292,7 @@ void do_init(void *o)
 #if defined(CONFIG_PFR_SW_MAILBOX)
 		InitializeSmbusMailbox();
 #endif
+		util_init_I2C();
 #if defined(CONFIG_PFR_MCTP)
 		init_pfr_mctp();
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
@@ -1376,6 +1378,7 @@ void handle_update_requested(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
 	struct event_context *evt_ctx = state->event_ctx;
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 	AO_DATA *ao_data_wrap = NULL;
 	EVENT_CONTEXT evt_ctx_wrap;
 	int ret = Success;
@@ -1384,6 +1387,8 @@ void handle_update_requested(void *o)
 
 	LOG_DBG("FIRMWARE_UPDATE Event Data %02x %02x", evt_ctx->data.bit8[0], evt_ctx->data.bit8[1]);
 
+	pfr_manifest->update_intent1 = 0;
+	pfr_manifest->update_intent2 = 0;
 	evt_ctx->data.bit8[1] &= PchBmcHROTActiveAndRecoveryUpdate;
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status, sizeof(CPLD_STATUS));
 	memcpy(&cpld_update_status, &cached_status, sizeof(CPLD_STATUS));
@@ -1395,6 +1400,9 @@ void handle_update_requested(void *o)
 			(UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate);
 		if (!update_region)
 			LogUpdateFailure(INVALID_UPD_INTENT, 0);
+		else
+			pfr_manifest->update_intent1 = evt_ctx->data.bit8[1];
+
 		break;
 	case BmcUpdateIntent:
 		/* BMC has full access */
@@ -1402,6 +1410,7 @@ void handle_update_requested(void *o)
 		if ((update_region & PchActiveUpdate) || (update_region & PchRecoveryUpdate)) {
 			cpld_update_status.BmcToPchStatus = 1;
 		}
+		pfr_manifest->update_intent1 = evt_ctx->data.bit8[1];
 		break;
 	case BmcUpdateIntent2:
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
@@ -1419,6 +1428,7 @@ void handle_update_requested(void *o)
 		}
 		break;
 #endif
+		pfr_manifest->update_intent2 = evt_ctx->data.bit8[1];
 	default:
 		break;
 	}

@@ -91,6 +91,9 @@ int intel_rsu_read_ctrl_reg(uint8_t rsu_type, uint8_t reg, uint16_t *val)
 	if (get_rsu_dev(rsu_type, &dev, &slave_addr))
 		return -1;
 
+	if (!dev)
+		return -1;
+
 	reg_addr[0] = RSU_CTRL_REG;
 	reg_addr[1] = reg;
 

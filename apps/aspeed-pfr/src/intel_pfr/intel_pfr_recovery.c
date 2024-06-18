@@ -340,6 +340,7 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 
 	uint32_t source_address;
 	uint32_t target_address;
+	uint32_t pc_type;
 	uint32_t image_type = manifest->image_type;
 
 	status = ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
@@ -355,18 +356,16 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 	manifest->image_type = BMC_TYPE;
 	manifest->address = source_address;
 
-#if defined(CONFIG_SEAMLESS_UPDATE)
-	if (manifest->state == SEAMLESS_UPDATE) {
-		manifest->pc_type = PFR_PCH_SEAMLESS_UPDATE_CAPSULE;
-	} else
-#endif
-	{
-		manifest->pc_type = PFR_PCH_UPDATE_CAPSULE;
-	}
-
 	LOG_INF("BMC's PCH Staging Area verification");
 	LOG_INF("Veriifying capsule signature, address=0x%08x", manifest->address);
 	// manifest verification
+	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(pc_type)),
+			sizeof(pc_type), (uint8_t *)&pc_type);
+	if (pc_type != PFR_PCH_UPDATE_CAPSULE && pc_type != PFR_PCH_SEAMLESS_UPDATE_CAPSULE) {
+		LOG_ERR("Invalid pc_type : %x", pc_type);
+		return Failure;
+	}
+
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
 			manifest->verification->base, manifest->pfr_hash->hash_out,
 			manifest->pfr_hash->length);
@@ -375,20 +374,6 @@ int pfr_staging_pch_staging(struct pfr_manifest *manifest)
 		return Failure;
 	}
 
-	// Recovery region PFM verification
-	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
-		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
-	else
-		manifest->address += PFM_SIG_BLOCK_SIZE;
-
-	manifest->pc_type = PFR_PCH_PFM;
-	LOG_INF("Verifying PFM signature, address=0x%08x", manifest->address);
-	// manifest verification
-	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
-			manifest->verification->base, manifest->pfr_hash->hash_out,
-			manifest->pfr_hash->length);
-	if (status != Success)
-		return Failure;
 	LOG_INF("BMC's PCH Staging verification successful");
 	manifest->address = target_address;
 	manifest->image_type = image_type;

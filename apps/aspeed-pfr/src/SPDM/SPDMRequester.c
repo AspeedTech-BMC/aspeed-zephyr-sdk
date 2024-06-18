@@ -155,7 +155,6 @@ int read_afm_dev_info(uint8_t dev_idx, uint8_t *buffer)
 	/* To verify the data content if the data is stored in external flash */
 	if (dev_idx > afm_dev_idx_bmc) {
 		manifest->image_type = flash_id;
-		manifest->pc_type = PFR_AFM_PER_DEV;
 		manifest->address = afm_list[dev_idx] - offset;
 		manifest->flash->state->device_id[0] = flash_id;
 		ret = manifest->base->verify((struct manifest *)manifest, manifest->hash,

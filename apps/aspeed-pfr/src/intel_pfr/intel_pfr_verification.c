@@ -185,12 +185,8 @@ int intel_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *has
 		return Failure;
 	}
 
+	pfr_manifest->pc_type = pc_type;
 	LOG_INF("pfr_manifest->image_type=%d address=0x%08x pc_type=%x", pfr_manifest->image_type, pfr_manifest->address + BLOCK0_PCTYPE_ADDRESS, pc_type);
-
-	// Validate PC type
-	status = pfr_manifest->pfr_authentication->validate_pctye(pfr_manifest, pc_type);
-	if (status != Success)
-		return Failure;
 
 	// Validate Key cancellation
 	status = pfr_manifest->pfr_authentication->validate_kc(pfr_manifest);
@@ -210,15 +206,42 @@ int intel_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *has
 	return status;
 }
 
-int validate_pc_type(struct pfr_manifest *manifest, uint32_t pc_type)
+int validate_pc_type(struct pfr_manifest *manifest)
 {
-	if (pc_type != manifest->pc_type && manifest->pc_type != PFR_PCH_SEAMLESS_UPDATE_CAPSULE) {
-		LOG_ERR("Validation PC Type failed, block0_read_pc_type = %x, manifest_pc_type = %x",
-				pc_type, manifest->pc_type);
-		return Failure;
-	}
+	if (manifest->pc_type == CPLD_CAPSULE_CANCELLATION)
+		return Success;
+	else if (manifest->pc_type == PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON ||
+			(manifest->pc_type & PFR_CPLD_UPDATE_CAPSULE))
+		return (manifest->update_intent1 & HROTActiveAndRecoveryUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_BMC_UPDATE_CAPSULE)
+		return (manifest->update_intent1 & BmcActiveAndRecoveryUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_PCH_UPDATE_CAPSULE)
+		return (manifest->update_intent1 & PchActiveAndRecoveryUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_CPLD_UPDATE_CAPSULE)
+		return (manifest->update_intent1 & HROTActiveAndRecoveryUpdate) ? Success : Failure;
+#if defined(CONFIG_SEAMLESS_UPDATE)
+	else if (manifest->pc_type == PFR_PCH_SEAMLESS_UPDATE_CAPSULE)
+		return (manifest->update_intent2 & SeamlessUpdate) ? Success : Failure;
+#endif
+#if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
+	else if (manifest->pc_type == PFR_INTEL_CPLD_UPDATE_CAPSULE)
+		return (manifest->update_intent2 & CPLDUpdate) ? Success : Failure;
+#endif
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+#if (CONFIG_AFM_SPEC_VERSION == 4)
+	else if (manifest->pc_type == PFR_AFM)
+		return (manifest->update_intent2 & AfmActiveUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_AFM_PER_DEV)
+		return (manifest->update_intent2 & AfmRecoveryUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_AFM_ADD_TO_UPDATE)
+		return (manifest->update_intent2 & AfmActiveAddToUpdate) ? Success : Failure;
+#elif (CONFIG_AFM_SPEC_VERSION == 3)
+	else if (manifest->pc_type == PFR_AFM)
+		return (manifest->update_intent2 & AfmActiveAndRecoveryUpdate) ? Success : Failure;
+#endif
+#endif
 
-	return Success;
+	return Failure;
 }
 
 #include "mbedtls/lms.h"
@@ -489,6 +512,12 @@ int intel_block1_csk_block0_entry_verify(struct pfr_manifest *manifest)
 		return Failure;
 	}
 
+	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(uint32_t)),
+			sizeof(uint32_t), (uint8_t *)&manifest->pc_type);
+	if (status != Success) {
+		LOG_ERR("Flash read PC type failed");
+		return Failure;
+	}
 	// Key permission
 	if (manifest->pc_type == PFR_BMC_UPDATE_CAPSULE) {// Bmc update
 		sign_bit_verify = SIGN_BMC_UPDATE_BIT3;

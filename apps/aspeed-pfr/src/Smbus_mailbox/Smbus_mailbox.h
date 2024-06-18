@@ -122,6 +122,7 @@ typedef enum _UPDATE_INTENT_2 {
 	AfmActiveUpdate                         = 0x02,
 	AfmRecoveryUpdate                       = 0x04,
 	AfmActiveAndRecoveryUpdate              = 0x06,
+	AfmActiveAddToUpdate                    = 0x08,
 	CPLDUpdate                              = 0x10,
 	SeamlessUpdateAck                       = 0x80,
 } UPDATE_INTENT_2;

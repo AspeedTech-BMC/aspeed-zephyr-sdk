@@ -32,30 +32,25 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 	if (manifest->image_type == BMC_TYPE) {
 		ufm_read(PROVISION_UFM, BMC_RECOVERY_REGION_OFFSET, (uint8_t *)&read_address,
 				sizeof(read_address));
-		manifest->pc_type = PFR_BMC_UPDATE_CAPSULE;
 	} else if (manifest->image_type == PCH_TYPE) {
 		ufm_read(PROVISION_UFM, PCH_RECOVERY_REGION_OFFSET, (uint8_t *)&read_address,
 				sizeof(read_address));
-		manifest->pc_type = PFR_PCH_UPDATE_CAPSULE;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #if (CONFIG_AFM_SPEC_VERSION == 4)
 	else if (manifest->image_type == ROT_EXT_AFM_RC_1) {
 		read_address = 0;
-		manifest->pc_type = PFR_AFM;
 		//manifest->image_type = ROT_EXT_AFM_RC_1;
 		verify_afm = true;
 	}
 	else if (manifest->image_type == ROT_EXT_AFM_RC_2) {
 		read_address = 0;
-		manifest->pc_type = PFR_AFM;
 		//manifest->image_type = ROT_EXT_AFM_RC_2;
 		verify_afm = true;
 	}
 #elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == AFM_TYPE) {
 		read_address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
-		manifest->pc_type = PFR_AFM;
 		manifest->image_type = BMC_TYPE;
 		verify_afm = true;
 	}
@@ -65,7 +60,6 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 	else if (manifest->image_type == CPLD_TYPE) {
 		manifest->image_type = ROT_EXT_CPLD_RC;
 		read_address = 0;
-		manifest->pc_type = PFR_INTEL_CPLD_UPDATE_CAPSULE;
 	}
 #endif
 	else {
@@ -84,19 +78,6 @@ int pfr_recovery_verify(struct pfr_manifest *manifest)
 		LOG_ERR("Verify recovery capsule failed");
 		return Failure;
 	}
-#if defined(CONFIG_PFR_SPDM_ATTESTATION)
-	if (verify_afm)
-		manifest->pc_type = PFR_AFM;
-	else if (manifest->image_type == BMC_TYPE)
-		manifest->pc_type = PFR_BMC_PFM;
-	else if (manifest->image_type == PCH_TYPE)
-		manifest->pc_type = PFR_PCH_PFM;
-#else
-	if (manifest->image_type == BMC_TYPE)
-		manifest->pc_type = PFR_BMC_PFM;
-	else if (manifest->image_type == PCH_TYPE)
-		manifest->pc_type = PFR_PCH_PFM;
-#endif
 
 	// Recovery region PFM verification
 	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
@@ -131,29 +112,24 @@ int pfr_active_verify(struct pfr_manifest *manifest)
 	if (manifest->image_type == BMC_TYPE) {
 		get_provision_data_in_flash(BMC_ACTIVE_PFM_OFFSET, (uint8_t *)&read_address,
 				sizeof(read_address));
-		manifest->pc_type = PFR_BMC_PFM;
 	} else if (manifest->image_type == PCH_TYPE) {
 		get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, (uint8_t *)&read_address,
 				sizeof(read_address));
-		manifest->pc_type = PFR_PCH_PFM;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #if (CONFIG_AFM_SPEC_VERSION == 4)
 	else if (manifest->image_type == ROT_EXT_AFM_ACT_1) {
 		/* Fixed partition so starts from zero */
 		read_address = 0;
-		manifest->pc_type = PFR_AFM;
 	}
 	else if (manifest->image_type == ROT_EXT_AFM_ACT_2) {
 		/* Fixed partition so starts from zero */
 		read_address = 0;
-		manifest->pc_type = PFR_AFM;
 	}
 #elif (CONFIG_AFM_SPEC_VERSION == 3)
 	else if (manifest->image_type == ROT_INTERNAL_AFM) {
 		/* Fixed partition so starts from zero */
 		read_address = 0;
-		manifest->pc_type = PFR_AFM;
 	}
 #endif
 #endif
@@ -161,7 +137,6 @@ int pfr_active_verify(struct pfr_manifest *manifest)
 	else if (manifest->image_type == CPLD_TYPE) {
 		manifest->image_type = ROT_EXT_CPLD_ACT;
 		read_address = 0;
-		manifest->pc_type = PFR_INTEL_CPLD_UPDATE_CAPSULE;
 		manifest->address = read_address;
 		LOG_INF("Verifying capsule signature, address=0x%08x", manifest->address);
 		if (manifest->pfr_authentication->online_update_cap_verify(manifest)) {

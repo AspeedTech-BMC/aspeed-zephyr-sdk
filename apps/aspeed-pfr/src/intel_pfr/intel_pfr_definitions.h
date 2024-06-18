@@ -10,16 +10,6 @@
 #define BMC_FLASH_ID                    0
 #define PCH_FLASH_ID                    1
 
-#define BMC_TYPE                        0
-#define PCH_TYPE                        2
-
-/* For Intel-PFR 3.0 */
-#define AFM_TYPE                        4
-/* For Intel-PFR 4.0 */
-#define AFM_TYPE2                       5
-
-#define CPLD_TYPE                       6
-
 #define UFM0                            4
 #define UFM0_SIZE                       512
 
@@ -91,7 +81,6 @@
 #define PFMTYPE                         0x01
 #define UPDATE_CAPSULE                  1
 #define ACTIVE_PFM                      2
-#define ROT_TYPE                        3
 
 #define SIGN_PCH_PFM_BIT0               0x00000001
 #define SIGN_PCH_UPDATE_BIT1            0x00000002
@@ -127,6 +116,16 @@
 #elif (CONFIG_AFM_SPEC_VERSION == 3)
 #define MEASUREMENT_PAYLOAD_SIZE 4
 #endif
+
+typedef enum {
+	BMC_TYPE = 0,
+	PCH_TYPE = 2,
+        ROT_TYPE,
+	AFM_TYPE,
+	AFM_TYPE2,
+	CPLD_TYPE,
+	MAX_SUPPORTED_FW_TYPE,
+} FW_TYPE;
 
 /*
 	Each AFM device data is 8 Kbytes

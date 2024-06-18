@@ -51,6 +51,8 @@ struct pfr_manifest {
 	uint32_t intel_cpld_addr[3];                            // CPU/SCM/Debug CPLD firmware addr
 	uint32_t intel_cpld_img_size[3];                        // CPU/SCM/Debug CPLD image size
 #endif
+	uint8_t update_intent1;
+	uint8_t update_intent2;
 };
 
 struct active_image {
