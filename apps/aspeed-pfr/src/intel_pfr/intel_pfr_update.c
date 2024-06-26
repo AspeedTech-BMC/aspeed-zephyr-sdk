@@ -114,7 +114,8 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	if (manifest->state != FIRMWARE_RECOVERY) {
 		status = manifest->pfr_authentication->validate_pctye(manifest);
 		if (status != Success) {
-			LOG_ERR("Validation PC Type failed");
+			LOG_ERR("Validation PC Type failed, pc_type = %x, update intent (%x, %x)",
+				manifest->pc_type, manifest->update_intent1, manifest->update_intent2);
 			return Failure;
 		}
 	}
@@ -347,7 +348,7 @@ int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length
 
 	if (part == AFM_PART_ACT_1) {
 		flash_type = ROT_EXT_AFM_ACT_1;
-		source_flash_type = ROT_EXT_AFM_RC_1;
+		source_flash_type = BMC_SPI;
 	} else if (part == AFM_PART_RCV_1) {
 		flash_type = ROT_EXT_AFM_RC_1;
 		source_flash_type = BMC_SPI;

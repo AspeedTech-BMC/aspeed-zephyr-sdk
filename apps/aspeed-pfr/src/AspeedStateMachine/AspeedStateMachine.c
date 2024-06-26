@@ -1606,18 +1606,23 @@ void handle_seamless_update_requested(void *o)
 	int ret;
 	uint8_t update_region = evt_ctx->data.bit8[1] & 0x3f;
 	CPLD_STATUS cpld_update_status;
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 
 	evt_ctx_wrap.operation = NONE;
 	LOG_DBG("SEAMLESS_UPDATE Event Data %02x %02x", evt_ctx->data.bit8[0], evt_ctx->data.bit8[1]);
+	pfr_manifest->update_intent2 = 0;
 
 	switch (evt_ctx->data.bit8[0]) {
 		case PchUpdateIntent2:
-			if (evt_ctx->data.bit8[1] & BIT(0))
+			if (evt_ctx->data.bit8[1] & BIT(0)) {
 				update_region &= SeamlessUpdate;
+				pfr_manifest->update_intent2 = evt_ctx->data.bit8[1] & BIT(0);
+			}
 			break;
 		case BmcUpdateIntent2:
 			if (evt_ctx->data.bit8[1] & BIT(0)) {
 				update_region &= SeamlessUpdate;
+				pfr_manifest->update_intent2 = evt_ctx->data.bit8[1] & BIT(0);
 				ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
 				cpld_update_status.BmcToPchStatus = 1;
 				ufm_write(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
