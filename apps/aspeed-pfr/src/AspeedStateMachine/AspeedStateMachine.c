@@ -1389,24 +1389,23 @@ void handle_update_requested(void *o)
 
 	pfr_manifest->update_intent1 = 0;
 	pfr_manifest->update_intent2 = 0;
-	evt_ctx->data.bit8[1] &= PchBmcHROTActiveAndRecoveryUpdate;
+	update_region = evt_ctx->data.bit8[1] & PchBmcHROTActiveAndRecoveryUpdate;
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status, sizeof(CPLD_STATUS));
 	memcpy(&cpld_update_status, &cached_status, sizeof(CPLD_STATUS));
 
 	switch (evt_ctx->data.bit8[0]) {
 	case PchUpdateIntent:
 		/* CPU/PCH only has access to bit[7:6] and bit[1:0] */
-		update_region = evt_ctx->data.bit8[1] &
-			(UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate);
 		if (!update_region)
 			LogUpdateFailure(INVALID_UPD_INTENT, 0);
-		else
+		else {
+			evt_ctx->data.bit8[1] &= (UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate);
 			pfr_manifest->update_intent1 = evt_ctx->data.bit8[1];
+		}
 
 		break;
 	case BmcUpdateIntent:
 		/* BMC has full access */
-		update_region = evt_ctx->data.bit8[1];
 		if ((update_region & PchActiveUpdate) || (update_region & PchRecoveryUpdate)) {
 			cpld_update_status.BmcToPchStatus = 1;
 		}
