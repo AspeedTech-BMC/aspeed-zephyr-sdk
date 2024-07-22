@@ -338,6 +338,7 @@ int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length
 	uint32_t source_address = address;
 	uint32_t length_page_align;
 	uint8_t flash_type, source_flash_type;
+	struct pfr_manifest *manifest = get_pfr_manifest();
 
 	length_page_align =
 		(length % PAGE_SIZE) ? (length + (PAGE_SIZE - (length % PAGE_SIZE))) : length;
@@ -347,8 +348,15 @@ int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length
 	}
 
 	if (part == AFM_PART_ACT_1) {
-		flash_type = ROT_EXT_AFM_ACT_1;
-		source_flash_type = BMC_SPI;
+		if (manifest->state == FIRMWARE_RECOVERY) {
+			flash_type = ROT_EXT_AFM_ACT_1;
+			source_flash_type = ROT_EXT_AFM_RC_1;
+			LOG_INF("to recover active region");
+		} else {
+			flash_type = ROT_EXT_AFM_ACT_1;
+			source_flash_type = BMC_SPI;
+			LOG_INF("to update active region");
+		}
 	} else if (part == AFM_PART_RCV_1) {
 		flash_type = ROT_EXT_AFM_RC_1;
 		source_flash_type = BMC_SPI;
