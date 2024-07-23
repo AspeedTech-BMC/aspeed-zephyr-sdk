@@ -231,13 +231,15 @@ int Wrapper_spi_flash_get_sector_size(struct spi_flash *flash, uint32_t *bytes)
  */
 int Wrapper_spi_flash_sector_erase(struct spi_flash *flash, uint32_t sector_addr)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
 	if (flash == NULL) {
 		return SPI_FLASH_INVALID_ARGUMENT;
 	}
 	xfer.cmd = MIDLEY_FLASH_CMD_4K_ERASE;
+	xfer.address = sector_addr;
+	xfer.length = SECTOR_SIZE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
