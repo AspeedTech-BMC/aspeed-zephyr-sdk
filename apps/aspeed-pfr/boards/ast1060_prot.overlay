@@ -188,24 +188,28 @@
 &spi1_cs0 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim1>;
 	status = "okay";
 };
 
 &spi1_cs1 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim2>;
 	status = "okay";
 };
 
 &spi2_cs0 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim3>;
 	status = "okay";
 };
 
 &spi2_cs1 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim4>;
 	status = "okay";
 };
 
@@ -232,7 +236,6 @@
 		&pin_spim1csout &pin_spim1io2in &pin_spim1io3in>;
 
 	pinctrl-names = "default";
-	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
 	ext-mux-sel-delay-us = <1000>;
@@ -250,7 +253,6 @@
 		&pin_spim2csout &pin_spim2io2in &pin_spim2io3in>;
 
 	pinctrl-names = "default";
-	flash-device = <&spi1_cs1>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_a_d 12 0>, <&sgpiom_a_d 0 0>; /* SGPIO OUT #1 */
 	ext-mux-sel-delay-us = <1000>;
@@ -270,7 +272,6 @@
 		&pin_spim3misoout &pin_spim3mosiout &pin_spim3io2out &pin_spim3io3out>;
 
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */
 	ext-mux-sel-delay-us = <1000>;
@@ -289,7 +290,6 @@
 		&pin_spim4misoout &pin_spim4mosiout &pin_spim4io2out &pin_spim4io3out>;
 
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
 	ext-mux-sel-gpios = <&gpio0_e_h 8 0>, <&sgpiom_a_d 2 0>; /* SGPIO OUT #3 */
 	ext-mux-sel-delay-us = <1000>;

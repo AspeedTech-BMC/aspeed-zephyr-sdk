@@ -142,24 +142,28 @@
 &spi1_cs0 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim1>;
 	status = "okay";
 };
 
 &spi1_cs1 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim2>;
 	status = "okay";
 };
 
 &spi2_cs0 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim3>;
 	status = "okay";
 };
 
 &spi2_cs1 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim4>;
 	status = "okay";
 };
 
@@ -185,7 +189,6 @@
 	pinctrl-0 = <pinctrl_spim1_quad_default>;
 	pinctrl-names = "default";
 
-	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
@@ -196,7 +199,6 @@
 	pinctrl-0 = <pinctrl_spim2_quad_default>;
 	pinctrl-names = "default";
 
-	flash-device = <&spi1_cs1>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
@@ -210,7 +212,6 @@
 		&pin_spim3muxsel>;
 	pinctrl-names = "default";
 
-	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
@@ -224,7 +225,6 @@
 		&pin_spim4muxsel>;
 	pinctrl-names = "default";
 
-	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
