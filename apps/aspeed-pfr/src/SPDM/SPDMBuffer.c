@@ -119,7 +119,10 @@ int spdm_buffer_append_reserved(struct spdm_buffer *buffer, size_t size)
 
 int spdm_buffer_get_array(struct spdm_buffer *buffer, void *data, size_t size)
 {
-	if (buffer == NULL || buffer->read_ptr + size > buffer->size) {
+	if (buffer == NULL) {
+		LOG_ERR("spdm_buffer_get_array buffer=NULL data=%p size=%d", data, size);
+		return -1;
+	} else if (buffer->read_ptr + size > buffer->size) {
 		LOG_ERR("spdm_buffer_get_array buffer=%p data=%p read_ptr=%d size=%d buf->size=%d",
 				buffer, data, buffer->read_ptr, size, buffer->size);
 		return -1;
