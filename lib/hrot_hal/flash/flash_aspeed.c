@@ -68,9 +68,13 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		return get_block_erase_size(DeviceId);
 	break;
 	case MIDLEY_FLASH_CMD_READ:
+	        if (xfer->data == NULL)
+			return -1;
 		ret = bmc_pch_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
+	        if (xfer->data == NULL)
+			return -1;
 		ret = bmc_pch_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
@@ -84,6 +88,8 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
+	        if (xfer->data == NULL)
+			return -1;
 		// bypass as flash status are write enabled and not busy
 		*xfer->data = 0x02;
 		ret = 0;
@@ -111,9 +117,13 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = 0;	// bypass as write enabled
 	break;
 	case MIDLEY_FLASH_CMD_READ:
+	        if (xfer->data == NULL)
+			return -1;
 		ret = rot_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
+	        if (xfer->data == NULL)
+			return -1;
 		ret = rot_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
@@ -127,6 +137,8 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = 0;
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
+	        if (xfer->data == NULL)
+			return -1;
 		// bypass as flash status are write enabled and not busy
 		*xfer->data = 0x02;
 		ret = 0;
