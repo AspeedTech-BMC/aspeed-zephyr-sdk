@@ -176,8 +176,6 @@ int intel_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *has
 	ARG_UNUSED(hash_out);
 	ARG_UNUSED(hash_length);
 
-	init_pfr_authentication(pfr_manifest->pfr_authentication);
-
 	status = pfr_spi_read(pfr_manifest->image_type, pfr_manifest->address + BLOCK0_PCTYPE_ADDRESS, sizeof(pc_type), (uint8_t *)&pc_type);
 	if (status != Success) {
 		LOG_INF("pfr_manifest->image_type=%d address=0x%08x", pfr_manifest->image_type, pfr_manifest->address + BLOCK0_PCTYPE_ADDRESS);

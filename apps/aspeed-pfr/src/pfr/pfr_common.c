@@ -239,4 +239,7 @@ void init_pfr_bases(void)
 			get_recovery_pfm(),
 			get_update_fw_base(),
 			get_active_image());
+#if defined(CONFIG_INTEL_PFR)
+	init_pfr_authentication(get_pfr_manifest()->pfr_authentication);
+#endif
 }
