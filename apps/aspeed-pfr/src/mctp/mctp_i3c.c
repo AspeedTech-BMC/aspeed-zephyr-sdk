@@ -295,6 +295,12 @@ static uint16_t mctp_i3c_read(void *mctp_p, void *msg_p)
 	packet->timeout_valid = 0;
 	packet->pkt_timeout = 0;
 	packet->state = CMD_VALID_PACKET;
+
+	if (xfer.len > CMD_MAX_PACKET_SIZE) {
+		LOG_WRN("Buffer is smaller than received data");
+		xfer.len = CMD_MAX_PACKET_SIZE;
+	}
+
 	memcpy(packet->data, xfer.buf, xfer.len);
 
 	return 0;
