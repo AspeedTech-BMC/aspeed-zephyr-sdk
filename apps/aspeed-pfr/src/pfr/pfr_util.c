@@ -136,8 +136,16 @@ uint32_t pfr_spi_get_device_size(uint8_t device_id)
 int pfr_spi_get_block_size(uint8_t device_id)
 {
 	uint32_t block_size;
+	uint8_t flash_id;
 
-	block_size = get_block_erase_size(device_id);
+	if (device_id >= ROT_INTERNAL_ACTIVE && device_id < ROT_EXT_AFM_ACT_1)
+		flash_id = ROT_SPI;
+	else if (device_id >= ROT_EXT_AFM_ACT_1)
+		flash_id = ROT_EXT_SPI;
+	else
+		flash_id = device_id;
+
+	block_size = get_block_erase_size(flash_id);
 
 	return block_size;
 }
