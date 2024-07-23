@@ -304,15 +304,17 @@ int Wrapper_spi_flash_block_erase(struct spi_flash *flash, uint32_t block_addr)
  */
 int Wrapper_spi_flash_chip_erase(struct spi_flash *flash)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
-	xfer.cmd = MIDLEY_FLASH_CMD_READ;
+	if (flash == NULL) {
+		return SPI_FLASH_INVALID_ARGUMENT;
+	}
+	xfer.cmd = MIDLEY_FLASH_CMD_CE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
 	return status;
-
 }
 
 int  flash_wrapper_init(struct spi_engine_wrapper *flash, struct flash_master_wrapper *spi, struct spi_engine_state_wrapper *flash_state)
