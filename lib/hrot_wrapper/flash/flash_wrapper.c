@@ -256,7 +256,7 @@ int Wrapper_spi_flash_sector_erase(struct spi_flash *flash, uint32_t sector_addr
  */
 int Wrapper_spi_flash_get_block_size(struct spi_flash *flash, uint32_t *bytes)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 
 	if ((flash == NULL) || (bytes == NULL)) {
 		return SPI_FLASH_INVALID_ARGUMENT;
