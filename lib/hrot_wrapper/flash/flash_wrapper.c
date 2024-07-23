@@ -206,7 +206,7 @@ int Wrapper_spi_flash_write(struct spi_flash *flash, uint32_t address, const uin
  */
 int Wrapper_spi_flash_get_sector_size(struct spi_flash *flash, uint32_t *bytes)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 
 	if ((flash == NULL) || (bytes == NULL)) {
 		return SPI_FLASH_INVALID_ARGUMENT;
