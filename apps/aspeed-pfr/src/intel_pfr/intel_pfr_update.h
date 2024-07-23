@@ -25,7 +25,7 @@ int update_cpld_image(struct pfr_manifest *manifest);
 #endif
 
 int intel_pfr_update_verify(const struct firmware_image *fw, struct hash_engine *hash);
-int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext, CPLD_STATUS *cpld_update_status);
+int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext, CPLD_STATUS *cpld_update_status, struct event_context *evt_ctx);
 
 #if defined(CONFIG_SEAMLESS_UPDATE)
 int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContext);

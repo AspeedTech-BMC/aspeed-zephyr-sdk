@@ -665,7 +665,7 @@ int update_recovery_region(int image_type, uint32_t source_address, uint32_t tar
 }
 
 int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
-		CPLD_STATUS *cpld_update_status)
+		CPLD_STATUS *cpld_update_status, struct event_context *evt_ctx)
 {
 	int status = 0;
 	uint32_t source_address, target_address, area_size;
@@ -759,7 +759,13 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 		} else if (pfr_manifest->update_intent2 & AfmRecoveryUpdate) {
 			cpld_update_status->Region[AFM_REGION].Recoveryregion = 0;
 		}
-
+		if (pfr_manifest->pc_type == PCH_PFM_CANCELLATION) {
+			LOG_INF("execute PCH PFM key cancellation, to hold PCH");
+			PCHBootHold();
+			// to remove BmcOnlyReset bit for booting BMC and PCH
+			if (evt_ctx->data.bit8[2] == BmcOnlyReset)
+				evt_ctx->data.bit8[2] &= ~BmcOnlyReset;
+		}
 		update_type = ROT_TYPE;
 	}
 

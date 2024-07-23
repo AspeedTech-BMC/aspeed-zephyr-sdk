@@ -1155,6 +1155,7 @@ void handle_provision_image(void *o)
 	EVENT_CONTEXT evt_ctx_wrap;
 	uint32_t image_type = ROT_TYPE;
 	int ret;
+	struct event_context *evt_ctx = ((struct smf_context *)o)->event_ctx;
 
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status,
 			sizeof(CPLD_STATUS));
@@ -1166,7 +1167,7 @@ void handle_provision_image(void *o)
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 #endif
-	ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap, &cpld_update_status);
+	ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap, &cpld_update_status, evt_ctx);
 
 	if (memcmp(&cached_status, &cpld_update_status, sizeof(CPLD_STATUS))) {
 		ufm_write(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
@@ -1582,7 +1583,7 @@ void handle_update_requested(void *o)
 
 		if (image_type != 0xFFFFFFFF)
 			ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap,
-					&cpld_update_status);
+					&cpld_update_status, evt_ctx);
 
 		evt_ctx->data.bit8[3] = handled_region;
 

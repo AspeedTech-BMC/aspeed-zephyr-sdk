@@ -173,23 +173,25 @@ bool verify_key_unused(uint32_t ufm_offset, uint8_t key_id)
 	return true;
 }
 
-bool is_csk_unused(uint8_t key_id)
+bool is_csk_unused(uint8_t key_id, uint32_t pc_type)
 {
-	LOG_INF("Verifying key is not used by BMC Active Region");
-	if (!verify_key_unused(BMC_ACTIVE_PFM_OFFSET, key_id))
-		return false;
+	if (pc_type == PCH_PFM_CANCELLATION) {
+		LOG_INF("Verifying key is not used by PCH Active Region");
+		if (!verify_key_unused(PCH_ACTIVE_PFM_OFFSET, key_id))
+			return false;
 
-	LOG_INF("Verifying key is not used by BMC Recovery Region");
-	if (!verify_key_unused(BMC_RECOVERY_REGION_OFFSET, key_id))
-		return false;
+		LOG_INF("Verifying key is not used by PCH Recovery Region");
+		if (!verify_key_unused(PCH_RECOVERY_REGION_OFFSET, key_id))
+			return false;
+	} else if (pc_type == BMC_PFM_CANCELLATION) {
+		LOG_INF("Verifying key is not used by BMC Active Region");
+		if (!verify_key_unused(BMC_ACTIVE_PFM_OFFSET, key_id))
+			return false;
 
-	LOG_INF("Verifying key is not used by PCH Active Region");
-	if (!verify_key_unused(PCH_ACTIVE_PFM_OFFSET, key_id))
-		return false;
-
-	LOG_INF("Verifying key is not used by PCH Recovery Region");
-	if (!verify_key_unused(PCH_RECOVERY_REGION_OFFSET, key_id))
-		return false;
+		LOG_INF("Verifying key is not used by BMC Recovery Region");
+		if (!verify_key_unused(BMC_RECOVERY_REGION_OFFSET, key_id))
+			return false;
+	}
 
 	LOG_INF("Key verification succeeded, Key Id: %d is not used by system", key_id);
 	return true;
@@ -213,7 +215,7 @@ int cancel_csk_key_id(struct pfr_manifest *manifest, uint8_t key_id)
 		return Failure;
 	}
 
-	if (!is_csk_unused(key_id))
+	if (!is_csk_unused(key_id, manifest->pc_type))
 		return Failure;
 
 	ufm_offset += (key_id / 32) * 4;
