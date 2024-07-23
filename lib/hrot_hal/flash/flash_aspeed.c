@@ -439,7 +439,7 @@ int get_block_erase_size(uint8_t device_id)
 {
 	int block_erase_sz = 0;
 
-	if (device_id >= sizeof(Flash_Devices_List))
+	if (device_id >= ARRAY_SIZE(Flash_Devices_List))
 		return SECTOR_SIZE;
 
 	const struct device *flash_device = device_get_binding(Flash_Devices_List[device_id]);
