@@ -279,13 +279,15 @@ int Wrapper_spi_flash_get_block_size(struct spi_flash *flash, uint32_t *bytes)
  */
 int Wrapper_spi_flash_block_erase(struct spi_flash *flash, uint32_t block_addr)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
 	if (flash == NULL) {
 		return SPI_FLASH_INVALID_ARGUMENT;
 	}
 	xfer.cmd = MIDLEY_FLASH_CMD_BLOCK_ERASE;
+	xfer.address = block_addr;
+	xfer.length = BLOCK_SIZE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
