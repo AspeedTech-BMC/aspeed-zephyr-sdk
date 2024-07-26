@@ -11,11 +11,18 @@
 #include "watchdog_timer/wdt_utils.h"
 #include "watchdog_timer/wdt_handler.h"
 #include "platform_monitor.h"
+#include "gpio/gpio_aspeed.h"
+#if defined(CONFIG_PFR_MCTP)
 #include "mctp/mctp.h"
+#if defined(CONFIG_PFR_MCTP_I3C)
+#include "mctp/mctp_i3c.h"
+#endif
+#endif
 
 LOG_MODULE_REGISTER(monitor, CONFIG_LOG_DEFAULT_LEVEL);
 
 extern struct k_work log_bmc_rst_work;
+extern struct k_sem pltrst_sem;
 extern uint8_t gWdtBootStatus;
 static struct gpio_callback bmc_rstind_cb_data;
 static void platform_reset_monitor_remove(void);
@@ -55,6 +62,7 @@ void bmc_reset_monitor_remove(void)
 
 #ifdef SUPPORT_PLTRST
 static struct gpio_callback rst_pltrst_cb_data;
+extern bool i3c_hub_configured;
 
 /**
  * Arm the ACM watchdog timer when ROT firmware detects a platform reset
@@ -75,7 +83,9 @@ static void platform_reset_handler(const struct device *dev, struct gpio_callbac
 		// platform_reset_monitor_remove();
 		extern bool pltrst_sync;
 		pltrst_sync = true;
-
+#if defined(CONFIG_PFR_MCTP_I3C)
+		k_sem_give(&pltrst_sem);
+#endif
 	}
 
 #endif

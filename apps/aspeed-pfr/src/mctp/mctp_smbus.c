@@ -11,7 +11,7 @@
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "cmd_interface/cmd_channel.h"
 #include "i2c/i2c_util.h"
-#include "mctp_utils.h"
+#include "mctp.h"
 
 LOG_MODULE_DECLARE(mctp, CONFIG_LOG_DEFAULT_LEVEL);
 

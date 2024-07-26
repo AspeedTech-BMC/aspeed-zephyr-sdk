@@ -21,6 +21,13 @@ config PFR_MCTP_I3C
 	help
 	  Enable MCTP over I3C support
 
+config PFR_MCTP_I3C_5_0
+	depends on PFR_MCTP_I3C
+	default n
+	bool "PFR 5.0 MCTP over I3C support"
+	help
+	  Enable MCTP over I3C support for PFR 5.0
+
 config PFR_SPDM_RESPONDER
 	depends on PFR_MCTP
 	default n
@@ -60,13 +67,25 @@ config PFR_SPDM_I3C_BUS
 	default 2
 	int "I3C bus for attestation"
 
+config PFR_SPDM_CPU_I3C_BUS
+	default 0
+	int "CPU I3C bus for attestation"
+
 config PFR_SPDM_I3C_BMC_DEV_PID
 	default 0x7ec05031000
 	hex "I3C device pid for BMC"
 
-config PFR_SPDM_I3C_CPU_DEV_PID
-	default 0x7ec05032000
-	hex "I3C device pid for CPU"
+config PFR_SPDM_I3C_HUB_DEV_PID
+	default 0x4cd7515a106
+	hex "I3C device pid for i3c hub"
+
+config PFR_SPDM_I3C_CPU0_DEV_PID
+	default 0x20a0000000f
+	hex "I3C device pid for CPU0"
+
+config PFR_SPDM_I3C_CPU1_DEV_PID
+	default 0x20a0000100f
+	hex "I3C device pid for CPU1"
 
 config AFM_SPEC_VERSION
 	range 3 4

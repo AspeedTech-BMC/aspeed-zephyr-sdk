@@ -128,6 +128,17 @@ K_TIMER_DEFINE(dcscm_sgpio_passthrough_workaround,
 
 static int ast2700_sgpio_workaround_init(void)
 {
+#define SCU_PIN_CTRL4      0x7e6e241c
+	uint32_t pinctrl_val = sys_read32(SCU_PIN_CTRL4);
+	pinctrl_val &= ~BIT(12);
+	sys_write32(pinctrl_val, SCU_PIN_CTRL4);
+
+	const struct device *dev = device_get_binding("gpio0_m_p");
+	if (dev) {
+		int ret = gpio_pin_configure(dev, 12, GPIO_OUTPUT);
+		ret = gpio_pin_set_raw(dev, 12, 1);
+	}
+
 	// I don't have a good value here, so let's starts the workaround
 	// after 200ms and runs every 50ms period
 	LOG_WRN("AST2700-A0 SGPIO Passthrough Workaround");

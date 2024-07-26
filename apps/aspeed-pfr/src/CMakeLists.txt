@@ -15,6 +15,7 @@ add_subdirectory(spi_filter)
 add_subdirectory(watchdog_timer)
 add_subdirectory(otp)
 add_subdirectory(i2c)
+add_subdirectory(i3c)
 
 # Vendor specific layer
 add_subdirectory_ifdef(CONFIG_INTEL_PFR intel_pfr)

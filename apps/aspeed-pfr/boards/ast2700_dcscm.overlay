@@ -55,6 +55,36 @@
 };
 
 // For mctp over i3c
+// CPU0 and CPU1 -> i3chub -> AST1060 i3c-2
+&i3c0 {
+	status = "okay";
+	sda-tx-hold-ns = <20>;
+	i3c-pp-scl-hi-period-ns = <380>;
+	i3c-pp-scl-lo-period-ns = <620>;
+	pinctrl-0 = <pinctrl_i3c0_default>;
+
+	// i3chub
+	i3cdev@4cd7515a106 {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x4cd 0x7515a106>;
+		status = "okay";
+	};
+
+	// cpu0
+	i3cdev@20a0000000f {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x20a 0x0000000f>;
+		status = "okay";
+	};
+
+	// cpu1
+	i3cdev@20a0000100f {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x20a 0x0000100f>;
+		status = "okay";
+	};
+};
+
 // AST2700 i3c-0 -> AST1060 i3c-2
 &i3c2 {
 	status = "okay";

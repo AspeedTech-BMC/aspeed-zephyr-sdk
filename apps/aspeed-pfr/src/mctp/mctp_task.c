@@ -8,7 +8,8 @@
 #include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "mctp_utils.h"
+#include "mctp.h"
+#include "mctp_i3c.h"
 
 LOG_MODULE_DECLARE(mctp, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -46,6 +47,7 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 	case MCTP_MEDIUM_TYPE_I3C:
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
 		LOG_INF("medium_type: i3c");
 		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
 
@@ -89,6 +91,11 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 	case MCTP_MEDIUM_TYPE_I3C:
 		ret = mctp_i3c_init(mctp_inst, medium_conf);
 		break;
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
+		ret = mctp_i3c_target_init(mctp_inst, medium_conf);
+		break;
+#endif
 #endif
 	default:
 		break;
@@ -108,6 +115,7 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 	case MCTP_MEDIUM_TYPE_I3C:
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
 		mctp_i3c_deinit(mctp_inst);
 		break;
 #endif

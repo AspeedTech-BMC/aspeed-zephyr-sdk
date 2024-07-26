@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "mctp_utils.h"
+#include "mctp.h"
 
 typedef struct _mctp_smbus_port {
 	mctp *mctp_inst;
