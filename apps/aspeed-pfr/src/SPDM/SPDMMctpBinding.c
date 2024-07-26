@@ -72,7 +72,7 @@ extern mctp *mctp_i3c_bmc_inst;
 bool spdm_mctp_init_req(void *ctx, SPDM_MEDIUM medium, uint8_t bus, uint8_t dst_sa, uint8_t dst_eid)
 {
 	struct spdm_context *context = (struct spdm_context *)ctx;
-	struct spdm_mctp_connection_data *conn = malloc(sizeof(struct spdm_mctp_connection_data));
+	struct spdm_mctp_connection_data *conn;
 	mctp *mctp_inst = NULL;
 
 	switch (medium) {
@@ -90,6 +90,11 @@ bool spdm_mctp_init_req(void *ctx, SPDM_MEDIUM medium, uint8_t bus, uint8_t dst_
 	}
 
 	if (mctp_inst != NULL) {
+		conn = malloc(sizeof(struct spdm_mctp_connection_data));
+		if (conn == NULL) {
+			LOG_ERR("can't allocate for connection data (%d)", sizeof(struct spdm_mctp_connection_data));
+			return false;
+		}
 		conn->mctp_inst = mctp_inst;
 		conn->dst_addr = dst_sa;
 		conn->dst_eid = dst_eid;
