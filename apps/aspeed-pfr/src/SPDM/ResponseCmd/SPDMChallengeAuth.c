@@ -62,7 +62,7 @@ int spdm_handle_challenge(void *ctx, void *req, void *rsp)
 	rsp_msg->header.param2 = context->local.certificate.slot_mask; // SlotMask
 
 	// Calculate Certificate Chain hash
-	uint8_t hash[48];
+	uint8_t hash[HASH_MAX_HASH_LEN];
 	mbedtls_sha512(context->local.certificate.certs[slot_id].data,
 			context->local.certificate.certs[slot_id].size,
 			hash, 1);
