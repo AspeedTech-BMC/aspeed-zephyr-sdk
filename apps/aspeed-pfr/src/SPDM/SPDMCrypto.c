@@ -93,7 +93,7 @@ int spdm_crypto_verify(void *ctx, uint8_t slot_id, uint8_t *input, size_t input_
 		bool sig_context_hash, uint8_t *sig_context, size_t sig_context_len)
 {
 	struct spdm_context *context = (struct spdm_context *)ctx;
-	int ret;
+	int ret = -1;
 
 	/* Get Public Key for verification */
 	mbedtls_x509_crt *cur = &context->remote.certificate.certs[slot_id].chain;
