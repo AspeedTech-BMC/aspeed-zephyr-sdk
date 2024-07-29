@@ -18,7 +18,7 @@ static int logging_memory_wrapper_init(struct logging_memory_wrapper *logging_wr
 
 	debug_log = &logging_wrapper->logging.base;
 	logging_wrapper->logging.state = &logging_wrapper->state;
-	status = logging_memory_init((struct logging_memory *)debug_log, &logging_wrapper->state,
+	status = logging_memory_init(&logging_wrapper->logging, &logging_wrapper->state,
 			LOGGING_ENTRY_COUNT, LOGGING_ENTRY_LENGTH);
 	if (status != 0) {
 		LOG_ERR("logging memory init failed(%x)", status);
