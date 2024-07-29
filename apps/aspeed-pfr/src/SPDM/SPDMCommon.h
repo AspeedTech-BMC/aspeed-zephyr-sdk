@@ -14,7 +14,6 @@
 #include "SPDM/SPDMBuffer.h"
 #include "SPDM/SPDMDefinitions.h"
 #include "SPDM/SPDMRequester.h"
-#include "crypto/hash.h"
 
 #pragma pack(1)
 

@@ -117,7 +117,7 @@ int spdm_handle_get_measurements(void *ctx, void *req, void *rsp)
 		 * Entire first GET_MEASUREMENTS request message under consideration, where the Requester has
 		 * requested a signature on that specific GET_MEASUREMENTS request.
 		 */
-		uint8_t hash[HASH_MAX_HASH_LEN];
+		uint8_t hash[MBEDTLS_MD_MAX_SIZE];
 
 		mbedtls_sha512_finish(&context->l1l2_context, hash);
 		LOG_HEXDUMP_DBG(hash, 48, "L1L2 Hash");
