@@ -9,6 +9,7 @@ This documentation briefly introduce users how to use Intel Platform Firmware Re
 
 # Flash layout
 In this example, the size of BIOS active image is 16MB and the BIOS full ROM image size is 64MB, the partition layout is below:
+
 |Contents                    |Start Address|End Address(-1)   |Size(KB)| Type    |
 |--------------------------- |-------------|------------------|--------|---------|
 |Reserved-1                  |0x0000_0000  |0x0002_0000       |128     |Static   |
@@ -223,6 +224,7 @@ ASPEED PFR Keys: copy keys from `apps/aspeed-pfr/tools/intel/` to this directory
 
 # Notice
 - Please ensuer provisioning the correct offsets of BIOS active, recovery and staging regions.
+
   |Region    |offset      |
   |----------|------------|
   |Active    |0x03FF_0000 |
