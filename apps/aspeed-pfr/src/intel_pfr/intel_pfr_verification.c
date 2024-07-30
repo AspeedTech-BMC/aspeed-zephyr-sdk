@@ -242,8 +242,12 @@ int validate_pc_type(struct pfr_manifest *manifest)
 	return Failure;
 }
 
+
+#if defined(CONFIG_MBEDTLS_LMS_C)
 #include "mbedtls/lms.h"
 #include "lmots.h"
+#endif
+
 int intel_block1_block0_entry_verify_lms(struct pfr_manifest *manifest, void *input, int hash_length)
 {
 #if defined(CONFIG_MBEDTLS_LMS_C)

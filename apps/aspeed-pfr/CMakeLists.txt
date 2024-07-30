@@ -19,7 +19,11 @@ set(CERBERUS_ROOT $ENV{ZEPHYR_BASE}/../middlewares/cerberus)
 zephyr_link_libraries(hrot_hal)
 zephyr_link_libraries(hrot_wrapper)
 zephyr_link_libraries(smf)
-zephyr_link_libraries(lms)
+
+if (MBEDTLS_LMS_C)
+    zephyr_link_libraries(lms)
+endif()
+
 zephyr_link_libraries(cerberus)
 zephyr_link_libraries(mbedTLS)
 zephyr_include_directories(mbedTLS)
