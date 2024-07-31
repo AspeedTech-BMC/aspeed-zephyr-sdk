@@ -62,7 +62,8 @@ mctp *find_mctp_by_smbus(uint8_t bus)
 void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");
-	uint8_t i, rc;
+	uint8_t i;
+	int rc;
 
 	if (gSwMbxDev == NULL) {
 		LOG_ERR("without SWMBX device");
