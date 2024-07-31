@@ -15,6 +15,7 @@ LOG_MODULE_DECLARE(mctp, CONFIG_LOG_DEFAULT_LEVEL);
 /* set thread name */
 static uint8_t set_thread_name(mctp *mctp_inst)
 {
+	int status;
 	if (!mctp_inst)
 		return MCTP_ERROR;
 
@@ -29,10 +30,18 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 		LOG_INF("medium_type: smbus");
 		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
 
-		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
+		status = snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus, smbus_conf->rot_addr);
-		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
+		if (status < 0) {
+			LOG_WRN("Failed to set smbus mctprx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, smbus_conf->bus, smbus_conf->rot_addr);
+		}
+		status = snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
 			 "mctptx_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus);
+		if (status < 0) {
+			LOG_WRN("Failed to set smbus mctptx thread name for %02x:%02x",
+					mctp_inst->medium_type, smbus_conf->bus);
+		}
 		ret = MCTP_SUCCESS;
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
@@ -40,12 +49,20 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 		LOG_INF("medium_type: i3c");
 		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
 
-		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
+		status = snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 				"mctprx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
 				i3c_conf->addr);
-		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
+		if (status < 0) {
+			LOG_WRN("Failed to set i3c mctprx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, i3c_conf->bus, i3c_conf->addr);
+		}
+		status = snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
 				"mctptx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
 				i3c_conf->addr);
+		if (status < 0) {
+			LOG_WRN("Failed to set i3c mctptx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, i3c_conf->bus, i3c_conf->addr);
+		}
 		ret = MCTP_SUCCESS;
 		break;
 #endif
