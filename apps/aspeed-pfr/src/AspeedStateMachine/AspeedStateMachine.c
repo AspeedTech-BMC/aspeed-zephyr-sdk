@@ -1278,7 +1278,7 @@ void handle_checkpoint(void *o)
 
 int handle_recovery_requested(CPLD_STATUS *cpld_status,
 		EVENT_CONTEXT *evt_ctx_wrap,
-		AO_DATA *ao_data_wrap,
+		AO_DATA **ao_data_wrap,
 		struct smf_context *state,
 		struct event_context *evt_ctx,
 		uint32_t *image_type,
@@ -1347,7 +1347,7 @@ int handle_recovery_requested(CPLD_STATUS *cpld_status,
 #endif
 			evt_ctx_wrap->flag = evt_ctx->data.bit8[1] & UPDATE_DYNAMIC;
 			evt_ctx_wrap->flash = SECONDARY_FLASH_REGION;
-			ao_data_wrap = &state->bmc_active_object;
+			*ao_data_wrap = &state->bmc_active_object;
 		} else {
 			*image_type = 0xFFFFFFFF;
 			LOG_ERR("Staging region is tampered, recovery update won't be performed");
@@ -1501,7 +1501,7 @@ void handle_update_requested(void *o)
 					if (update_region & BmcRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1525,7 +1525,7 @@ void handle_update_requested(void *o)
 					if (update_region & PchRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1548,7 +1548,7 @@ void handle_update_requested(void *o)
 					if (update_region & HROTRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1580,7 +1580,7 @@ void handle_update_requested(void *o)
 					if (update_region & AfmRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
