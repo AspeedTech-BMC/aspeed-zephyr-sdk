@@ -85,7 +85,12 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	break;
 	case MIDLEY_FLASH_CMD_CE:
 		FlashSize = bmc_pch_get_flash_size(DeviceId);
-		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
+		if (FlashSize > 0) {
+			ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
+		} else {
+			LOG_ERR("Failed to get flash size device_id=%x", DeviceId);
+			ret = -1;
+		}
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
 	        if (xfer->data == NULL)
@@ -95,7 +100,7 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = 0;
 	break;
 	default:
-		LOG_DBG("%d Command is not supported\n", xfer->cmd);
+		LOG_DBG("%d Command is not supported", xfer->cmd);
 	break;
 	}
 
@@ -133,7 +138,7 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = rot_flash_erase(DeviceId, AdrOffset, BLOCK_SIZE, false);
 	break;
 	case MIDLEY_FLASH_CMD_CE:
-		LOG_DBG("%d Command is not supported\n", xfer->cmd);
+		LOG_DBG("%d Command is not supported", xfer->cmd);
 		ret = 0;
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
@@ -144,7 +149,7 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = 0;
 	break;
 	default:
-		LOG_ERR("%d Command is not supported\n", xfer->cmd);
+		LOG_ERR("%d Command is not supported", xfer->cmd);
 	break;
 	}
 
