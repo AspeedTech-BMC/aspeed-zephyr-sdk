@@ -54,7 +54,7 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	uint8_t DeviceId = flash->state->device_id[0];
 	int AdrOffset = xfer->address;
 	int Datalen = xfer->length;
-	uint32_t FlashSize = 0;
+	int FlashSize = 0;
 	int ret = 0;
 
 	switch (xfer->cmd) {
