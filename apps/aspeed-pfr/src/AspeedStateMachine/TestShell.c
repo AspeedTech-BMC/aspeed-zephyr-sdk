@@ -103,7 +103,7 @@ static int cmd_asm_flash_cmp(const struct shell *shell, size_t argc,
 	size_t offset_b = strtol(argv[3], NULL, 16);
 	size_t length = strtol(argv[4], NULL, 16);
 
-	shell_print(shell, "Hash Dev:%s Offset_A:%p Offset_B:%p Length:%p", dev_name, offset_a, offset_b, length);
+	shell_print(shell, "Hash Dev:%s Offset_A:%08x Offset_B:%08x Length:%08x", dev_name, offset_a, offset_b, length);
 
 	const struct device *dev = device_get_binding(dev_name);
 
