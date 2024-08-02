@@ -141,6 +141,9 @@ uint8_t mctp_i3c_target_mctp_stop(void)
 	for (i = 0; i < ARRAY_SIZE(i3c_devs); i++) {
 		i3c_dev_p = &i3c_devs[i];
 		mctp_i3c_inst = &i3c_dev_p->mctp_i3c_inst;
+		if (mctp_i3c_inst->state != MCTP_I3C_TARGET_ATTACHED)
+			return 0;
+
 		mctp_i3c_inst->state = MCTP_I3C_TARGET_INITIALIZED_DETACHED;
 		k_timer_stop(&mctp_i3c_inst->i3c_state_timer);
 

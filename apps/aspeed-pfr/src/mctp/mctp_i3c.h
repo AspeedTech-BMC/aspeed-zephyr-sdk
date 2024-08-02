@@ -37,7 +37,7 @@ void set_prev_mctp_i3c_state(int state);
 int mctp_i3c_detach_slave_dev(uint8_t bus, uint64_t pid);
 int mctp_i3c_attach_target_dev(uint8_t bus, uint64_t pid);
 void mctp_i3c_stop_discovery_notify(struct device_manager *mgr);
-void mctp_i3c_hub_configuration(void);
+int mctp_i3c_hub_configuration(void);
 const struct device *get_mctp_i3c_dev(uint8_t bus_num);
 int mctp_i3c_ibi_cb(struct i3c_device_desc *target, struct i3c_ibi_payload *payload);
 

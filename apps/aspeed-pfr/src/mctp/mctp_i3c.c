@@ -273,13 +273,13 @@ void mctp_i3c_state_handler(void *a, void *b, void *c)
 		dev_state = device_manager_get_device_state(device_mgr,
 				DEVICE_MANAGER_SELF_DEVICE_NUM);
 		if (dev_state == DEVICE_MANAGER_SEND_DISCOVERY_NOTIFY) {
-			LOG_INF("Send discovery notify");
+			LOG_DBG("Send discovery notify");
 			stat = (I3C_MNG_OWNER_BMC == owner) ?
 				PFR_ACT1_DAA_I3C_BMC : PFR_ACT1_DAA_I3C_CPU;
 			SetPfrActivityInfo1(stat);
 			mctp_i3c_send_discovery_notify(mctp_instance, &duration);
 		} else if (dev_state == DEVICE_MANAGER_EID_ANNOUNCEMENT) {
-			LOG_INF("Announce EID");
+			LOG_DBG("Announce EID");
 			stat = (I3C_MNG_OWNER_BMC == owner) ?
 				PFR_ACT1_SET_EID_I3C_BMC : PFR_ACT1_SET_EID_I3C_CPU;
 			SetPfrActivityInfo1(stat);
@@ -685,7 +685,7 @@ void mctp_i3c_send_rstdaa(uint8_t bus)
 }
 
 // The function is used to configure RG3MxxB12 i3c hub
-void mctp_i3c_hub_configuration(void)
+int mctp_i3c_hub_configuration(void)
 {
 	const struct device *dev;
 	struct i3c_device_desc* desc;
@@ -866,8 +866,10 @@ void mctp_i3c_hub_configuration(void)
 	}
 
 	LOG_INF("I3C hub initialization succeed");
+	return 0;
 end:
-	return;
+	LOG_ERR("Failed to configure i3c hub");
+	return -1;
 }
 
 void mctp_i3c_configure_cpu_i3c_devs(void)
@@ -879,7 +881,8 @@ void mctp_i3c_configure_cpu_i3c_devs(void)
 		if (!i3c_hub_configured) {
 			mctp_i3c_send_rstdaa(CONFIG_PFR_SPDM_CPU_I3C_BUS);
 			mctp_i3c_send_entdaa(CONFIG_PFR_SPDM_CPU_I3C_BUS);
-			mctp_i3c_hub_configuration();
+			if (mctp_i3c_hub_configuration())
+				return;
 			i3c_hub_configured = true;
 		}
 		mctp_i3c_send_rstdaa(CONFIG_PFR_SPDM_CPU_I3C_BUS);
