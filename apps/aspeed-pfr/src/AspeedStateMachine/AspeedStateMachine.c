@@ -1621,10 +1621,8 @@ void handle_update_requested(void *o)
 		evt_ctx->data.bit8[3] = handled_region;
 
 		if (ret != Success) {
-			/* TODO: Log failed reason and handle it properly */
 			clear_pending_recovery_update(&cpld_update_status);
 			GenerateStateMachineEvent(UPDATE_FAILED, evt_ctx->data.ptr);
-			break;
 		}
 	}
 

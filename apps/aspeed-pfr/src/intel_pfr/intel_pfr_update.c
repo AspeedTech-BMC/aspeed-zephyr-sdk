@@ -114,8 +114,8 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	if (manifest->state != FIRMWARE_RECOVERY) {
 		status = manifest->pfr_authentication->validate_pctye(manifest);
 		if (status != Success) {
-			LOG_ERR("Validation PC Type failed, pc_type = %x, update intent (%x, %x)",
-				manifest->pc_type, manifest->update_intent1, manifest->update_intent2);
+			LOG_ERR("Validation PC Type failed, image = %d, pc_type = %x, update intent (%x, %x)",
+				manifest->image_type, manifest->pc_type, manifest->update_intent1, manifest->update_intent2);
 			return Failure;
 		}
 	}

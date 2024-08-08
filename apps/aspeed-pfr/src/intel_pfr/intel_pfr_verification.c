@@ -206,15 +206,27 @@ int intel_pfr_manifest_verify(struct manifest *manifest, struct hash_engine *has
 
 int validate_pc_type(struct pfr_manifest *manifest)
 {
+	int ret = Failure;
+
 	if (manifest->pc_type == CPLD_CAPSULE_CANCELLATION)
 		return Success;
 	else if (manifest->pc_type == PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON ||
 			(manifest->pc_type & PFR_CPLD_UPDATE_CAPSULE))
 		return (manifest->update_intent1 & HROTActiveAndRecoveryUpdate) ? Success : Failure;
-	else if (manifest->pc_type == PFR_BMC_UPDATE_CAPSULE)
-		return (manifest->update_intent1 & BmcActiveAndRecoveryUpdate) ? Success : Failure;
-	else if (manifest->pc_type == PFR_PCH_UPDATE_CAPSULE)
-		return (manifest->update_intent1 & PchActiveAndRecoveryUpdate) ? Success : Failure;
+	else if (manifest->pc_type == PFR_BMC_UPDATE_CAPSULE) {
+		if (manifest->update_intent1 & BmcActiveAndRecoveryUpdate &&
+			(manifest->image_type == BMC_TYPE)) {
+			ret = Success;
+		}
+		return ret;
+	}
+	else if (manifest->pc_type == PFR_PCH_UPDATE_CAPSULE) {
+		if (manifest->update_intent1 & PchActiveAndRecoveryUpdate &&
+			(manifest->image_type == PCH_TYPE)) {
+			ret = Success;
+		}
+		return ret;
+	}
 	else if (manifest->pc_type == PFR_CPLD_UPDATE_CAPSULE)
 		return (manifest->update_intent1 & HROTActiveAndRecoveryUpdate) ? Success : Failure;
 #if defined(CONFIG_SEAMLESS_UPDATE)
