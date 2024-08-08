@@ -120,7 +120,7 @@
 		reg = <0x0 0x7ec 0xa0030000>;
 		msg-size = <256>;
 		num-of-msgs = <4>;
-		mandatory-data-byte = <0xbf>;
+		mandatory-data-byte = <0xae>;
 		status = "okay";
 	};
 };
@@ -137,7 +137,7 @@
 		reg = <0x0 0x7ec 0xa0032000>;
 		msg-size = <256>;
 		num-of-msgs = <4>;
-		mandatory-data-byte = <0xbf>;
+		mandatory-data-byte = <0xae>;
 		status = "okay";
 	};
 };
