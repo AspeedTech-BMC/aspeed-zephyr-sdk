@@ -688,11 +688,6 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 	pfr_manifest->image_type = image_type;
 	pfr_manifest->flash_id = flash_select;
 
-	if (AoData == NULL) {
-		LOG_ERR("Active Object is NULL");
-		return Failure;
-	}
-
 	if (pfr_manifest->image_type == ROT_TYPE) {
 		update_type = ROT_TYPE;
 		pfr_manifest->image_type = BMC_TYPE;
@@ -772,6 +767,12 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 				evt_ctx->data.bit8[2] &= ~BmcOnlyReset;
 		}
 		update_type = ROT_TYPE;
+	}
+
+	/* ROT_TYPE doesn't use AoData pointer, to ignore the NULL pointer checking */
+	if ((update_type != ROT_TYPE) && (AoData == NULL)) {
+		LOG_ERR("Active Object is NULL");
+		return Failure;
 	}
 
 	if (update_type == ROT_TYPE) {
