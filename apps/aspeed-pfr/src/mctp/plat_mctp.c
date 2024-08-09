@@ -8,11 +8,14 @@
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/i2c/pfr/swmbx.h>
+#include <zephyr/drivers/i3c.h>
+#include <zephyr/drivers/i3c/target/i3c_target_mqueue.h>
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "mctp/mctp_interface_wrapper.h"
-#include "mctp_utils.h"
+#include "mctp.h"
 #include "plat_mctp.h"
 #include "cmd_channel_mctp.h"
+#include "i3c/i3c_util.h"
 
 LOG_MODULE_REGISTER(plat_mctp, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -62,7 +65,8 @@ mctp *find_mctp_by_smbus(uint8_t bus)
 void plat_mctp_init(void)
 {
 	LOG_INF("plat_mctp_init");
-	uint8_t i, rc;
+	uint8_t i;
+	int rc;
 
 	if (gSwMbxDev == NULL) {
 		LOG_ERR("without SWMBX device");

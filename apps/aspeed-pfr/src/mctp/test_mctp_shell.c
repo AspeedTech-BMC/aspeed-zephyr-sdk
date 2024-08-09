@@ -8,11 +8,10 @@
 #include <zephyr/shell/shell.h>
 #include <stdlib.h>
 #include "mctp/mctp_interface.h"
-#include "mctp_utils.h"
+#include "mctp.h"
 #include "plat_mctp.h"
 #include "cmd_interface/device_manager.h"
 #include "logging/logging_wrapper.h"
-#include "mctp.h"
 
 // #define MCTP_TEST_DEBUG
 static uint8_t request_buf[MCTP_BASE_PROTOCOL_MAX_MESSAGE_BODY] = {0};

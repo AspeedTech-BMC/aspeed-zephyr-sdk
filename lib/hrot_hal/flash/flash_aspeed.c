@@ -54,7 +54,7 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	uint8_t DeviceId = flash->state->device_id[0];
 	int AdrOffset = xfer->address;
 	int Datalen = xfer->length;
-	uint32_t FlashSize = 0;
+	int FlashSize = 0;
 	int ret = 0;
 
 	switch (xfer->cmd) {
@@ -68,9 +68,13 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		return get_block_erase_size(DeviceId);
 	break;
 	case MIDLEY_FLASH_CMD_READ:
+	        if (xfer->data == NULL)
+			return -1;
 		ret = bmc_pch_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
+	        if (xfer->data == NULL)
+			return -1;
 		ret = bmc_pch_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
@@ -81,15 +85,22 @@ int BMC_PCH_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 	break;
 	case MIDLEY_FLASH_CMD_CE:
 		FlashSize = bmc_pch_get_flash_size(DeviceId);
-		ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
+		if (FlashSize > 0) {
+			ret = bmc_pch_flash_erase(DeviceId, AdrOffset, FlashSize, false);
+		} else {
+			LOG_ERR("Failed to get flash size device_id=%x", DeviceId);
+			ret = -1;
+		}
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
+	        if (xfer->data == NULL)
+			return -1;
 		// bypass as flash status are write enabled and not busy
 		*xfer->data = 0x02;
 		ret = 0;
 	break;
 	default:
-		LOG_DBG("%d Command is not supported\n", xfer->cmd);
+		LOG_DBG("%d Command is not supported", xfer->cmd);
 	break;
 	}
 
@@ -111,9 +122,13 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = 0;	// bypass as write enabled
 	break;
 	case MIDLEY_FLASH_CMD_READ:
+	        if (xfer->data == NULL)
+			return -1;
 		ret = rot_flash_read(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_PP://Flash Write
+	        if (xfer->data == NULL)
+			return -1;
 		ret = rot_flash_write(DeviceId, AdrOffset, Datalen, xfer->data);
 	break;
 	case MIDLEY_FLASH_CMD_4K_ERASE:
@@ -123,16 +138,18 @@ int FMC_SPI_Command(struct pspi_flash *flash, struct pflash_xfer *xfer)
 		ret = rot_flash_erase(DeviceId, AdrOffset, BLOCK_SIZE, false);
 	break;
 	case MIDLEY_FLASH_CMD_CE:
-		LOG_DBG("%d Command is not supported\n", xfer->cmd);
+		LOG_DBG("%d Command is not supported", xfer->cmd);
 		ret = 0;
 	break;
 	case MIDLEY_FLASH_CMD_RDSR:
+	        if (xfer->data == NULL)
+			return -1;
 		// bypass as flash status are write enabled and not busy
 		*xfer->data = 0x02;
 		ret = 0;
 	break;
 	default:
-		LOG_ERR("%d Command is not supported\n", xfer->cmd);
+		LOG_ERR("%d Command is not supported", xfer->cmd);
 	break;
 	}
 
@@ -426,6 +443,10 @@ int rot_get_region_size(uint8_t device_id)
 int get_block_erase_size(uint8_t device_id)
 {
 	int block_erase_sz = 0;
+
+	if (device_id >= ARRAY_SIZE(Flash_Devices_List))
+		return SECTOR_SIZE;
+
 	const struct device *flash_device = device_get_binding(Flash_Devices_List[device_id]);
 
 	block_erase_sz = spi_nor_get_erase_sz(flash_device, MIDLEY_FLASH_CMD_BLOCK_ERASE);

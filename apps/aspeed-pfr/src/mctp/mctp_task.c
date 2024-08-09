@@ -8,13 +8,15 @@
 #include <zephyr/logging/log.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "mctp_utils.h"
+#include "mctp.h"
+#include "mctp_i3c.h"
 
 LOG_MODULE_DECLARE(mctp, CONFIG_LOG_DEFAULT_LEVEL);
 
 /* set thread name */
 static uint8_t set_thread_name(mctp *mctp_inst)
 {
+	int status;
 	if (!mctp_inst)
 		return MCTP_ERROR;
 
@@ -29,23 +31,40 @@ static uint8_t set_thread_name(mctp *mctp_inst)
 		LOG_INF("medium_type: smbus");
 		mctp_smbus_conf *smbus_conf = (mctp_smbus_conf *)&mctp_inst->medium_conf;
 
-		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
+		status = snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 			 "mctprx_%02x_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus, smbus_conf->rot_addr);
-		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
+		if (status < 0) {
+			LOG_WRN("Failed to set smbus mctprx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, smbus_conf->bus, smbus_conf->rot_addr);
+		}
+		status = snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
 			 "mctptx_%02x_%02x", mctp_inst->medium_type, smbus_conf->bus);
+		if (status < 0) {
+			LOG_WRN("Failed to set smbus mctptx thread name for %02x:%02x",
+					mctp_inst->medium_type, smbus_conf->bus);
+		}
 		ret = MCTP_SUCCESS;
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 	case MCTP_MEDIUM_TYPE_I3C:
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
 		LOG_INF("medium_type: i3c");
 		mctp_i3c_conf *i3c_conf = (mctp_i3c_conf *)&mctp_inst->medium_conf;
 
-		snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
+		status = snprintf(mctp_inst->mctp_rx_task_name, sizeof(mctp_inst->mctp_rx_task_name),
 				"mctprx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
 				i3c_conf->addr);
-		snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
+		if (status < 0) {
+			LOG_WRN("Failed to set i3c mctprx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, i3c_conf->bus, i3c_conf->addr);
+		}
+		status = snprintf(mctp_inst->mctp_tx_task_name, sizeof(mctp_inst->mctp_tx_task_name),
 				"mctptx_%02x_%02x_%02x", mctp_inst->medium_type, i3c_conf->bus,
 				i3c_conf->addr);
+		if (status < 0) {
+			LOG_WRN("Failed to set i3c mctptx thread name for %02x:%02x:%02x",
+					mctp_inst->medium_type, i3c_conf->bus, i3c_conf->addr);
+		}
 		ret = MCTP_SUCCESS;
 		break;
 #endif
@@ -72,6 +91,11 @@ static uint8_t mctp_medium_init(mctp *mctp_inst, mctp_medium_conf medium_conf)
 	case MCTP_MEDIUM_TYPE_I3C:
 		ret = mctp_i3c_init(mctp_inst, medium_conf);
 		break;
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
+		ret = mctp_i3c_target_init(mctp_inst, medium_conf);
+		break;
+#endif
 #endif
 	default:
 		break;
@@ -91,6 +115,7 @@ static uint8_t mctp_medium_deinit(mctp *mctp_inst)
 		break;
 #if defined(CONFIG_PFR_MCTP_I3C) && defined(CONFIG_I3C_ASPEED)
 	case MCTP_MEDIUM_TYPE_I3C:
+	case MCTP_MEDIUM_TYPE_I3C_TARGET:
 		mctp_i3c_deinit(mctp_inst);
 		break;
 #endif

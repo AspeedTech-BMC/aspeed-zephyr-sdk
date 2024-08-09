@@ -19,9 +19,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <zephyr/logging/log.h>
-#include "hal_i2c.h"
+#include "i2c/i2c_util.h"
 
-LOG_MODULE_REGISTER(hal_i2c, CONFIG_LOG_DEFAULT_LEVEL);
+LOG_MODULE_REGISTER(i2c_util, CONFIG_LOG_DEFAULT_LEVEL);
 
 const struct device *dev_i2c[I2C_BUS_MAX_NUM];
 
@@ -60,11 +60,6 @@ int i2c_master_read(I2C_MSG *msg, uint8_t retry)
 	if (msg->rx_len == 0) {
 		LOG_ERR("rx_len = 0");
 		return -EMSGSIZE;
-	}
-
-	if (msg->tx_len > I2C_BUFF_SIZE) {
-		LOG_ERR("tx_len %d is over limit %d", msg->tx_len, I2C_BUFF_SIZE);
-		return -1;
 	}
 
 	int status;
@@ -136,11 +131,6 @@ int i2c_master_write(I2C_MSG *msg, uint8_t retry)
 
 	if (check_i2c_bus_valid(msg->bus) < 0) {
 		LOG_ERR("i2c bus %d is invalid", msg->bus);
-		return -1;
-	}
-
-	if (msg->tx_len > I2C_BUFF_SIZE) {
-		LOG_ERR("tx_len %d is over limit %d", msg->tx_len, I2C_BUFF_SIZE);
 		return -1;
 	}
 

@@ -15,7 +15,6 @@
 	swmbx0: swmbx0@38 {
 		compatible = "aspeed,swmbx-dev";
 		reg = <0x38>;
-		label = "SWMBX_SLAVE_BMC";
 		size = <256>;
 		port = <0>;
 		status = "okay";
@@ -32,7 +31,6 @@
 	swmbx1: swmbx1@70 {
 		compatible = "aspeed,swmbx-dev";
 		reg = <0x70>;
-		label = "SWMBX_SLAVE_CPU";
 		size = <256>;
 		port = <1>;
 		status = "okay";
@@ -141,18 +139,21 @@
 &spi1_cs0 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim1>;
 	status = "okay";
 };
 
 &spi2_cs0 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim3>;
 	status = "okay";
 };
 
 &spi2_cs1 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim4>;
 	status = "okay";
 };
 
@@ -177,7 +178,6 @@
 	log-ram-size = <0x200>;
 	pinctrl-0 = <pinctrl_spim1_quad_default>;
 	pinctrl-names = "default";
-	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
@@ -190,7 +190,6 @@
 		&pin_spim3misoout &pin_spim3mosiout &pin_spim3io2out &pin_spim3io3out
 		&pin_spim3muxsel>;
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };
@@ -203,7 +202,6 @@
 		&pin_spim4misoout &pin_spim4mosiout &pin_spim4io2out &pin_spim4io3out
 		&pin_spim4muxsel>;
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
 	status = "okay";
 };

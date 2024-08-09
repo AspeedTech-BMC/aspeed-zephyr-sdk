@@ -24,12 +24,12 @@ int update_afm(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length);
 int update_cpld_image(struct pfr_manifest *manifest);
 #endif
 
-int intel_pfr_update_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa);
-int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext, CPLD_STATUS *cpld_update_status);
+int intel_pfr_update_verify(const struct firmware_image *fw, struct hash_engine *hash);
+int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext, CPLD_STATUS *cpld_update_status, struct event_context *evt_ctx);
 
 #if defined(CONFIG_SEAMLESS_UPDATE)
 int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContext);
 #endif
 
-int firmware_image_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa);
+int firmware_image_verify(const struct firmware_image *fw, struct hash_engine *hash);
 

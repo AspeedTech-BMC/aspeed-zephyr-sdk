@@ -10,7 +10,6 @@
 #include <zephyr/drivers/spi_nor.h>
 
 #include "gpio_ctrl.h"
-#include "sw_mailbox/sw_mailbox.h"
 
 #if !DT_NODE_HAS_STATUS(DT_INST(0, aspeed_pfr_gpio_common), okay)
 #error "no correct pfr gpio device"

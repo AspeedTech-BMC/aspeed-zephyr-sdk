@@ -17,7 +17,7 @@
 #include "intel_pfr_cpld_utils.h"
 #include "gpio/gpio_aspeed.h"
 #include "pfr/pfr_util.h"
-#include "i2c/hal_i2c.h"
+#include "i2c/i2c_util.h"
 
 LOG_MODULE_DECLARE(pfr, CONFIG_LOG_DEFAULT_LEVEL);
 
@@ -89,6 +89,9 @@ int intel_rsu_read_ctrl_reg(uint8_t rsu_type, uint8_t reg, uint16_t *val)
 	uint8_t *res = (uint8_t *)val;
 
 	if (get_rsu_dev(rsu_type, &dev, &slave_addr))
+		return -1;
+
+	if (!dev)
 		return -1;
 
 	reg_addr[0] = RSU_CTRL_REG;

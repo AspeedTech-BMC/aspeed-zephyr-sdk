@@ -155,7 +155,6 @@ int read_afm_dev_info(uint8_t dev_idx, uint8_t *buffer)
 	/* To verify the data content if the data is stored in external flash */
 	if (dev_idx > afm_dev_idx_bmc) {
 		manifest->image_type = flash_id;
-		manifest->pc_type = PFR_AFM_PER_DEV;
 		manifest->address = afm_list[dev_idx] - offset;
 		manifest->flash->state->device_id[0] = flash_id;
 		ret = manifest->base->verify((struct manifest *)manifest, manifest->hash,
@@ -420,13 +419,13 @@ void spdm_attester_main(void *a, void *b, void *c)
 				AFM_DEVICE_STRUCTURE_v40_p3 afm_meas_info;
 				char uuid_buf[36];
 
-				afm_device_v4.dev = afm_device;
 				afm_device_v4.pubkey = &afm_pubkey_info;
 				afm_device_v4.measurements = &afm_meas_info;
 				/* if data validation is failed, to ignore this item */
 				if (read_afm_dev_info(device, buffer))
 					continue;
 				afm_device = (AFM_DEVICE_STRUCTURE_v40_p1 *)buffer;
+				afm_device_v4.dev = afm_device;
 				snprintf(uuid_buf, sizeof(uuid_buf), "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 							afm_device->UUID[0], afm_device->UUID[1], afm_device->UUID[2], afm_device->UUID[3],
 							afm_device->UUID[4], afm_device->UUID[5], afm_device->UUID[6], afm_device->UUID[7],

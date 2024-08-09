@@ -56,6 +56,36 @@
 	status = "okay";
 };
 
+#if 1
+&i3c0 {
+	status = "okay";
+	sda-tx-hold-ns = <20>;
+	i3c-pp-scl-hi-period-ns = <380>;
+	i3c-pp-scl-lo-period-ns = <620>;
+	pinctrl-0 = <pinctrl_i3c0_default>;
+
+	// i3chub
+	i3cdev@4cd7515a106 {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x4cd 0x7515a106>;
+		status = "okay";
+	};
+
+	// cpu0
+	i3cdev@20a0000000f {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x20a 0x0000000f>;
+		status = "okay";
+	};
+
+	// cpu1
+	i3cdev@20a0000100f {
+		compatible = "i3c-dummy-device";
+		reg = <0x0 0x20a 0x0000100f>;
+		status = "okay";
+	};
+};
+
 // For mctp over i3c
 // AST2600 i3c-1 -> AST1060 i3c-2
 &i3c2 {
@@ -72,6 +102,46 @@
 		status = "okay";
 	};
 };
+#else
+// For testing PFR 5.0 it requires following modification on dcscm card:
+// - TP313 connected to R187
+// - TP314 connected to R188
+// AST1060 i3c0 -> AST2600 i3c0 (LV)
+// AST1060 i3c2 -> AST2600 i3c1 (LV)
+&i3c0 {
+	status = "okay";
+	dcr = <0xcc>;
+	secondary;
+
+	pinctrl-0 = < pinctrl_i3c0_default >;
+
+	i3c0_tmq:i3c-tmq@7eca0030000 {
+		compatible = "i3c-target-mqueue";
+		reg = <0x0 0x7ec 0xa0030000>;
+		msg-size = <256>;
+		num-of-msgs = <4>;
+		mandatory-data-byte = <0xae>;
+		status = "okay";
+	};
+};
+
+&i3c2 {
+	status = "okay";
+	dcr = <0xcc>;
+	secondary;
+
+	pinctrl-0 = < pinctrl_i3c2_default >;
+
+	i3c2_tmq:i3c-tmq@7eca0032000 {
+		compatible = "i3c-target-mqueue";
+		reg = <0x0 0x7ec 0xa0032000>;
+		msg-size = <256>;
+		num-of-msgs = <4>;
+		mandatory-data-byte = <0xae>;
+		status = "okay";
+	};
+};
+#endif
 
 &wdt0 {
 	status = "okay";
@@ -203,18 +273,21 @@
 &spi1_cs0 {
 	spi-max-buswidth = <4>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim1>;
 	status = "okay";
 };
 
 &spi2_cs0 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim3>;
 	status = "okay";
 };
 
 &spi2_cs1 {
 	spi-max-buswidth = <1>;
 	spi-max-frequency = <50000000>;
+	spi-monitor-ctrl = <&spim4>;
 	status = "okay";
 };
 
@@ -239,7 +312,6 @@
 	log-ram-size = <0x200>;
 	pinctrl-0 = <pinctrl_spim1_quad_default>;
 	pinctrl-names = "default";
-	flash-device = <&spi1_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 
@@ -256,7 +328,6 @@
 		&pin_spim3misoout &pin_spim3mosiout &pin_spim3io2out &pin_spim3io3out
 		&pin_spim3muxsel>;
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs0>;
 	ext-mux-sel = <1>;
 	status = "okay";
 	write-forbidden-regions = <
@@ -272,7 +343,6 @@
 		&pin_spim4misoout &pin_spim4mosiout &pin_spim4io2out &pin_spim4io3out
 		&pin_spim4muxsel>;
 	pinctrl-names = "default";
-	flash-device = <&spi2_cs1>;
 	ext-mux-sel = <1>;
 	status = "okay";
 	write-forbidden-regions = <

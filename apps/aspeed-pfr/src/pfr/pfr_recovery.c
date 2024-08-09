@@ -18,11 +18,13 @@
 #if defined(CONFIG_INTEL_PFR)
 #include "intel_pfr/intel_pfr_definitions.h"
 #include "intel_pfr/intel_pfr_recovery.h"
+#include "intel_pfr/intel_pfr_provision.h"
 #endif
 #if defined(CONFIG_CERBERUS_PFR)
 #include "cerberus_pfr/cerberus_pfr_definitions.h"
 #include "cerberus_pfr/cerberus_pfr_recovery.h"
 #include "cerberus_pfr/cerberus_pfr_svn.h"
+#include "cerberus_pfr/cerberus_pfr_provision.h"
 #endif
 
 #include "include/SmbusMailBoxCom.h"
@@ -35,6 +37,7 @@ int recover_image(void *AoData, void *EventContext)
 	int status = 0;
 	AO_DATA *ActiveObjectData = (AO_DATA *) AoData;
 	EVENT_CONTEXT *EventData = (EVENT_CONTEXT *) EventContext;
+	uint32_t act_pfm_addr;
 
 	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 
@@ -43,9 +46,21 @@ int recover_image(void *AoData, void *EventContext)
 	if (EventData->image == BMC_EVENT) {
 		LOG_INF("Image Type: BMC");
 		pfr_manifest->image_type = BMC_TYPE;
+		if (get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, (uint8_t *)&act_pfm_addr,
+				sizeof(act_pfm_addr))) {
+			LOG_ERR("Failed to get PCH active PFM address");
+			return Failure;
+		}
+		pfr_manifest->active_pfm_addr = act_pfm_addr;
 	} else if (EventData->image == PCH_EVENT) {
 		LOG_INF("Image Type: PCH");
 		pfr_manifest->image_type = PCH_TYPE;
+		if (get_provision_data_in_flash(PCH_ACTIVE_PFM_OFFSET, (uint8_t *)&act_pfm_addr,
+				sizeof(act_pfm_addr))) {
+			LOG_ERR("Failed to get PCH active PFM address");
+			return Failure;
+		}
+		pfr_manifest->active_pfm_addr = act_pfm_addr;
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #if (CONFIG_AFM_SPEC_VERSION == 4)
@@ -80,15 +95,19 @@ int recover_image(void *AoData, void *EventContext)
 	if (ActiveObjectData->RecoveryImageStatus != Success) {
 		status = pfr_manifest->update_fw->base->verify((struct firmware_image *)pfr_manifest, NULL);
 		if (status != Success) {
-			LOG_INF("PFR Staging Area Corrupted");
+			LOG_ERR("PFR Staging Area Corrupted");
 			if (ActiveObjectData->ActiveImageStatus != Success) {
 				/* Scenarios
 				 * Active | Recovery | Staging
 				 * 0      | 0        | 0
 				 */
+				uint8_t minor_err = ACTIVE_RECOVERY_STAGING_AUTH_FAIL;
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+				if (EventData->image == AFM_EVENT)
+					minor_err = AFM_ACTIVE_RECOVERY_STAGING_AUTH_FAIL;
+#endif
 				LogErrorCodes((pfr_manifest->image_type == BMC_TYPE ?
-							BMC_AUTH_FAIL : PCH_AUTH_FAIL),
-						ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
+							BMC_AUTH_FAIL : PCH_AUTH_FAIL), minor_err);
 				if (pfr_manifest->image_type == PCH_TYPE) {
 					status = pfr_staging_pch_staging(pfr_manifest);
 					if (status != Success)
@@ -150,54 +169,9 @@ int recover_image(void *AoData, void *EventContext)
 	return Success;
 }
 
-/**
- * Get the SHA-256 hash of the recovery image data, not including the signature.
- *
- * @param image The recovery image to query.
- * @param hash The hash engine to use for generating the hash.
- * @param hash_out Output buffer for the manifest hash.
- * @param hash_length Length of the hash output buffer.
- *
- * @return 0 if the hash was calculated successfully or an error code.
- */
-int recovery_get_hash(struct recovery_image *image, struct hash_engine *hash, uint8_t *hash_out,
-		      size_t hash_length)
-{
-
-	ARG_UNUSED(image);
-	ARG_UNUSED(hash);
-	ARG_UNUSED(hash_out);
-	ARG_UNUSED(hash_length);
-
-	return Success;
-}
-
-/**
- * Get the version of the recovery image.
- *
- * @param image The recovery image to query.
- * @param version The buffer to hold the version ID.
- * @param len The output buffer length.
- *
- * @return 0 if the ID was successfully retrieved or an error code.
- */
-int recovery_get_version(struct recovery_image *image, char *version, size_t len)
-{
-
-	ARG_UNUSED(image);
-	ARG_UNUSED(version);
-	ARG_UNUSED(len);
-
-	return Success;
-}
-
 void init_recovery_manifest(struct recovery_image *image)
 {
 	image->verify = recovery_verify;
-	image->get_hash = recovery_get_hash;
-	image->get_version = recovery_get_version;
-	image->apply_to_flash = recovery_apply_to_flash;
-
 }
 
 int pfr_recover_recovery_region(int image_type, uint32_t source_address, uint32_t target_address)

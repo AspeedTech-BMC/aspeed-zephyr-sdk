@@ -103,7 +103,7 @@ static int cmd_asm_flash_cmp(const struct shell *shell, size_t argc,
 	size_t offset_b = strtol(argv[3], NULL, 16);
 	size_t length = strtol(argv[4], NULL, 16);
 
-	shell_print(shell, "Hash Dev:%s Offset_A:%p Offset_B:%p Length:%p", dev_name, offset_a, offset_b, length);
+	shell_print(shell, "Hash Dev:%s Offset_A:%08x Offset_B:%08x Length:%08x", dev_name, offset_a, offset_b, length);
 
 	const struct device *dev = device_get_binding(dev_name);
 
@@ -148,7 +148,7 @@ static int cmd_asm_flash_copy(const struct shell *shell, size_t argc,
 	size_t offset_b = strtol(argv[4], NULL, 16);
 	size_t length = strtol(argv[5], NULL, 16);
 
-	shell_print(shell, "Hash Dev_src:%s Offset_src:%p Dev_dest:%s Offset_dest:%p Length:%p",
+	shell_print(shell, "Hash Dev_src:%s Offset_src:%08x Dev_dest:%s Offset_dest:%08x Length:%08x",
 			dev_name_a, offset_a, dev_name_b, offset_b, length);
 
 	const struct device *dev_a = device_get_binding(dev_name_a);
@@ -377,6 +377,7 @@ SHELL_SUBCMD_DICT_SET_CREATE(sub_event, cmd_asm_event,
 	(UPDATE_DONE, UPDATE_DONE, "UPDATE_DONE"),
 	(UPDATE_FAILED, UPDATE_FAILED, "UPDATE_FAILED"),
 	(PROVISION_CMD, PROVISION_CMD, "PROVISION_CMD"),
+	(BMC_CHECKPOINT_COMPLETE, ( WDT_CHECKPOINT | (BmcCheckpoint << 8) | (CompletingExecutionBlock << 16)), "BMC boot complete"),
 	(WDT_TIMEOUT_BMC, (WDT_TIMEOUT | BMC_EVENT << 8), "WDT_TIMEOUT_BMC"),
 	(WDT_TIMEOUT_PCH, (WDT_TIMEOUT | PCH_EVENT << 8), "WDT_TIMEOUT_PCH"),
 

@@ -35,6 +35,7 @@ int update_afm_body(uint32_t type, uint32_t address)
 	int hash_length = SHA384_DIGEST_LENGTH;
 	uint32_t org_type, afm_addr;
 	off_t *afmlist = spdm_get_afm_list();
+	PFR_AUTHENTICATION_BLOCK0 block0;
 
 	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 	org_type = pfr_manifest->image_type;
@@ -47,8 +48,21 @@ int update_afm_body(uint32_t type, uint32_t address)
 		afm_body_offset = PCH1_AFM_BODY_OFFSET;
 	}
 
-	/* ignore the AFM address definition part */
-	afm_addr = address + AFM_BODY_SIZE;
+	afm_addr = address;
+	pfr_spi_read(flash_type, afm_addr, sizeof(PFR_AUTHENTICATION_BLOCK0), (uint8_t *)&block0);
+	if (block0.PcType == PFR_AFM) {
+		/* if AFM data is an address defintion data, to find AFM device data */
+		pfr_spi_read(flash_type, afm_addr + AFM_BODY_SIZE, sizeof(PFR_AUTHENTICATION_BLOCK0), (uint8_t *)&block0);
+		if (block0.Block0Tag == BLOCK0TAG)
+			afm_addr += AFM_BODY_SIZE;
+		else {
+			LOG_WRN("there is no AFM device (%x, %x, %x)", block0.Block0Tag, block0.PcType, block0.PcLength);
+			return Success;
+		}
+	} else if (block0.PcType != PFR_AFM_PER_DEV) {
+		LOG_WRN("Invalid AFM type (%x, %x, %x)", block0.Block0Tag, block0.PcType, block0.PcLength);
+		return Failure;
+	}
 
 	pfr_manifest->image_type = flash_type;
 	pfr_manifest->pfr_hash->start_address = afm_addr;

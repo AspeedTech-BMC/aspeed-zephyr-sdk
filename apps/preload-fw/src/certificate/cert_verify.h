@@ -38,7 +38,3 @@ typedef struct {
 } PFR_DEVID_CERT_INFO;
 
 int get_certificate_info(PFR_DEVID_CERT_INFO *devid_cert_info, uint32_t cert_size);
-uint8_t get_certificate_chain(uint8_t *cert_chain, uint32_t *cert_chain_len);
-int verify_certificate(uint8_t *cert_chain, uint32_t cert_chain_len);
-int write_cert_chain(uint8_t *cert_chain, uint32_t cert_chain_len);
-void cleanup_cert_info(void);

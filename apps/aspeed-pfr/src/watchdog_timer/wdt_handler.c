@@ -40,6 +40,7 @@ void bmc_wdt_handler(uint8_t cmd)
 		// BMC stays in uboot or in FFUJ(Force Firmware Update Jumper (FFUJ)) mode
 		// Take over i3c MNG
 #if defined(CONFIG_PFR_MCTP_I3C)
+		SetPfrActivityInfo1(PFR_ACT1_I3C_MUX_TAKEOVER);
 		switch_i3c_mng_owner(I3C_MNG_OWNER_ROT);
 #endif
 	} else if (cmd == ResumedExecutionBlock) {
@@ -56,6 +57,7 @@ void bmc_wdt_handler(uint8_t cmd)
 		// Clear the fw recovery level upon successful boot
 		reset_recovery_level(BMC_SPI);
 #endif
+		SetPfrActivityInfo2(PFR_ACT2_BMC_BOOT_DONE);
 		log_t0_timed_boot_complete_if_ready(T0_BMC_BOOTED);
 	}
 }
@@ -171,6 +173,7 @@ void bios_wdt_handler(uint8_t cmd)
 				reset_recovery_level(PCH_SPI);
 #endif
 			// Log boot progress
+			SetPfrActivityInfo2(PFR_ACT2_OBB_BOOT_DONE);
 			log_t0_timed_boot_complete_if_ready(T0_BIOS_BOOTED);
 		} else if (cmd == AUTHENTICATION_FAILED) {
 			LOG_ERR("OBB authentication failed");
@@ -196,6 +199,7 @@ void bios_wdt_handler(uint8_t cmd)
 			gWdtBootStatus |= WDT_IBB_BOOT_DONE_MASK;
 			// Start the BIOS OBB timer.
 			pfr_start_timer(type, ms_timeout);
+			SetPfrActivityInfo2(PFR_ACT2_IBB_BOOT_DONE);
 		} else if (cmd == AUTHENTICATION_FAILED) {
 			LOG_ERR("IBB authentication failed");
 			pfr_stop_timer(type);

@@ -5,7 +5,7 @@
  */
 #pragma once
 #include "mctp/mctp_interface.h"
-#include "mctp/mctp_utils.h"
+#include "mctp/mctp.h"
 #include "mctp/plat_mctp.h"
 
 struct spdm_mctp_connection_data {

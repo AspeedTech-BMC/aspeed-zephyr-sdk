@@ -11,11 +11,18 @@
 #include "watchdog_timer/wdt_utils.h"
 #include "watchdog_timer/wdt_handler.h"
 #include "platform_monitor.h"
+#include "gpio/gpio_aspeed.h"
+#if defined(CONFIG_PFR_MCTP)
 #include "mctp/mctp.h"
+#if defined(CONFIG_PFR_MCTP_I3C)
+#include "mctp/mctp_i3c.h"
+#endif
+#endif
 
 LOG_MODULE_REGISTER(monitor, CONFIG_LOG_DEFAULT_LEVEL);
 
 extern struct k_work log_bmc_rst_work;
+extern struct k_sem pltrst_sem;
 extern uint8_t gWdtBootStatus;
 static struct gpio_callback bmc_rstind_cb_data;
 static void platform_reset_monitor_remove(void);
@@ -55,6 +62,7 @@ void bmc_reset_monitor_remove(void)
 
 #ifdef SUPPORT_PLTRST
 static struct gpio_callback rst_pltrst_cb_data;
+extern bool i3c_hub_configured;
 
 /**
  * Arm the ACM watchdog timer when ROT firmware detects a platform reset
@@ -67,9 +75,18 @@ static void platform_reset_handler(const struct device *dev, struct gpio_callbac
 	int ret = gpio_pin_get(dev, gpio_pin);
 	LOG_INF("[CPU->PFR] PLTRST_SYNC[%s %d] = %d", dev->name, gpio_pin, ret);
 
-	platform_reset_monitor_remove();
-	extern bool pltrst_sync;
-	pltrst_sync = true;
+	// platform_reset_monitor_remove();
+	if (ret == 0) {
+		RSTPlatformReset(true);
+	} else {
+		RSTPlatformReset(false);
+		// platform_reset_monitor_remove();
+		extern bool pltrst_sync;
+		pltrst_sync = true;
+#if defined(CONFIG_PFR_MCTP_I3C)
+		k_sem_give(&pltrst_sem);
+#endif
+	}
 
 #endif
 #ifdef INTEL_EGS
@@ -103,7 +120,7 @@ static void platform_reset_monitor_init(void)
 
 	ret = gpio_pin_configure_dt(&rst_pltrst, GPIO_INPUT);
 	LOG_INF("Platform: gpio_pin_configure_dt[%s %d] = %d", rst_pltrst.port->name, rst_pltrst.pin, ret);
-	ret = gpio_pin_interrupt_configure_dt(&rst_pltrst, GPIO_INT_EDGE_RISING);
+	ret = gpio_pin_interrupt_configure_dt(&rst_pltrst, GPIO_INT_EDGE_BOTH);
 	LOG_INF("Platform: gpio_pin_interrupt_configure_dt = %d", ret);
 	gpio_init_callback(&rst_pltrst_cb_data, platform_reset_handler, BIT(rst_pltrst.pin));
 	ret = gpio_add_callback(rst_pltrst.port, &rst_pltrst_cb_data);

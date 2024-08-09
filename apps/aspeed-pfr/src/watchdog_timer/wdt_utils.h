@@ -49,4 +49,5 @@ enum _pfr_timer {
 uint8_t is_timed_boot_done(void);
 void pfr_start_timer(int type, uint32_t ms_timeout);
 void pfr_stop_timer(int type);
+uint32_t pfr_timer_remaining_get(int type);
 

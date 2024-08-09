@@ -71,6 +71,8 @@ typedef enum _SMBUS_MAILBOX_RF_ADDRESS_READONLY {
 	IntelCpldActiveMajorVersion = 0x7c,
 	IntelCpldActiveMinorVersion = 0x7d,
 #endif
+	PfrActivityInfo1        = 0x7e,
+	PfrActivityInfo2        = 0x7f,
 	AcmBiosScratchPad       = 0x80,
 	BmcScratchPad           = 0xc0,
 } SMBUS_MAILBOX_RF_ADDRESS;
@@ -120,7 +122,9 @@ typedef enum _UPDATE_INTENT_2 {
 	AfmActiveUpdate                         = 0x02,
 	AfmRecoveryUpdate                       = 0x04,
 	AfmActiveAndRecoveryUpdate              = 0x06,
+	AfmActiveAddToUpdate                    = 0x08,
 	CPLDUpdate                              = 0x10,
+	SeamlessUpdateAck                       = 0x80,
 } UPDATE_INTENT_2;
 
 // EVT_DATA_0 : Update Intent(e.g. PchUpdateIntent)
@@ -211,6 +215,8 @@ byte GetBmcPfmRecoverMajorVersion(void);
 void SetBmcPfmRecoverMajorVersion(byte RecoverMajorVersion);
 byte GetBmcPfmRecoverMinorVersion(void);
 void SetBmcPfmRecoverMinorVersion(byte RecoverMinorVersion);
+byte GetBmcUpdateIntent2(void);
+void SetBmcUpdateIntent2(byte UpdateIntent);
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 byte GetAfmActiveSvn(void);
 void SetAfmActiveSvn(byte ActiveSVN);
@@ -235,6 +241,10 @@ void SetIntelCpldActiveMajorVersion(byte ActiveMajorVersion);
 byte GetIntelCpldActiveMinorVersion(void);
 void SetIntelCpldActiveMinorVersion(byte ActiveMinorVersion);
 #endif
+void SetPfrActivityInfo1(byte activity);
+byte GetPfrActivityInfo1(void);
+void SetPfrActivityInfo2(byte activity);
+byte GetPfrActivityInfo2(void);
 void process_provision_command(void);
 void UpdateBiosCheckpoint(byte Data);
 void UpdateBmcCheckpoint(byte Data);

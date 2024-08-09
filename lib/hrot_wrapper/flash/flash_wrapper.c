@@ -28,7 +28,7 @@
  */
 int Wrapper_spi_flash_get_device_size(struct spi_flash *flash, uint32_t *bytes)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 
 	if ((flash == NULL) || (bytes == NULL)) {
 		return SPI_FLASH_INVALID_ARGUMENT;
@@ -206,7 +206,7 @@ int Wrapper_spi_flash_write(struct spi_flash *flash, uint32_t address, const uin
  */
 int Wrapper_spi_flash_get_sector_size(struct spi_flash *flash, uint32_t *bytes)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 
 	if ((flash == NULL) || (bytes == NULL)) {
 		return SPI_FLASH_INVALID_ARGUMENT;
@@ -231,13 +231,15 @@ int Wrapper_spi_flash_get_sector_size(struct spi_flash *flash, uint32_t *bytes)
  */
 int Wrapper_spi_flash_sector_erase(struct spi_flash *flash, uint32_t sector_addr)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
 	if (flash == NULL) {
 		return SPI_FLASH_INVALID_ARGUMENT;
 	}
 	xfer.cmd = MIDLEY_FLASH_CMD_4K_ERASE;
+	xfer.address = sector_addr;
+	xfer.length = SECTOR_SIZE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
@@ -254,7 +256,7 @@ int Wrapper_spi_flash_sector_erase(struct spi_flash *flash, uint32_t sector_addr
  */
 int Wrapper_spi_flash_get_block_size(struct spi_flash *flash, uint32_t *bytes)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 
 	if ((flash == NULL) || (bytes == NULL)) {
 		return SPI_FLASH_INVALID_ARGUMENT;
@@ -277,13 +279,15 @@ int Wrapper_spi_flash_get_block_size(struct spi_flash *flash, uint32_t *bytes)
  */
 int Wrapper_spi_flash_block_erase(struct spi_flash *flash, uint32_t block_addr)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
 	if (flash == NULL) {
 		return SPI_FLASH_INVALID_ARGUMENT;
 	}
 	xfer.cmd = MIDLEY_FLASH_CMD_BLOCK_ERASE;
+	xfer.address = block_addr;
+	xfer.length = BLOCK_SIZE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
@@ -300,15 +304,17 @@ int Wrapper_spi_flash_block_erase(struct spi_flash *flash, uint32_t block_addr)
  */
 int Wrapper_spi_flash_chip_erase(struct spi_flash *flash)
 {
-	struct flash_xfer xfer;
+	struct flash_xfer xfer = {0};
 	int status = 0;
 
-	xfer.cmd = MIDLEY_FLASH_CMD_READ;
+	if (flash == NULL) {
+		return SPI_FLASH_INVALID_ARGUMENT;
+	}
+	xfer.cmd = MIDLEY_FLASH_CMD_CE;
 
 	status = SPI_Command_Xfer(flash, &xfer);
 
 	return status;
-
 }
 
 int  flash_wrapper_init(struct spi_engine_wrapper *flash, struct flash_master_wrapper *spi, struct spi_engine_state_wrapper *flash_state)

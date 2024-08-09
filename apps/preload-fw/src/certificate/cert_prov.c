@@ -14,7 +14,6 @@
 #include "cert_prov.h"
 #include "gpio/gpio_ctrl.h"
 #include "otp/otp_utils.h"
-#include "sw_mailbox/sw_mailbox.h"
 
 LOG_MODULE_REGISTER(prov, CONFIG_LOG_DEFAULT_LEVEL);
 PFR_DEVID_CERT_INFO devid_cert_info NON_CACHED_BSS_ALIGN16;
@@ -42,7 +41,6 @@ PROV_STATUS cert_provision(void)
 		}
 
 		LOG_INF("Certificate verified successfully");
-#if defined(CONFIG_ODM_ROT_REPLACEMENT)
 		// 2nd bootup
 		// Erase the 1st slot firmware, the 1st slot firmware will be replaced by
 		// the 2nd slot firmeware(customer's firmware) by mcuboot's recovery mechanism
@@ -70,29 +68,6 @@ PROV_STATUS cert_provision(void)
 		LOG_INF("Preload fw is erased");
 		set_mp_status(1, 1);
 		return PROV_DONE;
-#else
-		if (IS_CSR(devid_cert_info)) {
-			// 2nd bootup, CSR is generated and waiting for signing by HSM
-			LOG_WRN("Certificate is not signed");
-		} else {
-			// 3rd bootup, certificate chain is generated and waiting for
-			// firmware replacement
-			LOG_INF("Verify certificate chain...");
-			if (verify_certificate(devid_cert_info.cert.data,
-						devid_cert_info.cert.length)) {
-				LOG_ERR("Invalid certificate chain");
-				cleanup_cert_info();
-				goto out;
-			}
-
-			cleanup_cert_info();
-#if defined(CONFIG_PFR_SW_MAILBOX)
-			init_sw_mailbox();
-#endif
-			LOG_INF("Ready for ROT firmware replacement");
-			return PROV_ROT_UPDATE;
-		}
-#endif
 	} else {
 		// 1st bootup:
 		// Secure Boot is not enabled

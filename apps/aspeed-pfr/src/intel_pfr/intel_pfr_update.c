@@ -27,6 +27,7 @@
 #include "flash/flash_aspeed.h"
 #include "Smbus_mailbox/Smbus_mailbox.h"
 #include "gpio/gpio_aspeed.h"
+#include "watchdog_timer/wdt_utils.h"
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 #include "intel_pfr_cpld_utils.h"
 #endif
@@ -55,9 +56,6 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 				(uint8_t *)&target_address, sizeof(target_address));
 		if (status != Success)
 			return status;
-
-		manifest->pc_type = PFR_BMC_UPDATE_CAPSULE;
-
 	} else if (manifest->image_type == PCH_TYPE) {
 		LOG_INF("PCH Staging Region Verification");
 		status = ufm_read(PROVISION_UFM, PCH_STAGING_REGION_OFFSET,
@@ -69,15 +67,6 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 				(uint8_t *)&target_address, sizeof(target_address));
 		if (status != Success)
 			return Failure;
-
-#if defined(CONFIG_SEAMLESS_UPDATE)
-		if (manifest->state == SEAMLESS_UPDATE) {
-			manifest->pc_type = PFR_PCH_SEAMLESS_UPDATE_CAPSULE;
-		} else
-#endif
-		{
-			manifest->pc_type = PFR_PCH_UPDATE_CAPSULE;
-		}
 	}
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 #if (CONFIG_AFM_SPEC_VERSION == 4)
@@ -86,7 +75,6 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		manifest->image_type = BMC_TYPE;
 		read_address = CONFIG_BMC_AFM_STAGING_OFFSET;
 		target_address = 0;
-		manifest->pc_type = PFR_AFM;
 		afm_update = true;
 	}
 #elif (CONFIG_AFM_SPEC_VERSION == 3)
@@ -95,7 +83,6 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		manifest->image_type = BMC_TYPE;
 		read_address = CONFIG_BMC_AFM_STAGING_OFFSET;
 		target_address = CONFIG_BMC_AFM_RECOVERY_OFFSET;
-		manifest->pc_type = PFR_AFM;
 		afm_update = true;
 	}
 #endif
@@ -105,11 +92,17 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		LOG_INF("Intel CPLD Staging Region Verification");
 		manifest->image_type = BMC_TYPE;
 		read_address = CONFIG_BMC_INTEL_CPLD_STAGING_OFFSET;
-		manifest->pc_type = PFR_INTEL_CPLD_UPDATE_CAPSULE;
 		cpld_update = true;
 	}
 #endif
 	else {
+		return Failure;
+	}
+
+	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(uint32_t)),
+			sizeof(uint32_t), (uint8_t *)&manifest->pc_type);
+	if (status != Success) {
+		LOG_ERR("Flash read PC type failed");
 		return Failure;
 	}
 
@@ -118,6 +111,15 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 
 	LOG_INF("Verifying capsule signature, address=0x%08x", manifest->address);
 	// manifest verification
+	if (manifest->state != FIRMWARE_RECOVERY) {
+		status = manifest->pfr_authentication->validate_pctye(manifest);
+		if (status != Success) {
+			LOG_ERR("Validation PC Type failed, image = %d, pc_type = %x, update intent (%x, %x)",
+				manifest->image_type, manifest->pc_type, manifest->update_intent1, manifest->update_intent2);
+			return Failure;
+		}
+	}
+
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
 			manifest->verification->base, manifest->pfr_hash->hash_out,
 			manifest->pfr_hash->length);
@@ -127,15 +129,6 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	}
 
 	manifest->update_fw->pc_length = manifest->pc_length;
-
-	if (afm_update == true)
-		manifest->pc_type = PFR_AFM;
-	else if (cpld_update == true)
-		manifest->pc_type = PFR_INTEL_CPLD_UPDATE_CAPSULE;
-	else if (manifest->image_type == BMC_TYPE)
-		manifest->pc_type = PFR_BMC_PFM;
-	else if (manifest->image_type == PCH_TYPE)
-		manifest->pc_type = PFR_PCH_PFM;
 
 	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
 		manifest->address += LMS_PFM_SIG_BLOCK_SIZE;
@@ -164,7 +157,8 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 		status = manifest->pfr_authentication->fvms_verify(manifest);
 	}
 #endif
-	LOG_INF("Staging area verification successful");
+	if (status == Success)
+		LOG_INF("Staging area verification successful");
 
 	if (afm_update)
 		manifest->image_type = AFM_TYPE;
@@ -174,24 +168,25 @@ int pfr_staging_verify(struct pfr_manifest *manifest)
 	return status;
 }
 
-int intel_pfr_update_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa)
+int intel_pfr_update_verify(const struct firmware_image *fw, struct hash_engine *hash)
 {
 
 	ARG_UNUSED(hash);
-	ARG_UNUSED(rsa);
 
 	struct pfr_manifest *pfr_manifest = (struct pfr_manifest *) fw;
 
 	return pfr_staging_verify(pfr_manifest);
 }
 
-int  check_rot_capsule_type(struct pfr_manifest *manifest)
+int check_rot_capsule_type(struct pfr_manifest *manifest)
 {
 	int status = 0;
 	uint32_t pc_type;
 
 	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(pc_type)),
 			sizeof(pc_type), (uint8_t *)&pc_type);
+	manifest->pc_type = pc_type;
+
 	if (pc_type == PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON) {
 		LOG_INF("Decommission Certificate found");
 		return PFR_CPLD_UPDATE_CAPSULE_DECOMMISSON;
@@ -343,6 +338,7 @@ int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length
 	uint32_t source_address = address;
 	uint32_t length_page_align;
 	uint8_t flash_type, source_flash_type;
+	struct pfr_manifest *manifest = get_pfr_manifest();
 
 	length_page_align =
 		(length % PAGE_SIZE) ? (length + (PAGE_SIZE - (length % PAGE_SIZE))) : length;
@@ -352,8 +348,15 @@ int update_afm_v40(enum AFM_PARTITION_TYPE part, uint32_t address, size_t length
 	}
 
 	if (part == AFM_PART_ACT_1) {
-		flash_type = ROT_EXT_AFM_ACT_1;
-		source_flash_type = ROT_EXT_AFM_RC_1;
+		if (manifest->state == FIRMWARE_RECOVERY) {
+			flash_type = ROT_EXT_AFM_ACT_1;
+			source_flash_type = ROT_EXT_AFM_RC_1;
+			LOG_INF("to recover active region");
+		} else {
+			flash_type = ROT_EXT_AFM_ACT_1;
+			source_flash_type = BMC_SPI;
+			LOG_INF("to update active region");
+		}
 	} else if (part == AFM_PART_RCV_1) {
 		flash_type = ROT_EXT_AFM_RC_1;
 		source_flash_type = BMC_SPI;
@@ -392,18 +395,7 @@ int update_afm_image(struct pfr_manifest *manifest, uint32_t flash_select, void 
 	uint32_t payload_address;
 	uint32_t pc_length = 0;
 	uint32_t hrot_svn = 0;
-	uint32_t pc_type;
 	int status = 0;
-
-	// Checking the PC type
-	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(pc_type)),
-			sizeof(pc_type), (uint8_t *)&pc_type);
-	if (status != Success) {
-		LOG_ERR("Flash read PC type failed");
-		return Failure;
-	}
-
-	manifest->pc_type = pc_type;
 
 	LOG_INF("manifest->address=%08x", manifest->address);
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
@@ -546,8 +538,6 @@ int verify_and_update_cpld_images(struct pfr_manifest *manifest, uint32_t flash_
 	uint32_t read_addr = manifest->address;
 	uint32_t region_size;
 
-	manifest->pc_type = PFR_INTEL_CPLD_UPDATE_CAPSULE;
-
 	if (manifest->pfr_authentication->online_update_cap_verify(manifest)) {
 		LOG_ERR("Verify BMC's CPLD staging region failed");
 		return Failure;
@@ -595,25 +585,13 @@ int verify_and_update_cpld_images(struct pfr_manifest *manifest, uint32_t flash_
 }
 #endif
 
-int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
+int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select, uint32_t pc_type_status)
 {
 	uint32_t cancelled_id = 0;
 	uint32_t payload_address;
-	uint32_t pc_type_status;
 	uint32_t pc_length = 0;
 	uint32_t hrot_svn = 0;
-	uint32_t pc_type;
 	int status = 0;
-
-	// Checking the PC type
-	status = pfr_spi_read(manifest->image_type, manifest->address + (2 * sizeof(pc_type)),
-			sizeof(pc_type), (uint8_t *)&pc_type);
-	if (status != Success) {
-		LOG_ERR("Flash read PC type failed");
-		return Failure;
-	}
-
-	manifest->pc_type = pc_type;
 
 	LOG_INF("manifest->address=%x", manifest->address);
 	status = manifest->base->verify((struct manifest *)manifest, manifest->hash,
@@ -626,7 +604,6 @@ int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
 	}
 
 	LOG_INF("ROT update capsule verification success");
-	pc_type_status = check_rot_capsule_type(manifest);
 	if (manifest->hash_curve == hash_sign_algo384 || manifest->hash_curve == hash_sign_algo256)
 		payload_address = manifest->address + LMS_PFM_SIG_BLOCK_SIZE;
 	else
@@ -645,9 +622,9 @@ int ast1060_update(struct pfr_manifest *manifest, uint32_t flash_select)
 			return Failure;
 		}
 
-		status = manifest->keystore->kc_flag->cancel_kc_flag(manifest, cancelled_id);
+		status = manifest->keystore->kc_flag->cancel_kc_flag(manifest, (uint8_t)cancelled_id);
 		if (status == Success)
-			LOG_INF("Key cancellation success. Key Id :%d was cancelled", cancelled_id);
+			LOG_INF("Key cancellation success. Key Id :%d was cancelled", (uint8_t)cancelled_id);
 
 		return status;
 	} else if (pc_type_status == PFR_CPLD_UPDATE_CAPSULE) {
@@ -688,13 +665,13 @@ int update_recovery_region(int image_type, uint32_t source_address, uint32_t tar
 }
 
 int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
-		CPLD_STATUS *cpld_update_status)
+		CPLD_STATUS *cpld_update_status, struct event_context *evt_ctx)
 {
 	int status = 0;
 	uint32_t source_address, target_address, area_size;
-	uint32_t act_pfm_offset;
-	uint32_t address = 0;
+	uint32_t act_pfm_offset = 0;
 	uint32_t pc_type_status = 0;
+	uint32_t update_type;
 	uint8_t staging_svn = 0;
 	AO_DATA *ActiveObjectData = (AO_DATA *) AoData;
 	DECOMPRESSION_TYPE_MASK_ENUM decomp_event;
@@ -712,14 +689,13 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 	pfr_manifest->flash_id = flash_select;
 
 	if (pfr_manifest->image_type == ROT_TYPE) {
+		update_type = ROT_TYPE;
 		pfr_manifest->image_type = BMC_TYPE;
-		pfr_manifest->address = CONFIG_BMC_PFR_STAGING_OFFSET;
-		if (cpld_update_status->Region[ROT_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
-			cpld_update_status->Region[ROT_REGION].Recoveryregion = 0;
-		return ast1060_update(pfr_manifest, flash_select);
+		source_address = CONFIG_BMC_PFR_STAGING_OFFSET;
 	}
 	else if (pfr_manifest->image_type == BMC_TYPE) {
 		LOG_INF("BMC Update in progress");
+		update_type = BMC_TYPE;
 		if (ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
 					sizeof(source_address)))
 			return Failure;
@@ -728,9 +704,17 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 			return Failure;
 	} else if (pfr_manifest->image_type == PCH_TYPE) {
 		LOG_INF("PCH Update in progress");
-		if (ufm_read(PROVISION_UFM, PCH_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
-					sizeof(source_address)))
-			return Failure;
+		update_type = PCH_TYPE;
+		if (cpld_update_status->BmcToPchStatus == 1) {
+			pfr_manifest->image_type = BMC_TYPE;
+			if (ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
+						sizeof(source_address)))
+				return Failure;
+		} else {
+			if (ufm_read(PROVISION_UFM, PCH_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
+						sizeof(source_address)))
+				return Failure;
+		}
 		if (ufm_read(PROVISION_UFM, PCH_ACTIVE_PFM_OFFSET, (uint8_t *) &act_pfm_offset,
 					sizeof(act_pfm_offset)))
 			return Failure;
@@ -738,19 +722,17 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 	else if (pfr_manifest->image_type == AFM_TYPE) {
 		LOG_INF("AFM Update in progress");
+		update_type = AFM_TYPE;
 		pfr_manifest->image_type = BMC_TYPE;
-		pfr_manifest->address = CONFIG_BMC_AFM_STAGING_OFFSET;
-		if (cpld_update_status->Region[AFM_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
-			cpld_update_status->Region[AFM_REGION].Recoveryregion = 0;
-		return update_afm_image(pfr_manifest, flash_select, ActiveObjectData);
+		source_address = CONFIG_BMC_AFM_STAGING_OFFSET;
 	}
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 	else if (pfr_manifest->image_type == CPLD_TYPE) {
 		LOG_INF("SCM/CPU/Debug CPLD Update in progress");
+		update_type = CPLD_TYPE;
 		pfr_manifest->image_type = BMC_TYPE;
-		pfr_manifest->address = CONFIG_BMC_INTEL_CPLD_STAGING_OFFSET;
-		return verify_and_update_cpld_images(pfr_manifest, flash_select, ActiveObjectData);
+		source_address = CONFIG_BMC_INTEL_CPLD_STAGING_OFFSET;
 	}
 #endif
 	else {
@@ -758,37 +740,79 @@ int update_firmware_image(uint32_t image_type, void *AoData, void *EventContext,
 		return Failure;
 	}
 
+	pfr_manifest->address = source_address;
 	pfr_manifest->staging_address = source_address;
 	pfr_manifest->active_pfm_addr = act_pfm_offset;
+	pc_type_status = check_rot_capsule_type(pfr_manifest);
 
-	if (image_type == PCH_TYPE && cpld_update_status->BmcToPchStatus == 1) {
+	// Checking for key cancellation
+	if (pc_type_status ==  KEY_CANCELLATION_CAPSULE) {
+		// Key cancellation is allowed in any update intent.
+		// If users issue recovery intent with key cancellation capsule,
+		// the pending recovery flag should be cleared.
+		if (pfr_manifest->update_intent1 & PchRecoveryUpdate) {
+			if (cpld_update_status->BmcToPchStatus == 1)
+				cpld_update_status->BmcToPchStatus = 0;
+			cpld_update_status->Region[PCH_REGION].Recoveryregion = 0;
+		} else if (pfr_manifest->update_intent1 & BmcRecoveryUpdate) {
+			cpld_update_status->Region[BMC_REGION].Recoveryregion = 0;
+		} else if (pfr_manifest->update_intent2 & AfmRecoveryUpdate) {
+			cpld_update_status->Region[AFM_REGION].Recoveryregion = 0;
+		}
+		if (pfr_manifest->pc_type == PCH_PFM_CANCELLATION) {
+			LOG_INF("execute PCH PFM key cancellation, to hold PCH");
+			PCHBootHold();
+			// to remove BmcOnlyReset bit for booting BMC and PCH
+			if (evt_ctx->data.bit8[2] == BmcOnlyReset)
+				evt_ctx->data.bit8[2] &= ~BmcOnlyReset;
+		}
+		update_type = ROT_TYPE;
+	}
+
+	/* ROT_TYPE doesn't use AoData pointer, to ignore the NULL pointer checking */
+	if ((update_type != ROT_TYPE) && (AoData == NULL)) {
+		LOG_ERR("Active Object is NULL");
+		return Failure;
+	}
+
+	if (update_type == ROT_TYPE) {
+		if (cpld_update_status->Region[ROT_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
+			cpld_update_status->Region[ROT_REGION].Recoveryregion = 0;
+		return ast1060_update(pfr_manifest, flash_select, pc_type_status);
+	}
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+	else if (update_type == AFM_TYPE) {
+		if (cpld_update_status->Region[AFM_REGION].Recoveryregion == RECOVERY_PENDING_REQUEST_HANDLED)
+			cpld_update_status->Region[AFM_REGION].Recoveryregion = 0;
+		return update_afm_image(pfr_manifest, flash_select, ActiveObjectData);
+	}
+#endif
+#if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
+	else if (update_type == CPLD_TYPE) {
+		return verify_and_update_cpld_images(pfr_manifest, flash_select, ActiveObjectData);
+	}
+#endif
+	else if (update_type >= MAX_SUPPORTED_FW_TYPE) {
+		return Failure;
+	}
+
+	if (update_type == PCH_TYPE && cpld_update_status->BmcToPchStatus == 1) {
 		cpld_update_status->BmcToPchStatus = 0;
+		if (ufm_read(PROVISION_UFM, PCH_STAGING_REGION_OFFSET, (uint8_t *)&source_address,
+					sizeof(source_address))) {
+			LOG_ERR("Failed to get PCH staging offset");
+			return Failure;
+		}
+		pfr_manifest->image_type = update_type;
+		pfr_manifest->address = source_address;
 		// It is not necessary to copy image from bmc's staging to pch's staging again
 		// for handling the pending recovery update.
 		if (cpld_update_status->Region[PCH_REGION].Recoveryregion != RECOVERY_PENDING_REQUEST_HANDLED) {
-			status = ufm_read(PROVISION_UFM, BMC_STAGING_REGION_OFFSET,
-					(uint8_t *)&address, sizeof(address));
-			if (status != Success)
-				return Failure;
-
-			pfr_manifest->address = address;
-
-			// Checking for key cancellation
-			pfr_manifest->image_type = BMC_TYPE;
-			pc_type_status = check_rot_capsule_type(pfr_manifest);
-			pfr_manifest->image_type = image_type;
-
 			status = pfr_staging_pch_staging(pfr_manifest);
 			if (status != Success)
 				return Failure;
 		}
 	}
-
-	pfr_manifest->address = source_address;
-	// Checking for key cancellation
-	pc_type_status = check_rot_capsule_type(pfr_manifest);
-	if (pc_type_status ==  KEY_CANCELLATION_CAPSULE)
-		return ast1060_update(pfr_manifest, PRIMARY_FLASH_REGION);
 
 	// Staging area verification
 	LOG_INF("Staging Area verification");
@@ -916,7 +940,8 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 	CPLD_STATUS cpld_update_status;
 	const struct device *dev_m = NULL;
 #if defined(CONFIG_BMC_DUAL_FLASH)
-	uint32_t flash_size = flash_get_flash_size("spi1_cs0");
+	const struct device *flash_dev = device_get_binding("spi1@0");
+	uint32_t flash_size = flash_get_flash_size(flash_dev);
 	uint32_t staging_start_addr;
 #endif
 
@@ -982,23 +1007,34 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 #endif
 		spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 
-		pfr_manifest->address = address;
-
-		// Checking for key cancellation
 		pfr_manifest->image_type = BMC_TYPE;
+		pfr_manifest->address = address;
 		pc_type_status = check_rot_capsule_type(pfr_manifest);
-		pfr_manifest->image_type = image_type;
 
-		status = pfr_staging_pch_staging(pfr_manifest);
-		if (status != Success)
-			goto release_both_muxes;
-
+		if (pc_type_status == KEY_CANCELLATION_CAPSULE) {
+			// Key cancellation is allowed in any update intent.
+			status = ast1060_update(pfr_manifest, PRIMARY_FLASH_REGION, pc_type_status);
+				goto release_both_muxes;
+		} else {
+			pfr_manifest->image_type = image_type;
+			pfr_manifest->address = address;
+			status = pfr_staging_pch_staging(pfr_manifest);
+			if (status != Success)
+				goto release_both_muxes;
+		}
 		// Release BMC SPI after copying capsule to PCH's flash.
 		// PCH SPI will be release after firmware update completed.
 		LOG_INF("Switch BMC SPI MUX to BMC");
 		spim_ext_mux_config(dev_m, SPIM_EXT_MUX_BMC_PCH);
+	} else {
+		pc_type_status = check_rot_capsule_type(pfr_manifest);
+		// Checking for key cancellation
+		if (pc_type_status ==  KEY_CANCELLATION_CAPSULE) {
+			// Key cancellation is allowed in any update intent.
+			status = ast1060_update(pfr_manifest, PRIMARY_FLASH_REGION, pc_type_status);
+			goto release_pch_mux;
+		}
 	}
-
 
 	pfr_manifest->address = source_address;
 	// Staging area verification
@@ -1010,10 +1046,18 @@ int perform_seamless_update(uint32_t image_type, void *AoData, void *EventContex
 		goto release_pch_mux;
 	}
 
+	LOG_INF("Decompressing seamless capsule");
 	status = decompress_fv_capsule(pfr_manifest);
 	if (status != Success)
 		LOG_ERR("Failed to decompress seamless capsule");
 
+	// ROT finish the seamless update and check the most significant bit of the update intent.
+	// ROT wait up to ‘x’ ( Eg: 30sec) seconds for this significant bit to be cleared,
+	// if not cleared, ROT issue BMC reset.
+	if (GetBmcUpdateIntent2() & SeamlessUpdateAck)
+		pfr_start_timer(BMC_TIMER, 30000);
+
+	LOG_INF("Seamless update completed");
 	goto release_pch_mux;
 
 release_both_muxes:
@@ -1046,12 +1090,11 @@ release_pch_mux:
  *
  * @param fw The firmware image to validate.
  * @param hash The hash engine to use for validation.
- * @param rsa The RSA engine to use for signature checking.
  *
  * @return 0 if the firmware image is valid or an error code.
  */
-int firmware_image_verify(struct firmware_image *fw, struct hash_engine *hash, struct rsa_engine *rsa)
+int firmware_image_verify(const struct firmware_image *fw, struct hash_engine *hash)
 {
-	return intel_pfr_update_verify(fw, hash, rsa);
+	return intel_pfr_update_verify(fw, hash);
 }
 

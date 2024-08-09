@@ -364,6 +364,20 @@ void swmbx_notifyee_main(void *a, void *b, void *c)
 			k_sem_take(events[8].sem, K_NO_WAIT);
 			data.bit8[0] = BmcUpdateIntent2;
 			swmbx_get_msg(0, BmcUpdateIntent2, &data.bit8[1]);
+			// BMC sends 0b10000001 (seamless update value) to 0x62 (mailbox register offset).
+			// CPLD cleared Bit#0 of the seamless update intent after receiving the intent.
+			// CPLD finish the seamless update and check the most significant bit of the update intent.
+			// CPLD wait up to ‘x’ ( Eg: 30sec) seconds for this significant bit to be cleared,
+			// if not cleared, CPLD issue BMC reset.
+			uint8_t update_intent = data.bit8[1];
+
+			if (update_intent & SeamlessUpdateAck) {
+				update_intent &= ~SeamlessUpdate;
+				SetBmcUpdateIntent2(update_intent);
+			} else {
+				if (pfr_timer_remaining_get(BMC_TIMER))
+					pfr_stop_timer(BMC_TIMER);
+			}
 
 			GenerateStateMachineEvent(UPDATE_INTENT_2_REQUESTED, data.ptr);
 		} else if (events[9].state == K_POLL_STATE_SEM_AVAILABLE) {
@@ -579,6 +593,7 @@ MBX_REG_SETTER_GETTER(BmcCheckpoint);
 MBX_REG_SETTER_GETTER(AcmCheckpoint);
 MBX_REG_SETTER_GETTER(BiosCheckpoint);
 MBX_REG_SETTER_GETTER(BmcUpdateIntent);
+MBX_REG_SETTER_GETTER(BmcUpdateIntent2);
 MBX_REG_SETTER_GETTER(PchPfmActiveSvn);
 MBX_REG_SETTER_GETTER(PchPfmActiveMajorVersion);
 MBX_REG_SETTER_GETTER(PchPfmActiveMinorVersion);
@@ -605,6 +620,8 @@ MBX_REG_SETTER_GETTER(IntelCpldActiveSvn);
 MBX_REG_SETTER_GETTER(IntelCpldActiveMajorVersion);
 MBX_REG_SETTER_GETTER(IntelCpldActiveMinorVersion);
 #endif
+MBX_REG_SETTER_GETTER(PfrActivityInfo1);
+MBX_REG_SETTER_GETTER(PfrActivityInfo2);
 
 #if defined(CONFIG_FRONT_PANEL_LED)
 #include <zephyr/drivers/led.h>

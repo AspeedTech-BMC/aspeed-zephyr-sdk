@@ -48,14 +48,17 @@
 #include "platform_monitor/platform_monitor.h"
 #include "platform_monitor/spim_monitor.h"
 #include "engineManager/engine_manager.h"
-#include "spi_filter/spi_filter_wrapper.h"
+#include "spi_filter/spim_util.h"
 #include "pfr/pfr_ufm.h"
 #include "flash/flash_aspeed.h"
 #include "flash/flash_wrapper.h"
 #include "watchdog_timer/wdt_utils.h"
+#include "i2c/i2c_util.h"
+#include "i3c/i3c_util.h"
 
 #if defined(CONFIG_PFR_MCTP)
 #include "mctp/mctp.h"
+#include "mctp/mctp_i3c.h"
 #endif
 
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
@@ -107,6 +110,7 @@ static uint8_t last_cpld_recovery_verify_status = Failure;
 static bool reset_from_unprovision_state = false;
 
 size_t event_log_idx = 0;
+K_EVENT_DEFINE(pfr_system_event);
 
 extern enum boot_indicator get_boot_indicator(void);
 void clear_pending_recovery_update(CPLD_STATUS *cpld_update_status)
@@ -203,6 +207,22 @@ int is_pltrst_sync(void)
 	return pltrst_sync;
 }
 
+void init_i2c_filters(void)
+{
+	char bus_dev_name[] = "i2cfilterx";
+	const struct device *flt_dev = NULL;
+
+	for (int i = 0; i < 4; i++) {
+		bus_dev_name[9] = i + '0';
+		flt_dev = device_get_binding(bus_dev_name);
+		if (flt_dev) {
+			ast_i2c_filter_init(flt_dev);
+			ast_i2c_filter_en(flt_dev, true, false, true, true);
+			ast_i2c_filter_default(flt_dev, 0);
+		}
+	}
+}
+
 void do_init(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
@@ -275,6 +295,8 @@ void do_init(void *o)
 #if defined(CONFIG_PFR_SW_MAILBOX)
 		InitializeSmbusMailbox();
 #endif
+		util_init_I2C();
+		util_init_I3C();
 #if defined(CONFIG_PFR_MCTP)
 		init_pfr_mctp();
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
@@ -331,16 +353,21 @@ void enter_tmin1(void *o)
 	}
 
 	if (bmc_reset_only) {
+		init_i2c_filters();
 		BMCBootHold();
 		evt_ctx->data.bit8[2] |= BmcOnlyReset;
 		gWdtBootStatus &= ~WDT_BMC_BOOT_DONE_MASK;
 		SetBmcCheckpoint(0);
 #if defined(CONFIG_PFR_MCTP_I3C)
-		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
-					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
-			LOG_WRN("Failed to dettach i3c slave device");
-		else
-			LOG_INF("I3C slave device detached");
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+		mctp_i3c_target_mctp_stop();
+#else
+ 		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
+ 					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
+			LOG_WRN("Failed to detach BMC's i3c target device");
+ 		else
+			LOG_INF("BMC's I3C target device detached");
+#endif
 #endif
 	} else if (pch_reset_only) {
 		PCHBootHold();
@@ -351,6 +378,7 @@ void enter_tmin1(void *o)
 #endif
 		SetBiosCheckpoint(0);
 	} else {
+		init_i2c_filters();
 		evt_ctx->data.bit8[2] &= ~(BmcOnlyReset | PchOnlyReset);
 		BMCBootHold();
 		PCHBootHold();
@@ -364,11 +392,29 @@ void enter_tmin1(void *o)
 		SetBmcCheckpoint(0);
 		SetBiosCheckpoint(0);
 #if defined(CONFIG_PFR_MCTP_I3C)
-		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
-					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
-			LOG_WRN("Failed to dettach i3c slave device");
-		else
-			LOG_INF("I3C slave device detached");
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+		mctp_i3c_target_mctp_stop();
+#else
+ 		if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_I3C_BUS,
+ 					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID))
+			LOG_WRN("Failed to detach BMC's i3c target device");
+ 		else
+			LOG_INF("BMC's I3C target device detached");
+
+		if (get_i3c_mng_owner() == I3C_MNG_OWNER_ROT) {
+			if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_CPU_I3C_BUS,
+						CONFIG_PFR_SPDM_I3C_CPU0_DEV_PID))
+				LOG_WRN("Failed to detach CPU0 i3c target device");
+			else
+				LOG_INF("CPU0's I3C target device detached");
+
+			if (mctp_i3c_detach_slave_dev(CONFIG_PFR_SPDM_CPU_I3C_BUS,
+						CONFIG_PFR_SPDM_I3C_CPU1_DEV_PID))
+				LOG_WRN("Failed to detach CPU1 i3c target device");
+			else
+				LOG_INF("CPU1's I3C target device detached");
+		}
+#endif
 #endif
 	}
 
@@ -635,7 +681,7 @@ void handle_image_verification(void *o)
 			/* Success = 0, Failure = 1 */
 			if (state->bmc_active_object.ActiveImageStatus) {
 				if (state->bmc_active_object.RecoveryImageStatus)
-					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_RECOVERY_AUTH_FAIL);
+					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
 				else
 					LogErrorCodes(BMC_AUTH_FAIL, ACTIVE_AUTH_FAIL);
 			} else if (state->bmc_active_object.RecoveryImageStatus) {
@@ -644,12 +690,22 @@ void handle_image_verification(void *o)
 
 			if (state->pch_active_object.ActiveImageStatus) {
 				if (state->pch_active_object.RecoveryImageStatus)
-					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_RECOVERY_AUTH_FAIL);
+					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
 				else
 					LogErrorCodes(PCH_AUTH_FAIL, ACTIVE_AUTH_FAIL);
 			} else if (state->pch_active_object.RecoveryImageStatus) {
 				LogErrorCodes(PCH_AUTH_FAIL, RECOVERY_AUTH_FAIL);
 			}
+#if defined(CONFIG_PFR_SPDM_ATTESTATION)
+			if (state->afm_active_object.ActiveImageStatus) {
+				if (state->afm_active_object.RecoveryImageStatus)
+					LogErrorCodes(BMC_AUTH_FAIL, AFM_ACTIVE_RECOVERY_STAGING_AUTH_FAIL);
+				else
+					LogErrorCodes(BMC_AUTH_FAIL, AFM_ACTIVE_AUTH_FAIL);
+			} else if (state->afm_active_object.RecoveryImageStatus) {
+				LogErrorCodes(BMC_AUTH_FAIL, AFM_RECOVERY_AUTH_FAIL);
+			}
+#endif
 
 			if (state->bmc_active_object.ActiveImageStatus || !state->bmc_active_object.RecoveryImageStatus)
 				state->bmc_active_object.RestrictActiveUpdate = 0;
@@ -938,6 +994,9 @@ void enter_tzero(void *o)
 {
 	LOG_DBG("Start");
 	SetPlatformState(ENTER_T0);
+#if defined(CONFIG_PFR_MCTP_I3C)
+	switch_i3c_mng_owner(I3C_MNG_OWNER_BMC);
+#endif
 
 	struct smf_context *state = (struct smf_context *)o;
 	struct event_context *evt_ctx = ((struct smf_context *)o)->event_ctx;
@@ -955,9 +1014,6 @@ void enter_tzero(void *o)
 			goto enter_tzero_end;
 		} else if (evt_ctx->data.bit8[2] & PchOnlyReset) {
 			apply_pfm_protection(PCH_SPI);
-#if defined(CONFIG_CERBERUS_PFR)
-			apply_pfm_smbus_protection(PCH_SPI);
-#endif
 			PCHBootRelease();
 			goto enter_tzero_end;
 		}
@@ -979,11 +1035,8 @@ void enter_tzero(void *o)
 		}
 
 		if (state->pch_active_object.ActiveImageStatus == Success) {
-			/* Arm SPI/I2C Filter */
+			/* Arm SPI Filter */
 			apply_pfm_protection(PCH_SPI);
-#if defined(CONFIG_CERBERUS_PFR)
-			apply_pfm_smbus_protection(PCH_SPI);
-#endif
 			PCHBootRelease();
 		} else
 			LOG_ERR("Host firmware is invalid, host won't boot");
@@ -1130,6 +1183,7 @@ void handle_provision_image(void *o)
 	EVENT_CONTEXT evt_ctx_wrap;
 	uint32_t image_type = ROT_TYPE;
 	int ret;
+	struct event_context *evt_ctx = ((struct smf_context *)o)->event_ctx;
 
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status,
 			sizeof(CPLD_STATUS));
@@ -1141,7 +1195,7 @@ void handle_provision_image(void *o)
 	dev_m = device_get_binding(BMC_SPI_MONITOR_2);
 	spim_ext_mux_config(dev_m, SPIM_EXT_MUX_ROT);
 #endif
-	ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap, &cpld_update_status);
+	ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap, &cpld_update_status, evt_ctx);
 
 	if (memcmp(&cached_status, &cpld_update_status, sizeof(CPLD_STATUS))) {
 		ufm_write(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
@@ -1158,6 +1212,23 @@ void handle_provision_image(void *o)
 }
 #endif
 
+void handle_unprovisioned_checkpoint(void *o)
+{
+	struct smf_context *state = (struct smf_context *)o;
+	struct event_context *evt_ctx = state->event_ctx;
+
+	switch(evt_ctx->data.bit8[0]) {
+	case BmcCheckpoint:
+		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+			LOG_INF("BMC Boot complete UNPROVISIONED");
+			k_event_post(&pfr_system_event, PFR_SYSTEM_BMC_BOOTED);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void handle_checkpoint(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
@@ -1167,14 +1238,21 @@ void handle_checkpoint(void *o)
 	case BmcCheckpoint:
 		UpdateBmcCheckpoint(evt_ctx->data.bit8[1]);
 		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+			LOG_INF("BMC Boot complete RUNTIME");
+			k_event_post(&pfr_system_event, PFR_SYSTEM_BMC_BOOTED);
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
 			if (state->afm_active_object.ActiveImageStatus == Success) {
 				spdm_run_attester();
 			}
 #endif
 #if defined(CONFIG_PFR_MCTP_I3C)
-			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
-					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+			mctp_i3c_target_intf_init();
+#else
+ 			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
+ 					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
+			mctp_i3c_configure_cpu_i3c_devs();
+#endif
 #endif
 		}
 		break;
@@ -1200,7 +1278,7 @@ void handle_checkpoint(void *o)
 
 int handle_recovery_requested(CPLD_STATUS *cpld_status,
 		EVENT_CONTEXT *evt_ctx_wrap,
-		AO_DATA *ao_data_wrap,
+		AO_DATA **ao_data_wrap,
 		struct smf_context *state,
 		struct event_context *evt_ctx,
 		uint32_t *image_type,
@@ -1269,7 +1347,7 @@ int handle_recovery_requested(CPLD_STATUS *cpld_status,
 #endif
 			evt_ctx_wrap->flag = evt_ctx->data.bit8[1] & UPDATE_DYNAMIC;
 			evt_ctx_wrap->flash = SECONDARY_FLASH_REGION;
-			ao_data_wrap = &state->bmc_active_object;
+			*ao_data_wrap = &state->bmc_active_object;
 		} else {
 			*image_type = 0xFFFFFFFF;
 			LOG_ERR("Staging region is tampered, recovery update won't be performed");
@@ -1354,43 +1432,56 @@ void handle_update_requested(void *o)
 {
 	struct smf_context *state = (struct smf_context *)o;
 	struct event_context *evt_ctx = state->event_ctx;
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 	AO_DATA *ao_data_wrap = NULL;
 	EVENT_CONTEXT evt_ctx_wrap;
 	int ret = Success;
-	uint8_t update_region = evt_ctx->data.bit8[1] & PchBmcHROTActiveAndRecoveryUpdate;
+	uint8_t update_region = 0;
 	CPLD_STATUS cpld_update_status, cached_status;
 
 	LOG_DBG("FIRMWARE_UPDATE Event Data %02x %02x", evt_ctx->data.bit8[0], evt_ctx->data.bit8[1]);
 
+	pfr_manifest->update_intent1 = 0;
+	pfr_manifest->update_intent2 = 0;
+	update_region = evt_ctx->data.bit8[1] & PchBmcHROTActiveAndRecoveryUpdate;
 	ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cached_status, sizeof(CPLD_STATUS));
 	memcpy(&cpld_update_status, &cached_status, sizeof(CPLD_STATUS));
 
 	switch (evt_ctx->data.bit8[0]) {
 	case PchUpdateIntent:
 		/* CPU/PCH only has access to bit[7:6] and bit[1:0] */
-		update_region &= UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate;
 		if (!update_region)
 			LogUpdateFailure(INVALID_UPD_INTENT, 0);
+		else {
+			evt_ctx->data.bit8[1] &= (UpdateAtReset | DymanicUpdate | PchRecoveryUpdate | PchActiveUpdate);
+			pfr_manifest->update_intent1 = evt_ctx->data.bit8[1];
+		}
+
 		break;
 	case BmcUpdateIntent:
 		/* BMC has full access */
 		if ((update_region & PchActiveUpdate) || (update_region & PchRecoveryUpdate)) {
 			cpld_update_status.BmcToPchStatus = 1;
 		}
+		pfr_manifest->update_intent1 = evt_ctx->data.bit8[1];
 		break;
 	case BmcUpdateIntent2:
 #if defined(CONFIG_PFR_SPDM_ATTESTATION)
-		if (evt_ctx->data.bit8[1] & AfmActiveAndRecoveryUpdate) {
-			update_region &= AfmActiveAndRecoveryUpdate;
+		if (evt_ctx->data.bit8[1] & AfmActiveUpdate) {
+			update_region |= AfmActiveUpdate;
+		}
+		if (evt_ctx->data.bit8[1] & AfmRecoveryUpdate) {
+			update_region |= AfmRecoveryUpdate;
 		}
 		break;
 #endif
 #if defined(CONFIG_INTEL_PFR_CPLD_UPDATE)
 		if (evt_ctx->data.bit8[1] & CPLDUpdate) {
-			update_region &= CPLDUpdate;
+			update_region |= CPLDUpdate;
 		}
 		break;
 #endif
+		pfr_manifest->update_intent2 = evt_ctx->data.bit8[1];
 	default:
 		break;
 	}
@@ -1410,7 +1501,7 @@ void handle_update_requested(void *o)
 					if (update_region & BmcRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1434,7 +1525,7 @@ void handle_update_requested(void *o)
 					if (update_region & PchRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1457,7 +1548,7 @@ void handle_update_requested(void *o)
 					if (update_region & HROTRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1489,7 +1580,7 @@ void handle_update_requested(void *o)
 					if (update_region & AfmRecoveryUpdate) {
 						if (handle_recovery_requested(&cpld_update_status,
 									&evt_ctx_wrap,
-									ao_data_wrap,
+									&ao_data_wrap,
 									state,
 									evt_ctx,
 									&image_type,
@@ -1525,15 +1616,13 @@ void handle_update_requested(void *o)
 
 		if (image_type != 0xFFFFFFFF)
 			ret = update_firmware_image(image_type, ao_data_wrap, &evt_ctx_wrap,
-					&cpld_update_status);
+					&cpld_update_status, evt_ctx);
 
 		evt_ctx->data.bit8[3] = handled_region;
 
 		if (ret != Success) {
-			/* TODO: Log failed reason and handle it properly */
 			clear_pending_recovery_update(&cpld_update_status);
 			GenerateStateMachineEvent(UPDATE_FAILED, evt_ctx->data.ptr);
-			break;
 		}
 	}
 
@@ -1568,18 +1657,23 @@ void handle_seamless_update_requested(void *o)
 	int ret;
 	uint8_t update_region = evt_ctx->data.bit8[1] & 0x3f;
 	CPLD_STATUS cpld_update_status;
+	struct pfr_manifest *pfr_manifest = get_pfr_manifest();
 
 	evt_ctx_wrap.operation = NONE;
 	LOG_DBG("SEAMLESS_UPDATE Event Data %02x %02x", evt_ctx->data.bit8[0], evt_ctx->data.bit8[1]);
+	pfr_manifest->update_intent2 = 0;
 
 	switch (evt_ctx->data.bit8[0]) {
 		case PchUpdateIntent2:
-			if (evt_ctx->data.bit8[1] & BIT(0))
+			if (evt_ctx->data.bit8[1] & BIT(0)) {
 				update_region &= SeamlessUpdate;
+				pfr_manifest->update_intent2 = evt_ctx->data.bit8[1] & BIT(0);
+			}
 			break;
 		case BmcUpdateIntent2:
 			if (evt_ctx->data.bit8[1] & BIT(0)) {
 				update_region &= SeamlessUpdate;
+				pfr_manifest->update_intent2 = evt_ctx->data.bit8[1] & BIT(0);
 				ufm_read(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
 				cpld_update_status.BmcToPchStatus = 1;
 				ufm_write(UPDATE_STATUS_UFM, UPDATE_STATUS_ADDRESS, (uint8_t *)&cpld_update_status, sizeof(CPLD_STATUS));
@@ -1662,10 +1756,15 @@ void handle_seamless_update_verification(void *o)
 }
 #endif
 
+extern bool i3c_hub_configured;
 void do_unprovisioned(void *o)
 {
 	LOG_DBG("Start");
 	struct event_context *evt_ctx = ((struct smf_context *)o)->event_ctx;
+
+#if defined(CONFIG_PFR_MCTP_I3C)
+	switch_i3c_mng_owner(I3C_MNG_OWNER_BMC);
+#endif
 
 	switch (evt_ctx->event) {
 #if defined(CONFIG_CERBERUS_PFR)
@@ -1680,11 +1779,22 @@ void do_unprovisioned(void *o)
 #endif
 		break;
 	case WDT_CHECKPOINT:
+		handle_unprovisioned_checkpoint(o);
 #if defined(CONFIG_PFR_MCTP_I3C)
-		if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
-			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
-					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
-		}
+		if (evt_ctx->data.bit8[1] == PausingExecutionBlock) {
+#if !defined(CONFIG_PFR_MCTP_I3C_5_0)
+			switch_i3c_mng_owner(I3C_MNG_OWNER_ROT);
+			mctp_i3c_configure_cpu_i3c_devs();
+#endif
+		} else if (evt_ctx->data.bit8[1] == CompletingExecutionBlock) {
+#if defined(CONFIG_PFR_MCTP_I3C_5_0)
+			mctp_i3c_target_intf_init();
+#else
+ 			mctp_i3c_attach_target_dev(CONFIG_PFR_SPDM_I3C_BUS,
+ 					CONFIG_PFR_SPDM_I3C_BMC_DEV_PID);
+			mctp_i3c_configure_cpu_i3c_devs();
+#endif
+ 		}
 #endif
 		break;
 	default:
@@ -1955,7 +2065,7 @@ void AspeedStateMachine(void)
 				next_state = &state_table[ROT_RECOVERY];
 				break;
 			default:
-				/* Discard anyother event */
+				/* Discard another event */
 				break;
 			}
 		} else if (current_state == &state_table[ROT_RECOVERY]) {

@@ -1,0 +1,136 @@
+{
+    "exclude-pages":[[11248, 16367], [16368, 16383]],
+    "image-parts": [
+        {
+            "name": "Reserved-1",
+            "index": 0,
+            "offset": "0x0",
+            "size": "0x20000",
+            "prot_mask": 29,
+            "pfm": 1,
+            "hash": 1,
+            "compress": 1
+        },
+        {
+            "name": "Embedded-Firmware-Signature",
+            "index": 1,
+            "offset": "0x20000",
+            "size": "0x4000",
+            "prot_mask": 29,
+            "pfm": 1,
+            "hash": 1,
+            "compress": 1
+        },
+        {
+            "name": "NVRAM",
+            "index": 2,
+            "offset": "0x24000",
+            "size": "0x20000",
+            "prot_mask": 31,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 1
+        },
+        {
+            "name": "NVRAM-Backup",
+            "index": 3,
+            "offset": "0x44000",
+            "size": "0x20000",
+            "prot_mask": 31,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 1
+        },
+        {
+            "name": "PSP-Data",
+            "index": 4,
+            "offset": "0x64000",
+            "size": "0x770000",
+            "prot_mask": 29,
+            "pfm": 1,
+            "hash": 1,
+            "compress": 1
+        },
+        {
+            "name": "OEM-NCB",
+            "index": 5,
+            "offset": "0x7d4000",
+            "size": "0x10000",
+            "prot_mask": 31,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 1
+        },
+        {
+            "name": "GPNV",
+            "index": 6,
+            "offset": "0x7e4000",
+            "size": "0x10000",
+            "prot_mask": 31,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 1
+        },
+        {
+            "name": "WHEA",
+            "index": 7,
+            "offset": "0x7f4000",
+            "size": "0x10000",
+            "prot_mask": 31,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 1
+        },
+        {
+            "name": "FV_MAIN",
+            "index": 8,
+            "offset": "0x804000",
+            "size": "0x49c000",
+            "prot_mask": 29,
+            "pfm": 1,
+            "hash": 1,
+            "compress": 1
+        },
+        {
+            "name": "FV_BB",
+            "index": 9,
+            "offset": "0xca0000",
+            "size": "0x360000",
+            "prot_mask": 29,
+            "pfm": 1,
+            "hash": 1,
+            "compress": 1
+        },
+        {
+            "name": "Staging",
+            "index": 10,
+            "offset": "0x17f0000",
+            "size": "0x1400000",
+            "prot_mask": 3,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 0
+        },
+        {
+            "name": "Recovery",
+            "index": 11,
+            "offset": "0x2bf0000",
+            "size": "0x1400000",
+            "prot_mask": 0,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 0
+        },
+        {
+            "name": "PFM",
+            "index": 12,
+            "offset": "0x3ff0000",
+            "size": "0x10000",
+            "prot_mask": 0,
+            "pfm": 1,
+            "hash": 0,
+            "compress": 0
+        }
+    ],
+    "i2c-rules":[]
+}

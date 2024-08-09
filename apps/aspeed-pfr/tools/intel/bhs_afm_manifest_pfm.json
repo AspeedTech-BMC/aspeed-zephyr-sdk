@@ -15,7 +15,7 @@
             "device_platform_model" : "0x0011223344556677",
             "device_platform_version" : "0x9a9a",
             "afm_length" : "0x2000",
-            "afm_addr" : "0x4000800"
+            "afm_addr" : "0x4001000"
         }    },
     "afm_data" : {
         "device0" : {

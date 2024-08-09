@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.13.1)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(aspeed-pfr VERSION 02.01 LANGUAGES C)
+project(aspeed-pfr VERSION 02.02 LANGUAGES C)
 
 set(PROJECT_VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR})
 set(PROJECT_VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR})
@@ -19,7 +19,11 @@ set(CERBERUS_ROOT $ENV{ZEPHYR_BASE}/../middlewares/cerberus)
 zephyr_link_libraries(hrot_hal)
 zephyr_link_libraries(hrot_wrapper)
 zephyr_link_libraries(smf)
-zephyr_link_libraries(lms)
+
+if (MBEDTLS_LMS_C)
+    zephyr_link_libraries(lms)
+endif()
+
 zephyr_link_libraries(cerberus)
 zephyr_link_libraries(mbedTLS)
 zephyr_include_directories(mbedTLS)

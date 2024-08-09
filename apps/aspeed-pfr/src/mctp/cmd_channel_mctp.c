@@ -9,7 +9,7 @@
 #include <zephyr/sys/util.h>
 #include "cmd_interface/cmd_channel.h"
 #include "cmd_channel_mctp.h"
-#include "mctp_utils.h"
+#include "mctp.h"
 
 LOG_MODULE_REGISTER(cmd_channel_mctp, CONFIG_LOG_DEFAULT_LEVEL);
 
